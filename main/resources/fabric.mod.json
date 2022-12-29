@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "philter",
+  "version": "${version}",
+  "name": "Philter",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/philter/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.simplx.philter.client.PhilterClient"
+    ],
+    "main": [
+      "net.simplx.philter.Philter"
+    ]
+  },
+  "mixins": [
+    "philter.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.12",
+    "fabric": "*",
+    "minecraft": "1.19.3"
+  }
+}
