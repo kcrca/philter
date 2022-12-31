@@ -1,6 +1,20 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "philter:block/filter"
-  }
+    "parent": "block/block",
+    "textures": {
+	"all": "philter:block/filter",
+	"particle": "philter:block/filter"
+    },
+    "elements": [
+        {   "from": [ 4, 4, 4 ],
+            "to": [ 12, 12, 12 ],
+            "faces": {
+                "down":  { "texture": "#all", "uv": [4, 4, 12, 12] },
+                "up":    { "texture": "#all", "uv": [4, 4, 12, 12] },
+                "north": { "texture": "#all", "uv": [4, 4, 12, 12] },
+                "south": { "texture": "#all", "uv": [4, 4, 12, 12] },
+                "west":  { "texture": "#all", "uv": [4, 4, 12, 12] },
+                "east":  { "texture": "#all", "uv": [4, 4, 12, 12] }
+            }
+        }
+    ]
 }

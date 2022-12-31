@@ -1,7 +1,16 @@
 {
-  "variants": {
-    "": {
-      "model": "philter:block/filter"
-    }
-  }
+  "multipart": [
+      {"apply": { "model": "philter:block/filter" }},
+      {"when": { "facing": "north" },"apply": { "model": "philter:block/filter_facing" }},
+      {"when": { "facing": "east" },"apply": { "model": "philter:block/filter_facing", "uvlock": true, "y": 90 }},
+      {"when": { "facing": "south" },"apply": { "model": "philter:block/filter_facing", "uvlock": true, "y": 180 }},
+      {"when": { "facing": "west" },"apply": { "model": "philter:block/filter_facing", "uvlock": true, "y": 270 }},
+      {"when": { "facing": "down" },"apply": { "model": "philter:block/filter_facing", "uvlock": true, "x": 90 }},
+      {"when": { "filter": "north" },"apply": { "model": "philter:block/filter_filter" }},
+      {"when": { "filter": "east" },"apply": { "model": "philter:block/filter_filter", "uvlock": true, "y": 90 }},
+      {"when": { "filter": "south" },"apply": { "model": "philter:block/filter_filter", "uvlock": true, "y": 180 }},
+      {"when": { "filter": "west" },"apply": { "model": "philter:block/filter_filter", "uvlock": true, "y": 270 }},
+      {"when": { "filter": "down" },"apply": { "model": "philter:block/filter_filter", "uvlock": true, "x": 90 }},
+      {"when": { "filter": "up" },"apply": { "model": "philter:block/filter_filter", "uvlock": true, "x": 270 }}
+  ]
 }
