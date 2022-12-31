@@ -5,9 +5,14 @@ import java.util.Map;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.HopperBlock;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.Hopper;
+import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -29,7 +34,7 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class FilterBlock extends Block {
+public class FilterBlock extends HopperBlock {
 
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
@@ -72,6 +77,20 @@ public class FilterBlock extends Block {
         stateManager.getDefaultState().with(FACING, Direction.DOWN).with(FILTER, Direction.NORTH)
             .with(ENABLED, true));
   }
+
+  @Nullable
+  @Override
+  public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    return new FilterBlockEntity(pos, state);
+  }
+
+  @Override
+  @Nullable
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+    return world.isClient ? null : checkType(type, Philter.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+  }
+
+
 
   @Override
   public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos,
