@@ -1,17 +1,18 @@
 package net.simplx.philter;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.Hopper;
-import net.minecraft.block.entity.LootableContainerBlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.Nullable;
 
-public class FilterBlockEntity extends LootableContainerBlockEntity implements Hopper {
+public class FilterBlockEntity extends BlockEntity implements NamedScreenHandlerFactory {
+
   protected FilterBlockEntity(
       BlockEntityType<?> blockEntityType,
       BlockPos blockPos, BlockState blockState) {
@@ -19,42 +20,13 @@ public class FilterBlockEntity extends LootableContainerBlockEntity implements H
   }
 
   @Override
-  public double getHopperX() {
-    return 0;
-  }
-
-  @Override
-  public double getHopperY() {
-    return 0;
-  }
-
-  @Override
-  public double getHopperZ() {
-    return 0;
-  }
-
-  @Override
-  protected DefaultedList<ItemStack> getInvStackList() {
+  public Text getDisplayName() {
     return null;
   }
 
+  @Nullable
   @Override
-  protected void setInvStackList(DefaultedList<ItemStack> list) {
-
-  }
-
-  @Override
-  protected Text getContainerName() {
+  public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
     return null;
-  }
-
-  @Override
-  protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return null;
-  }
-
-  @Override
-  public int size() {
-    return 0;
   }
 }

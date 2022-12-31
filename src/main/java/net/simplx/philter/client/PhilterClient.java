@@ -11,11 +11,12 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+import net.simplx.philter.FilterBlock;
 
 @Environment(EnvType.CLIENT)
 public class PhilterClient implements ClientModInitializer {
 
-  public static final Block FILTER_BLOCK = new Block(
+  public static final Block FILTER_BLOCK = new FilterBlock(
       FabricBlockSettings.of(Material.METAL).strength(4.0f));
 
   @Override
