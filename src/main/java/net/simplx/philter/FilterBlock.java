@@ -5,14 +5,13 @@ import java.util.Map;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.HopperBlock;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.Hopper;
-import net.minecraft.block.entity.HopperBlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -73,9 +72,7 @@ public class FilterBlock extends HopperBlock {
 
   public FilterBlock(Settings settings) {
     super(settings);
-    setDefaultState(
-        stateManager.getDefaultState().with(FACING, Direction.DOWN).with(FILTER, Direction.NORTH)
-            .with(ENABLED, true));
+    setDefaultState(getDefaultState().with(FILTER, Direction.NORTH));
   }
 
   @Nullable
@@ -86,10 +83,11 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   @Nullable
-  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-    return world.isClient ? null : checkType(type, Philter.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
+      BlockEntityType<T> type) {
+    return world.isClient ? null
+        : checkType(type, Philter.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
-
 
 
   @Override
@@ -148,4 +146,13 @@ public class FilterBlock extends HopperBlock {
       return ActionResult.CONSUME;
     }
   }
+
+  @Override
+  public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
+    BlockEntity blockEntity = world.getBlockEntity(pos);
+    if (blockEntity instanceof FilterBlockEntity) {
+      ((FilterBlockEntity) blockEntity).onEntityCollided(world, pos, state, entity);
+    }
+  }
+
 }
