@@ -1,8 +1,11 @@
 package net.simplx.philter;
 
+import static net.simplx.philter.FilterBlock.MODE;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
 import net.minecraft.block.entity.BlockEntity;
@@ -14,7 +17,9 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +41,8 @@ import net.minecraft.world.World;
  * {@link FilterBlockEntity#onEntityCollided}.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements Forcer {
+public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
+    ExtendedScreenHandlerFactory {
 
   private static final StaticForcer force = new StaticForcer(HopperBlockEntity.class);
   public static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
@@ -143,6 +149,11 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer {
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this);
+    return new FilterScreenHandler(syncId, playerInventory, this, getCachedState().get(MODE));
+  }
+
+  @Override
+  public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+    buf.writeEnumConstant(getCachedState().get(MODE));
   }
 }

@@ -6,7 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
@@ -20,14 +20,35 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       "textures/gui/container/filter.png");
 
   private static final Text TEXT_ONLY_SAME = Text.translatable("philter.filter.only_same");
+  private static final int FILTER_Y = 130;
+  private static final int TEXT_HEIGHT = 13;
+  private static final int BUTTON_HEIGHT = TEXT_HEIGHT + 6;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
     passEvents = false;
     backgroundHeight = 233;
     playerInventoryTitleY = backgroundHeight - 194;
+  }
 
-    // addDrawableChild(ButtonWidget.builder(TEXT_ONLY_SAME, (button)->{setOnlySame();}));
+  @Override
+  protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
+    super.drawForeground(matrices, mouseX, mouseY);
+  }
+
+  protected void init() {
+    super.init();
+    addDrawableChild(
+        CyclingButtonWidget.builder(FilterScreen::filterText).values(FilterMode.values())
+            .build(this.x + 25, FILTER_Y + TEXT_HEIGHT, 80, 20, Text.literal("MODE"),
+                (button, mode) -> setMode(mode)));
+  }
+
+  private static Text filterText(FilterMode value) {
+    return Text.translatable("philter.filter.mode." + value.asString());
+  }
+
+  private void setMode(FilterMode mode) {
   }
 
 
