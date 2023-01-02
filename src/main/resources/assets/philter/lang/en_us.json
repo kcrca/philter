@@ -1,6 +1,5 @@
 {
-    "container.filter": "Filter",
-    "container.filter_spec": "Filter Spec",
+    "philter.filter.name": "Filter",
     "philter.filter.mode.only_same": "Only Same",
     "philter.filter.mode.matches": "Matches"
 }

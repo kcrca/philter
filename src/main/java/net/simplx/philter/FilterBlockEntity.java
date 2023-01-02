@@ -62,7 +62,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   @Override
   protected Text getContainerName() {
-    return Text.translatable("container.filter");
+    return Text.translatable("philter.filter.name");
   }
 
   public static void serverTick(World world, BlockPos pos, BlockState state,
