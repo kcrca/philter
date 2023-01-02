@@ -14,7 +14,6 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.text.Text;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
@@ -51,6 +50,8 @@ public class FilterBlockEntity extends HopperBlockEntity {
       Direction.class);
   public static final Method GET_OUTPUT_INVENTORY_M = method("getOutputInventory", World.class,
       BlockPos.class, BlockState.class);
+  public static final Method INSERT_M = method("insert", World.class, BlockPos.class,
+      BlockState.class, Inventory.class);
 
   protected final Logger logger;
 
@@ -186,35 +187,7 @@ public class FilterBlockEntity extends HopperBlockEntity {
   }
 
   private boolean insert(World world, BlockPos pos, BlockState state, Inventory inventory) {
-    Inventory inventory2 = getOutputInventory(world, pos, state);
-    if (inventory2 == null) {
-      return false;
-    }
-    return insertFacing(state, inventory2, FilterBlock.FACING, inventory);
-  }
-
-  private boolean insertFacing(BlockState state, Inventory inventory2,
-      DirectionProperty directionProperty, Inventory inventory) {
-    Direction direction = state.get(directionProperty).getOpposite();
-    if (isInventoryFull(inventory2, direction)) {
-      return false;
-    }
-    for (int i = 0; i < inventory.size(); ++i) {
-      if (inventory.getStack(i).isEmpty()) {
-        continue;
-      }
-      ItemStack itemStack = inventory.getStack(i).copy();
-      String tstack = itemStack.toString();
-      ItemStack itemStack2 = HopperBlockEntity.transfer(inventory, inventory2,
-          inventory.removeStack(i, 1), direction);
-      if (itemStack2.isEmpty()) {
-        inventory2.markDirty();
-        logger.debug("transfered " + direction + ": " + tstack);
-        return true;
-      }
-      inventory.setStack(i, itemStack);
-    }
-    return false;
+    return (boolean) forceInvoke(INSERT_M, world, pos, state, inventory);
   }
 
   public void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity) {
