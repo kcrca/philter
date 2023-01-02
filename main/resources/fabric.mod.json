@@ -1,4 +1,6 @@
 {
+  "accessWidener" : "philter.accesswidener",
+
   "schemaVersion": 1,
   "id": "philter",
   "version": "${version}",
