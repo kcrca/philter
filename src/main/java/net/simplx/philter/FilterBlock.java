@@ -72,6 +72,7 @@ public class FilterBlock extends HopperBlock {
 
   public FilterBlock(Settings settings) {
     super(settings);
+    stateManager.getDefaultState();
     setDefaultState(getDefaultState().with(FILTER, Direction.NORTH));
   }
 

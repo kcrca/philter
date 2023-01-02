@@ -11,6 +11,7 @@ import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.property.DirectionProperty;
@@ -20,6 +21,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
@@ -49,6 +52,9 @@ public class FilterBlockEntity extends HopperBlockEntity {
   public static final Method GET_OUTPUT_INVENTORY_M = method("getOutputInventory", World.class,
       BlockPos.class, BlockState.class);
 
+  protected final Logger logger;
+
+
   private static Field field(String name) {
     return field(HopperBlockEntity.class, name);
   }
@@ -77,12 +83,11 @@ public class FilterBlockEntity extends HopperBlockEntity {
     return method(HopperBlockEntity.class, name, parameterTypes);
   }
 
-
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, Philter.FILTER_BLOCK_ENTITY);
+    this.logger = LoggerFactory.getLogger("philter");
   }
-
 
   private Object forceGet(Field field) {
     try {
@@ -91,7 +96,6 @@ public class FilterBlockEntity extends HopperBlockEntity {
       throw new IllegalStateException(e);
     }
   }
-
 
   private void forceSet(Field field, Object value) {
     try {
@@ -156,7 +160,18 @@ public class FilterBlockEntity extends HopperBlockEntity {
     if (!needsCooldown() && state.get(HopperBlock.ENABLED)) {
       boolean bl = false;
       if (!isEmpty()) {
-        bl = insert(world, pos, state, this);
+        var filterState = state.with(FilterBlock.FACING, state.get(FilterBlock.FILTER));
+        SimpleInventory filterInventory = new SimpleInventory(size());
+        for (int i = 0; i < size(); i++) {
+          if (inFilter(getStack(i))) {
+            filterInventory.setStack(i, getStack(i));
+          }
+        }
+        if (!filterInventory.isEmpty() && insert(world, pos, filterState, this)) {
+          bl = true;
+        } else {
+          bl = insert(world, pos, state, this);
+        }
       }
       if (!isFull()) {
         bl |= booleanSupplier.getAsBoolean();
@@ -178,9 +193,9 @@ public class FilterBlockEntity extends HopperBlockEntity {
     return insertFacing(state, inventory2, FilterBlock.FACING, inventory);
   }
 
-  private boolean insertFacing(BlockState state, Inventory inventory2, DirectionProperty dir,
-      Inventory inventory) {
-    Direction direction = state.get(dir).getOpposite();
+  private boolean insertFacing(BlockState state, Inventory inventory2,
+      DirectionProperty directionProperty, Inventory inventory) {
+    Direction direction = state.get(directionProperty).getOpposite();
     if (isInventoryFull(inventory2, direction)) {
       return false;
     }
@@ -189,10 +204,12 @@ public class FilterBlockEntity extends HopperBlockEntity {
         continue;
       }
       ItemStack itemStack = inventory.getStack(i).copy();
+      String tstack = itemStack.toString();
       ItemStack itemStack2 = HopperBlockEntity.transfer(inventory, inventory2,
           inventory.removeStack(i, 1), direction);
       if (itemStack2.isEmpty()) {
         inventory2.markDirty();
+        logger.debug("transfered " + direction + ": " + tstack);
         return true;
       }
       inventory.setStack(i, itemStack);
