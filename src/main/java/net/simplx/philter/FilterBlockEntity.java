@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 import org.slf4j.Logger;
@@ -30,26 +29,22 @@ import org.slf4j.LoggerFactory;
  * entity class and tweak it. This way, at least what <em>can</em> be inherited is inherited.
  *
  * This is entirely to be able to re-write the insert() method to check the filter before doing any
- * move. The static serverTick() here simply invokes doServerTick() as a instance method, which
- * mirrors the static HopperBlockState.serverTick() (non-staticly) and so on until we get to
+ * move. The static serverTick() here simply invokes doServerTick() as an instance method, which
+ * mirrors the static HopperBlockState.serverTick() (non-statically) and so on until we get to
  * insert(). Everything below that we just invoke the superclass method (honestly or dishonestly).
  *
- * This also requires handling entites dropped on top specially because of course it does; see
+ * This also requires handling entities dropped on top specially because of course it does; see
  * {@link FilterBlockEntity#onEntityCollided}.
  */
+@SuppressWarnings("SameParameterValue")
 public class FilterBlockEntity extends HopperBlockEntity {
 
   public static final Field TRANSFER_COOLDOWN_F = field("transferCooldown");
   public static final Field LAST_TICK_TIME_F = field("lastTickTime");
-  public static final Field INVENTORY_F = field("inventory");
   public static final Field TYPE_F = field(BlockEntity.class, "type");
   public static final Method NEEDS_COOLDOWN_M = method("needsCooldown");
   public static final Method SET_TRANSFER_COOLDOWN_M = method("setTransferCooldown", int.class);
   public static final Method IS_FULL_M = method("isFull");
-  public static final Method IS_INVENTORY_FULL_M = method("isInventoryFull", Inventory.class,
-      Direction.class);
-  public static final Method GET_OUTPUT_INVENTORY_M = method("getOutputInventory", World.class,
-      BlockPos.class, BlockState.class);
   public static final Method INSERT_M = method("insert", World.class, BlockPos.class,
       BlockState.class, Inventory.class);
 
@@ -124,6 +119,7 @@ public class FilterBlockEntity extends HopperBlockEntity {
     blockEntity.doServerTick(world, pos, state);
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean needsCooldown() {
     return (Boolean) forceInvoke(NEEDS_COOLDOWN_M);
   }
@@ -136,14 +132,6 @@ public class FilterBlockEntity extends HopperBlockEntity {
     return (Boolean) forceInvoke(IS_FULL_M);
   }
 
-  private Inventory getOutputInventory(World world, BlockPos pos, BlockState state) {
-    return (Inventory) forceInvoke(GET_OUTPUT_INVENTORY_M, world, pos, state);
-  }
-
-  private boolean isInventoryFull(Inventory inventory, Direction direction) {
-    return (Boolean) forceInvoke(IS_INVENTORY_FULL_M, inventory, direction);
-  }
-
   private void doServerTick(World world, BlockPos pos, BlockState state) {
     forceSet(TRANSFER_COOLDOWN_F, (int) forceGet(TRANSFER_COOLDOWN_F) - 1);
     forceSet(LAST_TICK_TIME_F, world.getTime());
@@ -153,6 +141,7 @@ public class FilterBlockEntity extends HopperBlockEntity {
     }
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   private boolean insertAndExtract(World world, BlockPos pos, BlockState state,
       BooleanSupplier booleanSupplier) {
     if (world.isClient) {
