@@ -1,7 +1,6 @@
 package net.simplx.philter;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
 import net.minecraft.block.BlockState;
@@ -10,17 +9,17 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
@@ -37,76 +36,22 @@ import org.slf4j.LoggerFactory;
  * {@link FilterBlockEntity#onEntityCollided}.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity {
+public class FilterBlockEntity extends HopperBlockEntity implements Forcer {
 
-  public static final Field TRANSFER_COOLDOWN_F = field("transferCooldown");
-  public static final Field LAST_TICK_TIME_F = field("lastTickTime");
-  public static final Field TYPE_F = field(BlockEntity.class, "type");
-  public static final Method NEEDS_COOLDOWN_M = method("needsCooldown");
-  public static final Method SET_TRANSFER_COOLDOWN_M = method("setTransferCooldown", int.class);
-  public static final Method IS_FULL_M = method("isFull");
-  public static final Method INSERT_M = method("insert", World.class, BlockPos.class,
+  private static final StaticForcer force = new StaticForcer(HopperBlockEntity.class);
+  public static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
+  public static final Field LAST_TICK_TIME_F = force.field("lastTickTime");
+  public static final Field TYPE_F = Forcer.field(BlockEntity.class, "type");
+  public static final Method NEEDS_COOLDOWN_M = force.method("needsCooldown");
+  public static final Method SET_TRANSFER_COOLDOWN_M = force.method("setTransferCooldown",
+      int.class);
+  public static final Method IS_FULL_M = force.method("isFull");
+  public static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
       BlockState.class, Inventory.class);
-
-  protected final Logger logger;
-
-
-  private static Field field(String name) {
-    return field(HopperBlockEntity.class, name);
-  }
-
-  private static Field field(Class<?> clz, String name) {
-    try {
-      var field = clz.getDeclaredField(name);
-      field.setAccessible(true);
-      return field;
-    } catch (NoSuchFieldException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private static Method method(Class<?> clz, String name, Class<?>... parameterTypes) {
-    try {
-      var method = clz.getDeclaredMethod(name, parameterTypes);
-      method.setAccessible(true);
-      return method;
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private static Method method(String name, Class<?>... parameterTypes) {
-    return method(HopperBlockEntity.class, name, parameterTypes);
-  }
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
-    forceSet(TYPE_F, Philter.FILTER_BLOCK_ENTITY);
-    this.logger = LoggerFactory.getLogger("philter");
-  }
-
-  private Object forceGet(Field field) {
-    try {
-      return field.get(this);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private void forceSet(Field field, Object value) {
-    try {
-      field.set(this, value);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private Object forceInvoke(Method method, Object... parameters) {
-    try {
-      return method.invoke(this, parameters);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
-    }
+    forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
   }
 
   @Override
@@ -194,5 +139,10 @@ public class FilterBlockEntity extends HopperBlockEntity {
     }
     Item item = hopperStack.getItem();
     return item.getName().getContent().toString().contains("sand");
+  }
+
+  @Override
+  protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
+    return new FilterScreenHandler(syncId, playerInventory, this);
   }
 }

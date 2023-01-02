@@ -87,7 +87,7 @@ public class FilterBlock extends HopperBlock {
   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
       BlockEntityType<T> type) {
     return world.isClient ? null
-        : checkType(type, Philter.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+        : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
 
 
@@ -155,5 +155,4 @@ public class FilterBlock extends HopperBlock {
       ((FilterBlockEntity) blockEntity).onEntityCollided(world, pos, state, entity);
     }
   }
-
 }

@@ -1,0 +1,6 @@
+accessWidener	v1		named
+
+extendable	class	net/minecraft/block/entity/HopperBlockEntity
+extendable	class	net/minecraft/block/entity/BlockEntity
+
+mutable		field	net/minecraft/block/entity/HopperBlockEntity	transferCooldown	I
