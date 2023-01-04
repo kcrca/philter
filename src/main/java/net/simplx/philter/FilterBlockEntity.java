@@ -4,6 +4,7 @@ import static net.simplx.philter.FilterBlock.MODE;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
@@ -181,5 +182,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer, Side
   @Override
   public boolean canExtract(int slot, ItemStack stack, Direction dir) {
     return true;
+  }
+
+  public List<String> getMatchSpec() {
+    return List.of("one", "two", "three");
   }
 }

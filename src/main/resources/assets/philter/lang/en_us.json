@@ -1,5 +1,5 @@
 {
     "philter.filter.name": "Filter",
-    "philter.filter.mode.only_same": "Only Same",
+    "philter.filter.mode.no_new": "No New",
     "philter.filter.mode.matches": "Matches"
 }

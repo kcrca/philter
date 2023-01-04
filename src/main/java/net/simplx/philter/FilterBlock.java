@@ -76,7 +76,7 @@ public class FilterBlock extends HopperBlock {
     super(settings);
     stateManager.getDefaultState();
     setDefaultState(
-        getDefaultState().with(FILTER, Direction.NORTH).with(MODE, FilterMode.ONLY_SAME));
+        getDefaultState().with(FILTER, Direction.NORTH).with(MODE, FilterMode.NO_NEW));
   }
 
   @Nullable
