@@ -1,7 +1,7 @@
 package net.simplx.philter;
 
 import static net.minecraft.block.entity.HopperBlockEntity.INVENTORY_SIZE;
-import static net.simplx.philter.PhilterMod.FILTER_SCREEN_HANDLER;
+import static net.simplx.philter.PhilterMod.FILTER_SCREEN_HANDLER_TYPE;
 
 import java.lang.reflect.Field;
 import net.minecraft.entity.player.PlayerInventory;
@@ -24,7 +24,7 @@ public class FilterScreenHandler extends HopperScreenHandler implements Forcer {
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory,
       FilterMode mode) {
     super(syncId, playerInventory, inventory);
-    forceSet(TYPE_F, FILTER_SCREEN_HANDLER);
+    forceSet(TYPE_F, FILTER_SCREEN_HANDLER_TYPE);
     this.mode = mode;
   }
 }

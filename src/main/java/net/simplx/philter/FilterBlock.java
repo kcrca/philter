@@ -144,7 +144,7 @@ public class FilterBlock extends HopperBlock {
     } else {
       BlockEntity blockEntity = world.getBlockEntity(pos);
       if (blockEntity instanceof FilterBlockEntity) {
-        player.openHandledScreen((FilterBlockEntity) blockEntity);
+        player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
         player.incrementStat(Stats.INSPECT_HOPPER);
       }
       return ActionResult.CONSUME;

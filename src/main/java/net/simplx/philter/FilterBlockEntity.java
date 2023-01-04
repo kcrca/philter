@@ -8,23 +8,30 @@ import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
+import net.minecraft.block.InventoryProvider;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
@@ -41,8 +48,7 @@ import net.minecraft.world.World;
  * {@link FilterBlockEntity#onEntityCollided}.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
-    ExtendedScreenHandlerFactory {
+public class FilterBlockEntity extends HopperBlockEntity implements Forcer, SidedInventory, InventoryProvider {
 
   private static final StaticForcer force = new StaticForcer(HopperBlockEntity.class);
   public static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
@@ -147,13 +153,33 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     return item.getName().getContent().toString().contains("sand");
   }
 
+  @Nullable
+  public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerEntity) {
+    if (checkUnlocked(playerEntity)) {
+      checkLootInteraction(inventory.player);
+      return new FilterGuiDescription(syncId, inventory, ScreenHandlerContext.create(world, pos));
+    } else {
+      return null;
+    }
+  }
+
+  public SidedInventory getInventory(BlockState state, WorldAccess world, BlockPos pos) {
+    return this;
+  }
+
+
   @Override
-  protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, getCachedState().get(MODE));
+  public int[] getAvailableSlots(Direction side) {
+    return new int[]{size()};
   }
 
   @Override
-  public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-    buf.writeEnumConstant(getCachedState().get(MODE));
+  public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+    return true;
+  }
+
+  @Override
+  public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    return true;
   }
 }
