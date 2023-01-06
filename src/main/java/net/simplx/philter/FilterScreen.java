@@ -3,6 +3,7 @@ package net.simplx.philter;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.Collections;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -28,6 +29,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final int BUTTON_HEIGHT = TEXT_HEIGHT + 2;
   public static final int BUTTON_WIDTH;
 
+  private final FilterDesc filterDesc;
+
   static {
     var renderer = MinecraftClient.getInstance().textRenderer;
     var maxWidth = 0;
@@ -43,6 +46,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     passEvents = false;
     backgroundHeight = 233;
     playerInventoryTitleY = backgroundHeight - 194;
+    filterDesc = handler.getFilterDesc();
   }
 
   @Override
@@ -58,6 +62,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     addDrawableChild(
         CyclingButtonWidget.builder(FilterScreen::filterText).values(FilterMode.values())
             .omitKeyText()
+            .initially(filterDesc.mode)
             .build(x + BORDER + textWidth, FILTER_Y, BUTTON_WIDTH, BUTTON_HEIGHT, null,
                 (button, mode) -> setMode(mode)));
   }
@@ -67,8 +72,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void setMode(FilterMode mode) {
+    filterDesc.mode = mode;
+    client.player.networkHandler.sendPacket(new FilterPacket(filterDesc, handler.getPos()));
   }
-
 
   public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
     renderBackground(matrices);

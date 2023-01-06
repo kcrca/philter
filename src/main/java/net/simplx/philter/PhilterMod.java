@@ -2,6 +2,7 @@ package net.simplx.philter;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
@@ -38,6 +39,12 @@ public class PhilterMod implements ModInitializer {
     Registry.register(Registries.BLOCK, FILTER_ID, FILTER_BLOCK);
     Registry.register(Registries.ITEM, FILTER_ID,
         new BlockItem(FILTER_BLOCK, new FabricItemSettings()));
-
+    ServerPlayNetworking.registerGlobalReceiver(FILTER_ID,
+        (server, player, handler, buf, responseSender) -> {
+          server.execute(() -> {
+            FilterBlockEntity.updateEntity(player, buf);
+          });
+        });
   }
+
 }

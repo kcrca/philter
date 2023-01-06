@@ -1,9 +1,8 @@
 package net.simplx.philter;
 
-import static net.simplx.philter.FilterBlock.MODE;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
@@ -17,7 +16,9 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -55,9 +56,34 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   public static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
       BlockState.class, Inventory.class);
 
+  private FilterDesc desc;
+
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
+    desc = new FilterDesc(FilterMode.ONLY_SAME, Collections.emptyList());
+  }
+
+  static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {
+    FilterDesc filterDesc = new FilterDesc(buf);
+    BlockPos pos = buf.readBlockPos();
+    FilterBlockEntity entity = (FilterBlockEntity) player.getWorld().getBlockEntity(pos);
+    if (entity != null) {
+      entity.setFilterDesc(filterDesc);
+    }
+    System.out.printf("Received: %s: %s", player.getName(), filterDesc);
+  }
+
+  @Override
+  public void readNbt(NbtCompound nbt) {
+    super.readNbt(nbt);
+    desc = new FilterDesc(nbt);
+  }
+
+  @Override
+  protected void writeNbt(NbtCompound nbt) {
+    super.writeNbt(nbt);
+    desc.writeNbt(nbt);
   }
 
   @Override
@@ -149,11 +175,24 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, getCachedState().get(MODE));
+    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos);
   }
 
   @Override
   public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-    buf.writeEnumConstant(getCachedState().get(MODE));
+    desc.write(buf, pos);
+  }
+
+  public void applyChange(CustomPayloadC2SPacket packet) {
+    System.out.printf("Foo: %s\n", packet);
+    // this.desc = new FilterDesc(packet);
+  }
+
+  public void onFilterChange(FilterDesc packet) {
+    this.desc = packet;
+  }
+
+  public void setFilterDesc(FilterDesc desc) {
+    this.desc = desc;
   }
 }

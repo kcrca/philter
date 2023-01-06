@@ -19,7 +19,6 @@ import net.minecraft.stat.Stats;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -39,7 +38,8 @@ public class FilterBlock extends HopperBlock {
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
-  public static final EnumProperty<FilterMode> MODE = EnumProperty.of("mode", FilterMode.class);
+  public static final int MAX_FILTERS = 25;
+  public static final int MAX_FILTER_LEN = 50;
 
   private static final VoxelShape CENTER_SHAPE = Block.createCuboidShape(4, 4, 4, 12, 12, 12);
   private static final Map<Direction, VoxelShape> POINTING = new EnumMap<>(Direction.class);
@@ -75,8 +75,7 @@ public class FilterBlock extends HopperBlock {
   public FilterBlock(Settings settings) {
     super(settings);
     stateManager.getDefaultState();
-    setDefaultState(
-        getDefaultState().with(FILTER, Direction.NORTH).with(MODE, FilterMode.ONLY_SAME));
+    setDefaultState(getDefaultState().with(FILTER, Direction.NORTH));
   }
 
   @Nullable
@@ -102,7 +101,7 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-    builder.add(FACING, ENABLED, FILTER, MODE);
+    builder.add(FACING, ENABLED, FILTER);
   }
 
   @Override
