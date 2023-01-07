@@ -18,7 +18,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -181,15 +180,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   @Override
   public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
     desc.write(buf, pos);
-  }
-
-  public void applyChange(CustomPayloadC2SPacket packet) {
-    System.out.printf("Foo: %s\n", packet);
-    // this.desc = new FilterDesc(packet);
-  }
-
-  public void onFilterChange(FilterDesc packet) {
-    this.desc = packet;
   }
 
   public void setFilterDesc(FilterDesc desc) {
