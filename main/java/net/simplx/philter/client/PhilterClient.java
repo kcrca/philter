@@ -15,13 +15,11 @@ import net.minecraft.util.Identifier;
 @Environment(EnvType.CLIENT)
 public class PhilterClient implements ClientModInitializer {
 
-  public static final Block FILTER_BLOCK = new Block(
-      FabricBlockSettings.of(Material.METAL).strength(4.0f));
-
   @Override
   public void onInitializeClient() {
-    Registry.register(Registries.BLOCK, new Identifier("philter", "filter"), FILTER_BLOCK);
-    Registry.register(Registries.ITEM, new Identifier("philter", "filter"),
-        new BlockItem(FILTER_BLOCK, new FabricItemSettings()));
+    Block filterBlock = new Block(FabricBlockSettings.of(Material.METAL).strength(4.0f));
+    Registry.register(Registries.BLOCK, FILTER_ID, filterBlock);
+    Registry.register(Registries.ITEM, FILTER_ID,
+        new BlockItem(filterBlock, new FabricItemSettings()));
   }
 }

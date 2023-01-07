@@ -17,7 +17,7 @@ public class FilterDesc {
   private static final String MODE = "Mode";
 
   public FilterMode mode;
-  public List<String> matchSpecs;
+  public final List<String> matchSpecs;
 
   public FilterDesc(FilterMode mode, List<String> matchSpecs) {
     this.mode = mode;

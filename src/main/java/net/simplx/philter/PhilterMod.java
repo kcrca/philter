@@ -40,11 +40,9 @@ public class PhilterMod implements ModInitializer {
     Registry.register(Registries.ITEM, FILTER_ID,
         new BlockItem(FILTER_BLOCK, new FabricItemSettings()));
     ServerPlayNetworking.registerGlobalReceiver(FILTER_ID,
-        (server, player, handler, buf, responseSender) -> {
-          server.execute(() -> {
-            FilterBlockEntity.updateEntity(player, buf);
-          });
-        });
+        (server, player, handler, buf, responseSender) -> server.execute(() -> {
+          FilterBlockEntity.updateEntity(player, buf);
+        }));
   }
 
 }

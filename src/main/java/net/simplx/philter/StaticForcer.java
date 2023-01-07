@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 
 public class StaticForcer implements Forcer {
 
-  private Class<?> clz;
+  private final Class<?> clz;
 
   public StaticForcer(Class<?> clz) {
     this.clz = clz;

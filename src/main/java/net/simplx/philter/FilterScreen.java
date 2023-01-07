@@ -3,7 +3,6 @@ package net.simplx.philter;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.Collections;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -22,12 +21,15 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       "textures/gui/container/filter.png");
 
   private static final Text FILTER_TITLE = Text.translatable("philter.filter.name").append(":");
-  public static final int TITLE_TEXT_COLOR = 4210752; // A constant in minecraft source...somewhere?
+  private static final int TITLE_TEXT_COLOR = 4210752; // A constant in minecraft source...somewhere?
   private static final int TEXT_HEIGHT = MinecraftClient.getInstance().textRenderer.fontHeight + 2;
   private static final int FILTER_Y = 130 + TEXT_HEIGHT / 2;
   private static final int BORDER = 8;
   private static final int BUTTON_HEIGHT = TEXT_HEIGHT + 2;
-  public static final int BUTTON_WIDTH;
+  private static final int BUTTON_WIDTH;
+  private static final int SCROLLBAR_WIDTH = 12;
+  private static final int SCROLLBAR_HEIGHT = 15;
+
 
   private final FilterDesc filterDesc;
 
