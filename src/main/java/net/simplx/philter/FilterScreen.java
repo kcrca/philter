@@ -75,7 +75,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
             .omitKeyText().initially(desc.mode)
             .build(x + BORDER + textWidth, FILTER_Y, filterButtonWidth, BUTTON_HEIGHT, null,
                 (button, mode) -> setMode(mode)));
-    updateForMode();
 
     MutableText matchesAltText = Text.translatable("philter.filter_mode.matches_alt");
     editBox = addDrawableChild(
@@ -85,11 +84,13 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     editBox.setMaxLength(FilterDesc.MATCHES_MAX_LEN);
     editBox.setText(desc.matchSpec);
     editBox.setChangeListener(this::updateForSpec);
-    updateForSpec(desc.matchSpec);
 
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(x + SAVE_X, y + SAVE_Y,
             saveButtonWidth, BUTTON_HEIGHT).build());
+
+    updateForSpec(desc.matchSpec);
+    updateForMode();
   }
 
   @Override
@@ -139,8 +140,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   @Override
   public void close() {
-    storeText();
-    sendFilterDesc();
+    if (editBox != null && !editBox.getText().equals(desc.matchSpec)) {
+      storeText();
+      sendFilterDesc();
+    }
     super.close();
   }
 

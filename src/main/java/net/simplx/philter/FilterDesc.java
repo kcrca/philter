@@ -25,14 +25,14 @@ public class FilterDesc {
   }
 
   public FilterDesc(NbtCompound nbt) {
-    if (nbt.contains(MODE, NbtElement.INT_TYPE)) {
-      mode = FilterMode.values()[nbt.getInt(MODE)];
+    if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
+      mode = FilterMode.valueOf(nbt.getString(MODE));
     }
     matchSpec = nbt.getString(MATCHES);
   }
 
   public void writeNbt(NbtCompound nbt) {
-    nbt.putInt(MODE, mode.ordinal());
+    nbt.putString(MODE, mode.toString());
     if (matchSpec.length() > 0) {
       nbt.putString(MODE, matchSpec);
     }
