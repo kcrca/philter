@@ -2,7 +2,6 @@ package net.simplx.philter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
@@ -183,5 +182,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   public void setFilterDesc(FilterDesc desc) {
     this.desc = desc;
+    markDirty();
   }
 }

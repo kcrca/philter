@@ -34,7 +34,7 @@ public class FilterDesc {
   public void writeNbt(NbtCompound nbt) {
     nbt.putString(MODE, mode.toString());
     if (matchSpec.length() > 0) {
-      nbt.putString(MODE, matchSpec);
+      nbt.putString(MATCHES, matchSpec);
     }
   }
 
