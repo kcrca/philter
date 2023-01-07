@@ -1,5 +1,6 @@
 {
     "philter.filter.name": "Filter",
     "philter.filter.mode.only_same": "Only Same",
-    "philter.filter.mode.matches": "Matches"
+    "philter.filter.mode.matches": "Matches",
+    "philter.save": "Save"
 }

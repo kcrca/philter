@@ -1,13 +1,7 @@
 package net.simplx.philter;
 
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 
@@ -15,53 +9,38 @@ public class FilterDesc {
 
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
+  static final int MATCHES_MAX_LEN = 150;
 
   public FilterMode mode;
-  public final List<String> matchSpecs;
+  public String matchSpec;
 
-  public FilterDesc(FilterMode mode, List<String> matchSpecs) {
+  public FilterDesc(FilterMode mode, String matchSpec) {
     this.mode = mode;
-    this.matchSpecs = List.copyOf(matchSpecs);
+    this.matchSpec = matchSpec;
   }
 
   public FilterDesc(PacketByteBuf buf) {
     mode = buf.readEnumConstant(FilterMode.class);
-    matchSpecs = buf.readCollection(
-        PacketByteBuf.getMaxValidator(Lists::newArrayListWithCapacity, FilterBlock.MAX_FILTERS),
-        PacketByteBuf::readString);
+    matchSpec = buf.readString(MATCHES_MAX_LEN);
   }
 
   public FilterDesc(NbtCompound nbt) {
     if (nbt.contains(MODE, NbtElement.INT_TYPE)) {
       mode = FilterMode.values()[nbt.getInt(MODE)];
     }
-
-    if (!nbt.contains(MATCHES, NbtElement.STRING_TYPE)) {
-      matchSpecs = Collections.emptyList();
-    } else {
-      NbtList matches = nbt.getList(MATCHES, NbtElement.STRING_TYPE);
-      matchSpecs = new ArrayList<>(matches.size());
-      for (int i = 0; i < matches.size(); i++) {
-        matchSpecs.add(matches.getString(i));
-      }
-    }
+    matchSpec = nbt.getString(MATCHES);
   }
 
   public void writeNbt(NbtCompound nbt) {
     nbt.putInt(MODE, mode.ordinal());
-    if (matchSpecs.size() > 0) {
-      NbtList matches = new NbtList();
-      for (String matchSpec : matchSpecs) {
-        matches.add(NbtString.of(matchSpec));
-      }
-      nbt.put(MATCHES, matches);
+    if (matchSpec.length() > 0) {
+      nbt.putString(MODE, matchSpec);
     }
   }
 
   public void write(PacketByteBuf buf, BlockPos pos) {
     buf.writeEnumConstant(mode);
-    buf.writeCollection(matchSpecs,
-        (buf2, string) -> buf2.writeString(string, FilterBlock.MAX_FILTER_LEN));
+    buf.writeString(matchSpec, MATCHES_MAX_LEN);
     buf.writeBlockPos(pos);
   }
 }

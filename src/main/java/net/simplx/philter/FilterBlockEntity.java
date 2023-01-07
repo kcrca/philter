@@ -60,7 +60,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
-    desc = new FilterDesc(FilterMode.ONLY_SAME, Collections.emptyList());
+    desc = new FilterDesc(FilterMode.ONLY_SAME, "");
   }
 
   static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {
@@ -70,7 +70,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (entity != null) {
       entity.setFilterDesc(filterDesc);
     }
-    System.out.printf("Received: %s: %s", player.getName(), filterDesc);
   }
 
   @Override
