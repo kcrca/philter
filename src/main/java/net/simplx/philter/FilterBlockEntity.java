@@ -20,6 +20,7 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.visitor.StringNbtWriter;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -52,14 +53,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     ExtendedScreenHandlerFactory {
 
   private static final StaticForcer force = new StaticForcer(HopperBlockEntity.class);
-  public static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
-  public static final Field LAST_TICK_TIME_F = force.field("lastTickTime");
-  public static final Field TYPE_F = Forcer.field(BlockEntity.class, "type");
-  public static final Method NEEDS_COOLDOWN_M = force.method("needsCooldown");
-  public static final Method SET_TRANSFER_COOLDOWN_M = force.method("setTransferCooldown",
+  private static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
+  private static final Field LAST_TICK_TIME_F = force.field("lastTickTime");
+  private static final Field TYPE_F = Forcer.field(BlockEntity.class, "type");
+  private static final Method NEEDS_COOLDOWN_M = force.method("needsCooldown");
+  private static final Method SET_TRANSFER_COOLDOWN_M = force.method("setTransferCooldown",
       int.class);
-  public static final Method IS_FULL_M = force.method("isFull");
-  public static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
+  private static final Method IS_FULL_M = force.method("isFull");
+  private static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
       BlockState.class, Inventory.class);
 
   private FilterDesc desc;
@@ -188,7 +189,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (hopperStack.getCount() == 0) {
       return false;
     }
-    Item item = hopperStack.getItem();
     return switch (desc.mode) {
       case NONE -> false;
       case ONLY_SAME -> true;
@@ -204,18 +204,30 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item) {
     for (Pattern pattern : patterns) {
-      Optional<RegistryKey<Item>> key = item.getItem().getRegistryEntry().getKey();
+      Item it = item.getItem();
+      Optional<RegistryKey<Item>> key = it.getRegistryEntry().getKey();
       if (key.isEmpty()) {
         continue;
       }
       Identifier id = key.get().getValue();
-      if (pattern.matcher(id.toString()).matches() == yes || id.getNamespace().equals("minecraft")
-          && pattern.matcher(id.getPath()).matches() == yes) {
+      String nbtStr = "";
+      if (desc.exact) {
+        NbtCompound nbt = item.getNbt();
+        if (nbt == null) {
+          nbtStr = "{}";
+        } else {
+          nbtStr = new StringNbtWriter().apply(nbt);
+        }
+      }
+      if (pattern.matcher(id.toString() + nbtStr).matches() == yes
+          || id.getNamespace().equals("minecraft")
+          && pattern.matcher(id.getPath() + nbtStr).matches() == yes) {
         return true;
       }
     }
     return false;
   }
+
 
   private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item) {
     for (Identifier tag : tags) {
