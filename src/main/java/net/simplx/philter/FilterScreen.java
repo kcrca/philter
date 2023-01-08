@@ -6,17 +6,21 @@ import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
@@ -65,6 +69,31 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private Text filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
 
+  /**
+   * This class exists because EditBoxWidget does _not_ work around the fact that Screen will
+   * automatically close itself if the "inventory" key is pressed. So if the user types 'e' (or
+   * whatever) in their matches, the window goes away. This is the most direct way around this bug,
+   * and it ought to be fixed, but until then, we work around it by unbinding the inventory key,
+   * handling the key press, and then rebinding it.
+   */
+  private class HackedEditBoxWidget extends EditBoxWidget implements Forcer {
+
+    private static final Field BOUND_KEY_F = new StaticForcer(KeyBinding.class).field("boundKey");
+
+    public HackedEditBoxWidget(TextRenderer textRenderer, int x, int y, int width, int height,
+        Text placeholder, Text message) {
+      super(textRenderer, x, y, width, height, placeholder, message);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+      if (active && FilterScreen.this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
+        return true;
+      }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+  }
+
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
     passEvents = false;
@@ -104,6 +133,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   protected void init() {
     super.init();
 
+    // If I don't do this, whenever the user types an 'e' (or whatever) into the text box,
+    // the whole window will close.
+    // this.client.options.inventoryKey
+
     // Calculate the text- and font-relative values.
     Text saveText = Text.translatable("philter.save");
     Text exactText = Text.translatable("philter.exact");
@@ -129,8 +162,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
             (button, exact) -> setExact(exact)));
     MutableText matchesAltText = Text.translatable("philter.filter_mode.matches_alt");
     matchesBox = addDrawableChild(
-        new EditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W, MATCHES_H,
-            matchesAltText, matchesAltText));
+        new HackedEditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W,
+            MATCHES_H, matchesAltText, matchesAltText));
     matchesBox.setMaxLength(FilterDesc.MATCHES_MAX_LEN);
     matchesBox.setText(desc.matches);
     matchesBox.setChangeListener(this::matchesChanged);
@@ -217,6 +250,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
   }
 
+  @SuppressWarnings("unused")
   private void drawBox(MatrixStack matrices, int x, int y, int width, int height, int color) {
     drawHorizontalLine(matrices, x, x + width, y, color);
     drawHorizontalLine(matrices, x, x + width, y + height, color);
