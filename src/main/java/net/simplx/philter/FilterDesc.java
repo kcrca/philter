@@ -33,7 +33,8 @@ public class FilterDesc {
       mode = FilterMode.valueOf(nbt.getString(MODE));
     }
     matches = nbt.getString(MATCHES);
-    exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : true;
+    //noinspection SimplifiableConditionalExpression
+    exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
   }
 
   public void write(PacketByteBuf buf, BlockPos pos) {

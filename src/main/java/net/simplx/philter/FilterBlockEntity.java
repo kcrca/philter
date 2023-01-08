@@ -2,7 +2,11 @@ package net.simplx.philter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
+import java.util.regex.Pattern;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
@@ -17,9 +21,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShapes;
@@ -55,11 +63,25 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
       BlockState.class, Inventory.class);
 
   private FilterDesc desc;
+  private String compiledMatches;
+  private List<Identifier> tagsYes;
+  private List<Identifier> tagsNo;
+  private List<Pattern> patternsYes;
+  private List<Pattern> patternsNo;
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
     desc = new FilterDesc(FilterMode.ONLY_SAME, "");
+    compiledMatches = "";
+    resetCompiledMatches();
+  }
+
+  private void resetCompiledMatches() {
+    tagsYes = new ArrayList<>();
+    tagsNo = new ArrayList<>();
+    patternsYes = new ArrayList<>();
+    patternsNo = new ArrayList<>();
   }
 
   static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {
@@ -167,7 +189,68 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
       return false;
     }
     Item item = hopperStack.getItem();
-    return item.getName().getContent().toString().contains("sand");
+    return switch (desc.mode) {
+      case NONE -> false;
+      case ONLY_SAME -> true;
+      case MATCHES -> filterMatches(hopperStack);
+    };
+  }
+
+  private boolean filterMatches(ItemStack item) {
+    ensureMatchesCompiled();
+    return checkTags(tagsYes, true, item) || checkTags(tagsNo, false, item) || checkPatterns(
+        patternsYes, true, item);
+  }
+
+  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item) {
+    for (Pattern pattern : patterns) {
+      Optional<RegistryKey<Item>> key = item.getItem().getRegistryEntry().getKey();
+      if (key.isEmpty()) {
+        continue;
+      }
+      Identifier id = key.get().getValue();
+      if (pattern.matcher(id.toString()).matches() == yes || id.getNamespace().equals("minecraft")
+          && pattern.matcher(id.getPath()).matches() == yes) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item) {
+    for (Identifier tag : tags) {
+      TagKey<Item> t = TagKey.of(RegistryKeys.ITEM, tag);
+      boolean isIn = item.isIn(t);
+      if (isIn == yes) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void ensureMatchesCompiled() {
+    if (compiledMatches.equals(desc.matches)) {
+      return;
+    }
+    compiledMatches = desc.matches;
+
+    resetCompiledMatches();
+    for (String spec : desc.matches.split("[\\s,]+")) {
+      if (spec.length() == 0) {
+        continue;
+      }
+      var yes = spec.charAt(0) != '!';
+      if (!yes) {
+        spec = spec.substring(1);
+      }
+      if (spec.startsWith("#")) {
+        spec = spec.substring(1);
+        var id = Identifier.tryParse(spec);
+        (yes ? tagsYes : tagsNo).add(id);
+      } else {
+        (yes ? patternsYes : patternsNo).add(Pattern.compile(spec));
+      }
+    }
   }
 
   @Override
