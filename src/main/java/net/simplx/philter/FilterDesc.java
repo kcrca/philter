@@ -9,6 +9,7 @@ public class FilterDesc {
 
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
+  private static final String GENERAL = "General";
   static final int MATCHES_MAX_LEN = 150;
 
   public FilterMode mode;
