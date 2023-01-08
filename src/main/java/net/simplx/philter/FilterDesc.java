@@ -9,39 +9,45 @@ public class FilterDesc {
 
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
-  private static final String GENERAL = "General";
+  private static final String EXACT = "Exact";
   static final int MATCHES_MAX_LEN = 150;
 
   public FilterMode mode;
-  public String matchSpec;
+  public String matches;
+  public boolean exact;
 
-  public FilterDesc(FilterMode mode, String matchSpec) {
+  public FilterDesc(FilterMode mode, String matches) {
     this.mode = mode;
-    this.matchSpec = matchSpec;
+    this.matches = matches;
+    exact = true;
   }
 
   public FilterDesc(PacketByteBuf buf) {
     mode = buf.readEnumConstant(FilterMode.class);
-    matchSpec = buf.readString(MATCHES_MAX_LEN);
+    matches = buf.readString(MATCHES_MAX_LEN);
+    exact = buf.readBoolean();
   }
 
   public FilterDesc(NbtCompound nbt) {
     if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
       mode = FilterMode.valueOf(nbt.getString(MODE));
     }
-    matchSpec = nbt.getString(MATCHES);
-  }
-
-  public void writeNbt(NbtCompound nbt) {
-    nbt.putString(MODE, mode.toString());
-    if (matchSpec.length() > 0) {
-      nbt.putString(MATCHES, matchSpec);
-    }
+    matches = nbt.getString(MATCHES);
+    exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : true;
   }
 
   public void write(PacketByteBuf buf, BlockPos pos) {
     buf.writeEnumConstant(mode);
-    buf.writeString(matchSpec, MATCHES_MAX_LEN);
+    buf.writeString(matches, MATCHES_MAX_LEN);
+    buf.writeBoolean(exact);
     buf.writeBlockPos(pos);
+  }
+
+  public void writeNbt(NbtCompound nbt) {
+    nbt.putString(MODE, mode.toString());
+    if (matches.length() > 0) {
+      nbt.putString(MATCHES, matches);
+    }
+    nbt.putBoolean(EXACT, exact);
   }
 }

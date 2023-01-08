@@ -1,6 +1,8 @@
 package net.simplx.philter;
 
 import static net.simplx.philter.FilterMode.MATCHES;
+import static net.simplx.philter.FilterMode.NONE;
+import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -61,6 +63,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private ButtonWidget saveButton;
 
   private Text filterTitle;
+  private CyclingButtonWidget<Boolean> exactButton;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -108,20 +111,20 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     TextHelper th = new TextHelper();
     int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
-    int modeW = th.buttonW(Arrays.stream(FilterMode.values())
+    int modeW = th.buttonW(Arrays.stream(values())
         .map(mode -> Text.translatable("philter.filter.mode." + mode.toString().toLowerCase()))
         .collect(Collectors.toList()));
     int saveButtonW = th.buttonW(saveText);
 
     int modeX = x + MODE_X + filterTitleW;
     addDrawableChild(
-        CyclingButtonWidget.builder(FilterScreen::filterText).values(FilterMode.values())
-            .omitKeyText().initially(desc.mode)
+        CyclingButtonWidget.builder(FilterScreen::filterText).values(values()).omitKeyText()
+            .initially(desc.mode)
             .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
 
     int exactW = th.onOffButtonW(exactText);
     int exactX = backgroundWidth - exactW - BORDER;
-    addDrawableChild(CyclingButtonWidget.onOffBuilder(true)
+    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
         .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
             (button, exact) -> setExact(exact)));
     MutableText matchesAltText = Text.translatable("philter.filter_mode.matches_alt");
@@ -129,20 +132,16 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         new EditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W, MATCHES_H,
             matchesAltText, matchesAltText));
     matchesBox.setMaxLength(FilterDesc.MATCHES_MAX_LEN);
-    matchesBox.setText(desc.matchSpec);
-    matchesBox.setChangeListener(this::updateForSpec);
+    matchesBox.setText(desc.matches);
+    matchesBox.setChangeListener(this::matchesChanged);
 
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(this.x + SAVE_X, y + SAVE_Y,
             saveButtonW, BUTTON_H).build());
 
-    updateForSpec(desc.matchSpec);
-    updateForMode();
+    matchesChanged(desc.matches);
+    reactToChange();
   }
-
-  private void setExact(boolean exact) {
-  }
-
 
   @Override
   protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
@@ -151,8 +150,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         TITLE_TEXT_COLOR);
   }
 
-  private void updateForSpec(String text) {
-    saveButton.visible = !text.equals(desc.matchSpec) && matchesBox.visible;
+  private void matchesChanged(String text) {
+    saveButton.visible = !text.equals(desc.matches) && matchesBox.visible;
   }
 
   private static Text filterText(FilterMode value) {
@@ -161,17 +160,23 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void setMode(FilterMode mode) {
     desc.mode = mode;
-    updateForMode();
+    reactToChange();
+  }
+
+  private void setExact(boolean exact) {
+    desc.exact = exact;
     sendFilterDesc();
   }
 
-  private void updateForMode() {
+  private void reactToChange() {
     matchesBox.visible = desc.mode == MATCHES;
+    exactButton.visible = desc.mode != NONE;
+    sendFilterDesc();
   }
 
   private void storeText() {
-    desc.matchSpec = matchesBox.getText();
-    updateForSpec(desc.matchSpec);
+    desc.matches = matchesBox.getText();
+    matchesChanged(desc.matches);
   }
 
   private void save(ButtonWidget unused) {
@@ -196,7 +201,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   @Override
   public void close() {
-    if (matchesBox != null && !matchesBox.getText().equals(desc.matchSpec)) {
+    if (matchesBox != null && !matchesBox.getText().equals(desc.matches)) {
       storeText();
       sendFilterDesc();
     }

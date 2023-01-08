@@ -4,8 +4,8 @@ import net.minecraft.util.StringIdentifiable;
 
 public enum FilterMode implements StringIdentifiable {
   ONLY_SAME,
-  MATCHES
-  ;
+  MATCHES,
+  NONE;
 
   @Override
   public String asString() {
