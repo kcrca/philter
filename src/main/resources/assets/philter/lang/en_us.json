@@ -4,6 +4,5 @@
     "philter.filter.mode.matches": "Matches",
     "philter.filter_mode.matches_alt": "Match Specification",
     "philter.save": "Save",
-    "philter.exact": "Exact",
-    "philter.general": "General"
+    "philter.exact": "Exact"
 }

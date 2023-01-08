@@ -44,7 +44,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final int MODE_Y = BORDER;
   private static final int MODE_H = BUTTON_H;
 
-  private static final int GENERAL_Y = MODE_Y;
+  private static final int EXACT_Y = MODE_Y;
 
   // EditBox draws the max-char display _outside_ itself, this gives room for that.
   private static final int MATCHES_MAX_CHAR_H = TEXT_H * 3 / 2;
@@ -71,22 +71,47 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     desc = handler.getFilterDesc();
   }
 
+  class TextHelper {
+
+    final int enW = textRenderer.getWidth("n");
+
+    int textW(Text text) {
+      return textRenderer.getWidth(text);
+    }
+
+    int buttonW(Text text) {
+      return textW(text) + 2 * enW;
+    }
+
+    int buttonW(Iterable<Text> texts) {
+      int maxW = 0;
+      for (Text t : texts) {
+        maxW = Math.max(buttonW(t), maxW);
+      }
+      return maxW;
+    }
+
+    int onOffButtonW(Text text) {
+      int onOffW = buttonW(
+          List.of(Text.translatable("options.on"), Text.translatable("options.off")));
+      return textW(text) + textW(Text.literal(": ")) + onOffW;
+    }
+  }
+
   protected void init() {
     super.init();
 
     // Calculate the text- and font-relative values.
     Text saveText = Text.translatable("philter.save");
     Text exactText = Text.translatable("philter.exact");
-    Text generalText = Text.translatable("philter.general");
     filterTitle = Text.translatable("philter.filter.name").append(":");
 
-    int enW = textRenderer.getWidth("n");
-    int filterTitleW = textW(filterTitle) + textRenderer.getWidth(" ");
-    int modeW = buttonW(Arrays.stream(FilterMode.values())
+    TextHelper th = new TextHelper();
+    int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
+    int modeW = th.buttonW(Arrays.stream(FilterMode.values())
         .map(mode -> Text.translatable("philter.filter.mode." + mode.toString().toLowerCase()))
-        .collect(Collectors.toList()), enW);
-    int saveButtonW = buttonW(saveText, enW);
-    int exactButtonW = buttonW(exactText, enW);
+        .collect(Collectors.toList()));
+    int saveButtonW = th.buttonW(saveText);
 
     int modeX = x + MODE_X + filterTitleW;
     addDrawableChild(
@@ -94,11 +119,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
             .omitKeyText().initially(desc.mode)
             .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
 
-    int generalW = onOffButtonW(exactText, enW);
-    int generalX = backgroundWidth - generalW - BORDER;
+    int exactW = th.onOffButtonW(exactText);
+    int exactX = backgroundWidth - exactW - BORDER;
     addDrawableChild(CyclingButtonWidget.onOffBuilder(true)
-        .build(x + generalX, y + GENERAL_Y, generalW, BUTTON_H, exactText,
-            (button, general) -> setGeneral(general)));
+        .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
+            (button, exact) -> setExact(exact)));
     MutableText matchesAltText = Text.translatable("philter.filter_mode.matches_alt");
     matchesBox = addDrawableChild(
         new EditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W, MATCHES_H,
@@ -115,30 +140,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     updateForMode();
   }
 
-  private void setGeneral(boolean general) {
+  private void setExact(boolean exact) {
   }
 
-  private int textW(Text text) {
-    return textRenderer.getWidth(text);
-  }
-
-  private int buttonW(Text text, int enW) {
-    return textW(text) + 2 * enW;
-  }
-
-  private int buttonW(Iterable<Text> texts, int enW) {
-    int maxW = 0;
-    for (Text t : texts) {
-      maxW = Math.max(buttonW(t, enW), maxW);
-    }
-    return maxW;
-  }
-
-  private int onOffButtonW(Text text, int enW) {
-    int onOffW = buttonW(List.of(Text.translatable("options.on"), Text.translatable("options.off")),
-        enW);
-    return textW(text) + textW(Text.literal(": ")) + onOffW;
-  }
 
   @Override
   protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
