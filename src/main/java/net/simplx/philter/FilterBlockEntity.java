@@ -2,12 +2,10 @@ package net.simplx.philter;
 
 import static net.simplx.philter.FilterBlock.FILTER;
 
+import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
-import java.util.regex.Pattern;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
@@ -24,7 +22,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -64,23 +61,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
-  private List<Identifier> tagsYes;
-  private List<Identifier> tagsNo;
-  private List<Pattern> patternsYes;
-  private List<Pattern> patternsNo;
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
-    desc = new FilterDesc(FilterMode.ONLY_SAME, "");
-    filterMatches = new FilterMatches("");
-  }
-
-  private void resetCompiledMatches() {
-    tagsYes = new ArrayList<>();
-    tagsNo = new ArrayList<>();
-    patternsYes = new ArrayList<>();
-    patternsNo = new ArrayList<>();
+    desc = new FilterDesc(FilterMode.ONLY_SAME, ImmutableList.of(), false);
+    filterMatches = new FilterMatches(ImmutableList.of());
   }
 
   static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {

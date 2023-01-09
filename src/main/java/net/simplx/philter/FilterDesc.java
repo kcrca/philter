@@ -1,53 +1,86 @@
 package net.simplx.philter;
 
+import static java.util.Objects.requireNonNull;
+import static net.simplx.philter.FilterMode.ONLY_SAME;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FilterDesc {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(FilterDesc.class);
 
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
   private static final String EXACT = "Exact";
-  static final int MATCHES_MAX_LEN = 150;
+  static final int MATCHES_MAX_COUNT = 12;
 
   public FilterMode mode;
-  public String matches;
+  public ImmutableList<String> matches;
   public boolean exact;
 
-  public FilterDesc(FilterMode mode, String matches) {
+  public FilterDesc(FilterMode mode, List<String> matches, boolean exact) {
+    if (matches.size() > MATCHES_MAX_COUNT) {
+      LOGGER.warn(matches.size() + ": More than " + MATCHES_MAX_COUNT + " matches, truncated");
+      matches = matches.subList(0, MATCHES_MAX_COUNT);
+    }
     this.mode = mode;
-    this.matches = matches;
-    exact = true;
+    this.matches = ImmutableList.copyOf(matches);
+    this.exact = exact;
   }
 
   public FilterDesc(PacketByteBuf buf) {
-    mode = buf.readEnumConstant(FilterMode.class);
-    matches = buf.readString(MATCHES_MAX_LEN);
-    exact = buf.readBoolean();
+    this(requireNonNull(buf.readNbt()));
   }
 
   public FilterDesc(NbtCompound nbt) {
-    if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
-      mode = FilterMode.valueOf(nbt.getString(MODE));
+    try {
+      mode = ONLY_SAME;
+      if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
+        mode = FilterMode.valueOf(nbt.getString(MODE));
+      }
+      if (!nbt.contains(MATCHES, NbtElement.LIST_TYPE)) {
+        matches = ImmutableList.of();
+      } else {
+        NbtList nbtList = nbt.getList(MATCHES, NbtElement.STRING_TYPE);
+        ImmutableList.Builder<String> matches = ImmutableList.builder();
+        for (int i = 0; i < nbtList.size(); i++) {
+          matches.add(nbtList.getString(i));
+        }
+        this.matches = matches.build();
+      }
+      //noinspection SimplifiableConditionalExpression
+      exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
+    } catch (IllegalArgumentException | NullPointerException e) {
+      mode = ONLY_SAME;
+      matches = ImmutableList.of();
+      exact = true;
     }
-    matches = nbt.getString(MATCHES);
-    //noinspection SimplifiableConditionalExpression
-    exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
   }
 
   public void write(PacketByteBuf buf, BlockPos pos) {
-    buf.writeEnumConstant(mode);
-    buf.writeString(matches, MATCHES_MAX_LEN);
-    buf.writeBoolean(exact);
+    NbtCompound nbt = new NbtCompound();
+    writeNbt(nbt);
+    buf.writeNbt(nbt);
     buf.writeBlockPos(pos);
   }
 
   public void writeNbt(NbtCompound nbt) {
     nbt.putString(MODE, mode.toString());
-    if (matches.length() > 0) {
-      nbt.putString(MATCHES, matches);
+    if (matches.size() > 0) {
+      NbtList nbtList = new NbtList();
+      for (int i = 0; i < matches.size(); i++) {
+        nbtList.add(NbtString.of(matches.get(i)));
+      }
+      nbt.put(MATCHES, nbtList);
     }
     nbt.putBoolean(EXACT, exact);
   }

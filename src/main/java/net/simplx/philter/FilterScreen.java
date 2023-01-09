@@ -1,25 +1,27 @@
 package net.simplx.philter;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.stream;
+import static net.simplx.philter.FilterDesc.MATCHES_MAX_COUNT;
 import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.EditBoxWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
@@ -62,40 +64,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final int SAVE_X = MODE_X;
   private static final int SAVE_Y = MATCHES_Y + MATCHES_H + MATCHES_MAX_CHAR_H - BUTTON_H;
 
+  private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
+
   private final FilterDesc desc;
-  private HackedEditBoxWidget matchesBox;
-  private ButtonWidget saveButton;
 
   private Text filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
-
-  /**
-   * This class exists because EditBoxWidget does _not_ work around the fact that Screen will
-   * automatically close itself if the "inventory" key is pressed. So if the user types 'e' (or
-   * whatever) in their matches, the window goes away. This is the most direct way around this bug,
-   * and it ought to be fixed, but until then, we work around it by consuming that key when it is
-   * pressed before it gets to Screen.keyPressed(), so it is handled like a regular key. This seems
-   * like it is mostly harmless, but maybe I'm missing something.
-   */
-  private class HackedEditBoxWidget extends EditBoxWidget implements Forcer {
-
-    private static final Field BOUND_KEY_F = new StaticForcer(KeyBinding.class).field("boundKey");
-
-    public HackedEditBoxWidget(TextRenderer textRenderer, int x, int y, int width, int height,
-        Text placeholder, Text message) {
-      super(textRenderer, x, y, width, height, placeholder, message);
-    }
-
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-      //noinspection ConstantConditions
-      if (active && FilterScreen.this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
-        return true;
-      }
-      return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-  }
+  private TextFieldWidget[] matchesFields;
+  private ButtonWidget saveButton;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -152,8 +128,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     filterTitle = th.text("philter.filter.name").append(":");
 
     int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
-    int modeW = th.buttonW(Arrays.stream(values())
-        .map(mode -> th.text("philter.filter.mode." + mode.toString().toLowerCase()))
+    int modeW = th.buttonW(stream(values()).map(
+            mode -> th.text("philter.filter.mode." + mode.toString().toLowerCase()))
         .collect(Collectors.toList()));
     int saveButtonW = th.buttonW(saveText);
 
@@ -171,21 +147,28 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
             (button, exact) -> setExact(exact)));
     Text matchesAltText = th.text("philter.filter_mode.matches_alt");
-    matchesBox = addDrawableChild(
-        new HackedEditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W,
-            MATCHES_H, matchesAltText, matchesAltText));
-    matchesBox.setMaxLength(FilterDesc.MATCHES_MAX_LEN);
-    matchesBox.setText(desc.matches);
-    matchesBox.setChangeListener(this::matchesChanged);
-    // The tooltip covers up the Save button, don't know where to move it, nor care enough currently
-    // matchesBox.setTooltip(th.tooltip("philter.filter.mode.matches.tooltip"));
+    Tooltip matchTooltip = th.tooltip("philter.filter.mode.matches.tooltip");
+    matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
+    for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
+      int row = i % (MATCHES_MAX_COUNT / 2);
+      int col = i / (MATCHES_MAX_COUNT / 2);
+      var field = matchesFields[i] = addDrawableChild(
+          new TextFieldWidget(textRenderer, x + MATCHES_X + col * MATCHES_W / 2,
+              y + MATCHES_Y + TEXT_H * row, MATCHES_W / 2, TEXT_H, th.text("")));
+      final int index = i;
+      field.setChangedListener(text -> matchChanged(index, text));
+      // Set here instead of on creation, so all text is handled through the same change mechansim.
+      field.setText(i < desc.matches.size() ? desc.matches.get(i) : "");
+      field.setTooltip(matchTooltip);
+      field.visible = false;
+    }
 
+    // TODO: Add all/any button
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(this.x + SAVE_X, y + SAVE_Y,
             saveButtonW, BUTTON_H).tooltip(th.tooltip("philter.save.tooltip")).build());
 
-    matchesChanged(desc.matches);
-    matchesBox.visible = false; // ... so if it needs to be visible, it will be newly visible.
+    setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
     reactToChange();
   }
 
@@ -196,8 +179,29 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         TITLE_TEXT_COLOR);
   }
 
-  private void matchesChanged(String text) {
-    saveButton.visible = !text.equals(desc.matches) && matchesBox.visible;
+  private void matchChanged(int i, String text) {
+    String spec = text.trim();
+    TextFieldWidget field = matchesFields[i];
+    if (!spec.equals(text)) {
+      // This will cause recursion back into here, so just return.
+      field.setText(spec);
+      return;
+    }
+
+    // Color the text based on validity.
+    field.setEditableColor(0xffffff);
+    if (spec.isEmpty() || RESOURCE_PAT.matcher(spec).matches()) {
+      return;
+    }
+    try {
+      field.setTooltip(null);
+      Pattern.compile(spec);
+      return;
+    } catch (PatternSyntaxException e) {
+      field.setTooltip(Tooltip.of(Text.literal(e.getMessage())));
+    }
+    field.setEditableColor(0xff0000);
+    reactToChange();
   }
 
   private static Text filterText(FilterMode value) {
@@ -216,24 +220,42 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void reactToChange() {
     exactButton.visible = desc.mode != NONE;
-    var wasVisible = matchesBox.visible;
+    saveButton.visible = anyMatchChanged();
+
+    // We have to deal with focus before changing visibility
+    var wasVisible = matchesFields[0].visible;
     boolean newVisible = desc.mode == MATCHES;
-    if (newVisible) {
-      if (!wasVisible) {
-        setInitialFocus(matchesBox);
-      }
-    } else {
-      if (wasVisible) {
-        matchesBox.changeFocus(true);
+    if (!wasVisible && newVisible) {
+      setInitialFocus(matchesFields[0]);
+    } else if (wasVisible && !newVisible) {
+      if (stream(matchesFields).anyMatch(ClickableWidget::isFocused)) {
+        TextFieldWidget lastField = matchesFields[matchesFields.length - 1];
+        setFocused(lastField);
+        lastField.changeFocus(true);
       }
     }
-    matchesBox.visible = newVisible;
+    setMatchesVisible(newVisible);
+
     sendFilterDesc();
   }
 
+  private boolean anyMatchChanged() {
+    for (int i = 0; i < matchesFields.length; i++) {
+      String orig = i < desc.matches.size() ? desc.matches.get(i) : "";
+      if (!matchesFields[i].getText().equals(orig)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void setMatchesVisible(boolean newVisible) {
+    stream(matchesFields).forEach(field -> field.visible = newVisible);
+  }
+
   private void storeText() {
-    desc.matches = matchesBox.getText();
-    matchesChanged(desc.matches);
+    desc.matches = stream(matchesFields).map(TextFieldWidget::getText)
+        .filter(text -> !text.isBlank()).collect(toImmutableList());
   }
 
   private void save(ButtonWidget unused) {
@@ -258,10 +280,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   @Override
   public void close() {
-    if (matchesBox != null && !matchesBox.getText().equals(desc.matches)) {
+    if (anyMatchChanged()) {
       storeText();
-      sendFilterDesc();
     }
+    sendFilterDesc();
     super.close();
   }
 
