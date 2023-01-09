@@ -15,6 +15,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
@@ -107,6 +108,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   class TextHelper {
 
+    Tooltip tooltip(String keyName) {
+      return Tooltip.of(text(keyName));
+    }
+
+    MutableText text(String keyName) {
+      return Text.translatable(keyName);
+    }
+
     final int enW = textRenderer.getWidth("n");
 
     int textW(Text text) {
@@ -135,44 +144,45 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   protected void init() {
     super.init();
 
-    // If I don't do this, whenever the user types an 'e' (or whatever) into the text box,
-    // the whole window will close.
-    // this.client.options.inventoryKey
+    TextHelper th = new TextHelper();
 
     // Calculate the text- and font-relative values.
-    Text saveText = Text.translatable("philter.save");
-    Text exactText = Text.translatable("philter.exact");
-    filterTitle = Text.translatable("philter.filter.name").append(":");
+    Text saveText = th.text("philter.filter.save");
+    Text exactText = th.text("philter.filter.exact");
+    filterTitle = th.text("philter.filter.name").append(":");
 
-    TextHelper th = new TextHelper();
     int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
     int modeW = th.buttonW(Arrays.stream(values())
-        .map(mode -> Text.translatable("philter.filter.mode." + mode.toString().toLowerCase()))
+        .map(mode -> th.text("philter.filter.mode." + mode.toString().toLowerCase()))
         .collect(Collectors.toList()));
     int saveButtonW = th.buttonW(saveText);
 
     int modeX = x + MODE_X + filterTitleW;
     addDrawableChild(
         CyclingButtonWidget.builder(FilterScreen::filterText).values(values()).omitKeyText()
-            .initially(desc.mode)
+            .initially(desc.mode).tooltip(value -> th.tooltip(
+                "philter.filter.mode." + value.toString().toLowerCase() + ".tooltip"))
             .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
 
     int exactW = th.onOffButtonW(exactText);
     int exactX = backgroundWidth - exactW - BORDER;
     exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
+        .tooltip(value -> th.tooltip("philter.filter.exact." + value + ".tooltip"))
         .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
             (button, exact) -> setExact(exact)));
-    MutableText matchesAltText = Text.translatable("philter.filter_mode.matches_alt");
+    Text matchesAltText = th.text("philter.filter_mode.matches_alt");
     matchesBox = addDrawableChild(
         new HackedEditBoxWidget(textRenderer, this.x + MATCHES_X, y + MATCHES_Y, MATCHES_W,
             MATCHES_H, matchesAltText, matchesAltText));
     matchesBox.setMaxLength(FilterDesc.MATCHES_MAX_LEN);
     matchesBox.setText(desc.matches);
     matchesBox.setChangeListener(this::matchesChanged);
+    // The tooltip covers up the Save button, don't know where to move it, nor care enough currently
+    // matchesBox.setTooltip(th.tooltip("philter.filter.mode.matches.tooltip"));
 
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(this.x + SAVE_X, y + SAVE_Y,
-            saveButtonW, BUTTON_H).build());
+            saveButtonW, BUTTON_H).tooltip(th.tooltip("philter.save.tooltip")).build());
 
     matchesChanged(desc.matches);
     matchesBox.visible = false; // ... so if it needs to be visible, it will be newly visible.
