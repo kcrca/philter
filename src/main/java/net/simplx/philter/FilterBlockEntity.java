@@ -209,7 +209,8 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (!filterMatches.input.equals(desc.matches)) {
       filterMatches = new FilterMatches(desc.matches);
     }
-    return filterMatches.matchAny(item, desc.exact);
+    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, desc.matchAll):filterMatches.matchAny(item, desc.exact,
+        desc.matchAll);
   }
 
   @Override

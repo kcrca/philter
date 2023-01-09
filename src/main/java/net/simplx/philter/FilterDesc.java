@@ -21,11 +21,13 @@ public class FilterDesc {
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
   private static final String EXACT = "Exact";
+  private static final String MATCH_ALL = "MatchAll";
   static final int MATCHES_MAX_COUNT = 12;
 
   public FilterMode mode;
   public ImmutableList<String> matches;
   public boolean exact;
+  public boolean matchAll;
 
   public FilterDesc(FilterMode mode, List<String> matches, boolean exact) {
     if (matches.size() > MATCHES_MAX_COUNT) {
@@ -41,6 +43,7 @@ public class FilterDesc {
     this(requireNonNull(buf.readNbt()));
   }
 
+  @SuppressWarnings("SimplifiableConditionalExpression")
   public FilterDesc(NbtCompound nbt) {
     try {
       mode = ONLY_SAME;
@@ -57,13 +60,28 @@ public class FilterDesc {
         }
         this.matches = matches.build();
       }
-      //noinspection SimplifiableConditionalExpression
+      matchAll = nbt.contains(MATCH_ALL, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
       exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
     } catch (IllegalArgumentException | NullPointerException e) {
       mode = ONLY_SAME;
       matches = ImmutableList.of();
       exact = true;
     }
+  }
+
+  public void writeNbt(NbtCompound nbt) {
+    nbt.putString(MODE, mode.toString());
+    if (matches.size() > 0) {
+      NbtList nbtList = new NbtList();
+      for (int i = 0; i < matches.size(); i++) {
+        nbtList.add(NbtString.of(matches.get(i)));
+      }
+      nbt.put(MATCHES, nbtList);
+      if (matchAll) {
+        nbt.putBoolean(MATCH_ALL, matchAll);
+      }
+    }
+    nbt.putBoolean(EXACT, exact);
   }
 
   public String match(int index) {
@@ -75,17 +93,5 @@ public class FilterDesc {
     writeNbt(nbt);
     buf.writeNbt(nbt);
     buf.writeBlockPos(pos);
-  }
-
-  public void writeNbt(NbtCompound nbt) {
-    nbt.putString(MODE, mode.toString());
-    if (matches.size() > 0) {
-      NbtList nbtList = new NbtList();
-      for (int i = 0; i < matches.size(); i++) {
-        nbtList.add(NbtString.of(matches.get(i)));
-      }
-      nbt.put(MATCHES, nbtList);
-    }
-    nbt.putBoolean(EXACT, exact);
   }
 }

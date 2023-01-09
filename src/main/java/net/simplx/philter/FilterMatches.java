@@ -15,7 +15,6 @@ import net.minecraft.util.Identifier;
 
 public class FilterMatches {
 
-
   public final ImmutableList<String> input;
   public final ImmutableList<Identifier> tagsYes;
   public final ImmutableList<Identifier> tagsNo;
@@ -49,24 +48,33 @@ public class FilterMatches {
     this.patternsNo = patternsNo.build();
   }
 
-  public boolean matchAny(ItemStack item, boolean exact) {
-    return checkTags(tagsYes, true, item) || checkTags(tagsNo, false, item) || checkPatterns(
-        patternsYes, true, item, exact) || checkPatterns(patternsNo, false, item, exact);
+  public boolean matchAny(ItemStack item, boolean exact, boolean matchAll) {
+    return checkTags(tagsYes, true, item, matchAll) || checkTags(tagsNo, false, item, matchAll)
+        || checkPatterns(patternsYes, true, item, exact, matchAll) || checkPatterns(patternsNo,
+        false, item, exact, matchAll);
   }
 
-  private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item) {
+  public boolean matchAll(ItemStack item, boolean exact, boolean matchAll) {
+    return checkTags(tagsYes, true, item, matchAll) && checkTags(tagsNo, false, item, matchAll)
+        && checkPatterns(patternsYes, true, item, exact, matchAll) && checkPatterns(patternsNo,
+        false, item, exact, matchAll);
+  }
+
+  private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item, boolean matchAll) {
     for (Identifier tag : tags) {
       TagKey<Item> t = TagKey.of(RegistryKeys.ITEM, tag);
       boolean isIn = item.isIn(t);
-      if (isIn == yes) {
+      if (!matchAll && isIn == yes) {
         return true;
+      } else if (matchAll && isIn != yes) {
+        return false;
       }
     }
-    return false;
+    return matchAll;
   }
 
-  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item,
-      boolean exact) {
+  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item, boolean exact,
+      boolean matchAll) {
     for (Pattern pattern : patterns) {
       Item it = item.getItem();
       Optional<RegistryKey<Item>> key = it.getRegistryEntry().getKey();
@@ -83,13 +91,16 @@ public class FilterMatches {
           nbtStr = new StringNbtWriter().apply(nbt);
         }
       }
-      if (pattern.matcher(id.toString() + nbtStr).matches() == yes
+      boolean isIn = pattern.matcher(id.toString() + nbtStr).matches() == yes
           || id.getNamespace().equals("minecraft")
-          && pattern.matcher(id.getPath() + nbtStr).matches() == yes) {
+          && pattern.matcher(id.getPath() + nbtStr).matches() == yes;
+      if (!matchAll && isIn == yes) {
         return true;
+      } else if (matchAll && isIn != yes) {
+        return false;
       }
     }
-    return false;
+    return matchAll;
   }
 
 }

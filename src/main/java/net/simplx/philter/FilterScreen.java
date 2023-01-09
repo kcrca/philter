@@ -8,6 +8,7 @@ import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -54,15 +55,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final int EXACT_Y = MODE_Y;
 
-  // EditBox draws the max-char display _outside_ itself, this gives room for that.
-  private static final int MATCHES_MAX_CHAR_H = TEXT_H * 3 / 2;
-  private static final int MATCHES_X = MODE_X;
-  private static final int MATCHES_Y = MODE_Y + MODE_H + BORDER;
-  private static final int MATCHES_W = SCREEN_W - MATCHES_X - BORDER;
-  private static final int MATCHES_H = SCREEN_H - MATCHES_Y - BORDER - MATCHES_MAX_CHAR_H;
+  private static final int ALL_X = MODE_X;
+  private static final int ALL_Y = MODE_Y + MODE_H + BORDER;
 
-  private static final int SAVE_X = MODE_X;
-  private static final int SAVE_Y = MATCHES_Y + MATCHES_H + MATCHES_MAX_CHAR_H - BUTTON_H;
+  private static final int SAVE_Y = ALL_Y;
+
+  private static final int MATCHES_X = MODE_X;
+  private static final int MATCHES_Y = ALL_Y + BUTTON_H + BORDER;
+  private static final int MATCHES_W = SCREEN_W - MATCHES_X - BORDER;
 
   private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
 
@@ -71,6 +71,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private Text filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
   private TextFieldWidget[] matchesFields;
+  private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
   private Tooltip matchTooltip;
   private boolean initializing;
@@ -128,12 +129,15 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     // Calculate the text- and font-relative values.
     Text saveText = th.text("philter.filter.save");
     Text exactText = th.text("philter.filter.exact");
+    Text allText = th.text("philter.filter.all");
+    Text anyText = th.text("philter.filter.any");
     filterTitle = th.text("philter.filter.name").append(":");
 
     int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
     int modeW = th.buttonW(stream(values()).map(
             mode -> th.text("philter.filter.mode." + mode.toString().toLowerCase()))
         .collect(Collectors.toList()));
+    int allButtonW = th.buttonW(ImmutableList.of(anyText, allText));
     int saveButtonW = th.buttonW(saveText);
 
     int modeX = x + MODE_X + filterTitleW;
@@ -149,7 +153,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         .tooltip(value -> th.tooltip("philter.filter.exact." + value + ".tooltip"))
         .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
             (button, exact) -> setExact(exact)));
-    matchTooltip = th.tooltip("philter.filter.mode.matches.tooltip");
+
     matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
     boolean foundFocus = false;
     for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
@@ -167,14 +171,18 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         foundFocus = true;
         setInitialFocus(field);
       }
-      field.setTooltip(matchTooltip);
       field.visible = false;
     }
 
-    // TODO: Add all/any button
+    allButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true)
+        .omitKeyText()
+        .build(x + ALL_X, y + ALL_Y, allButtonW, BUTTON_H, null, (button, all) -> setAll(all)));
+
+    int saveX = SCREEN_W - BORDER - th.buttonW(saveText);
     saveButton = addDrawableChild(
-        new ButtonWidget.Builder(saveText, this::save).dimensions(this.x + SAVE_X, y + SAVE_Y,
-            saveButtonW, BUTTON_H).tooltip(th.tooltip("philter.save.tooltip")).build());
+        new ButtonWidget.Builder(saveText, this::save).dimensions(x + saveX, y + SAVE_Y,
+            saveButtonW, BUTTON_H).tooltip
+            (th.tooltip("philter.save.tooltip")).build());
 
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
 
@@ -226,12 +234,18 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     sendFilterDesc();
   }
 
+  private void setAll(Boolean all) {
+    desc.matchAll = all;
+    sendFilterDesc();
+  }
+
   private void reactToChange() {
     if (initializing) {
       return;
     }
     exactButton.visible = desc.mode != NONE;
-    saveButton.visible = anyMatchChanged();
+    allButton.visible = desc.mode == MATCHES;
+    saveButton.visible = allButton.visible && anyMatchChanged();
 
     // We have to deal with focus before changing visibility
     var wasVisible = matchesFields[0].visible;

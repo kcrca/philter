@@ -9,8 +9,10 @@
   "philter.filter.mode.matches.tooltip": "Tag or regular expression",
   "philter.filter_mode.matches_alt": "Match Specification",
   "philter.filter.save": "Save",
-  "philter.save.tooltip": "Save changes to matches",
+  "philter.filter.save.tooltip": "Save changes to matches",
   "philter.filter.exact": "Exact",
   "philter.filter.exact.tooltip.true": "Exact matches only, including nbt",
-  "philter.filter.exact.tooltip.false": "Same type matches"
+  "philter.filter.exact.tooltip.false": "Same type matches",
+  "philter.filter.any": "Any of",
+  "philter.filter.all": "All of"
 }
