@@ -199,7 +199,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   private boolean filterMatches(ItemStack item) {
     ensureMatchesCompiled();
     return checkTags(tagsYes, true, item) || checkTags(tagsNo, false, item) || checkPatterns(
-        patternsYes, true, item);
+        patternsYes, true, item) || checkPatterns(patternsNo, false, item);
   }
 
   private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item) {
