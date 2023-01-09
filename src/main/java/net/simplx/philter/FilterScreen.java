@@ -20,7 +20,6 @@ import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.EditBoxWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
@@ -63,7 +62,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final int SAVE_Y = MATCHES_Y + MATCHES_H + MATCHES_MAX_CHAR_H - BUTTON_H;
 
   private final FilterDesc desc;
-  private EditBoxWidget matchesBox;
+  private HackedEditBoxWidget matchesBox;
   private ButtonWidget saveButton;
 
   private Text filterTitle;
@@ -73,8 +72,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
    * This class exists because EditBoxWidget does _not_ work around the fact that Screen will
    * automatically close itself if the "inventory" key is pressed. So if the user types 'e' (or
    * whatever) in their matches, the window goes away. This is the most direct way around this bug,
-   * and it ought to be fixed, but until then, we work around it by unbinding the inventory key,
-   * handling the key press, and then rebinding it.
+   * and it ought to be fixed, but until then, we work around it by consuming that key when it is
+   * pressed before it gets to Screen.keyPressed(), so it is handled like a regular key. This seems
+   * like it is mostly harmless, but maybe I'm missing something.
    */
   private class HackedEditBoxWidget extends EditBoxWidget implements Forcer {
 
@@ -85,12 +85,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       super(textRenderer, x, y, width, height, placeholder, message);
     }
 
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+      //noinspection ConstantConditions
       if (active && FilterScreen.this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
         return true;
       }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+      return super.keyPressed(keyCode, scanCode, modifiers);
     }
   }
 
@@ -173,6 +175,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
             saveButtonW, BUTTON_H).build());
 
     matchesChanged(desc.matches);
+    matchesBox.visible = false; // ... so if it needs to be visible, it will be newly visible.
     reactToChange();
   }
 
@@ -202,8 +205,19 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void reactToChange() {
-    matchesBox.visible = desc.mode == MATCHES;
     exactButton.visible = desc.mode != NONE;
+    var wasVisible = matchesBox.visible;
+    boolean newVisible = desc.mode == MATCHES;
+    if (newVisible) {
+      if (!wasVisible) {
+        setInitialFocus(matchesBox);
+      }
+    } else {
+      if (wasVisible) {
+        matchesBox.changeFocus(true);
+      }
+    }
+    matchesBox.visible = newVisible;
     sendFilterDesc();
   }
 
