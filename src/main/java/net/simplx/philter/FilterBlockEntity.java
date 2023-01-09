@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.regex.Pattern;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
@@ -19,14 +18,9 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.visitor.StringNbtWriter;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -69,7 +63,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
       ItemStack.class);
 
   private FilterDesc desc;
-  private String compiledMatches;
+  private FilterMatches filterMatches;
   private List<Identifier> tagsYes;
   private List<Identifier> tagsNo;
   private List<Pattern> patternsYes;
@@ -79,8 +73,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
     desc = new FilterDesc(FilterMode.ONLY_SAME, "");
-    compiledMatches = "";
-    resetCompiledMatches();
+    filterMatches = new FilterMatches("");
   }
 
   private void resetCompiledMatches() {
@@ -194,8 +187,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     }
   }
 
-  private boolean inFilter(ItemStack hopperStack, World world, BlockPos pos,
-      BlockState state) {
+  private boolean inFilter(ItemStack hopperStack, World world, BlockPos pos, BlockState state) {
     if (hopperStack.getCount() == 0) {
       return false;
     }
@@ -206,8 +198,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     };
   }
 
-  private boolean filterOnlySame(ItemStack item, World world, BlockPos pos,
-      BlockState state) {
+  private boolean filterOnlySame(ItemStack item, World world, BlockPos pos, BlockState state) {
     Direction direction = state.get(FILTER);
     Inventory inventory = getInventoryAt(world, pos.offset(direction));
     if (inventory == null) {
@@ -229,72 +220,10 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   }
 
   private boolean filterMatches(ItemStack item) {
-    ensureMatchesCompiled();
-    return checkTags(tagsYes, true, item) || checkTags(tagsNo, false, item) || checkPatterns(
-        patternsYes, true, item) || checkPatterns(patternsNo, false, item);
-  }
-
-  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item) {
-    for (Pattern pattern : patterns) {
-      Item it = item.getItem();
-      Optional<RegistryKey<Item>> key = it.getRegistryEntry().getKey();
-      if (key.isEmpty()) {
-        continue;
-      }
-      Identifier id = key.get().getValue();
-      String nbtStr = "";
-      if (desc.exact) {
-        NbtCompound nbt = item.getNbt();
-        if (nbt == null) {
-          nbtStr = "{}";
-        } else {
-          nbtStr = new StringNbtWriter().apply(nbt);
-        }
-      }
-      if (pattern.matcher(id.toString() + nbtStr).matches() == yes
-          || id.getNamespace().equals("minecraft")
-          && pattern.matcher(id.getPath() + nbtStr).matches() == yes) {
-        return true;
-      }
+    if (!filterMatches.input.equals(desc.matches)) {
+      filterMatches = new FilterMatches(desc.matches);
     }
-    return false;
-  }
-
-
-  private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item) {
-    for (Identifier tag : tags) {
-      TagKey<Item> t = TagKey.of(RegistryKeys.ITEM, tag);
-      boolean isIn = item.isIn(t);
-      if (isIn == yes) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private void ensureMatchesCompiled() {
-    if (compiledMatches.equals(desc.matches)) {
-      return;
-    }
-    compiledMatches = desc.matches;
-
-    resetCompiledMatches();
-    for (String spec : desc.matches.split("[\\s,]+")) {
-      if (spec.length() == 0) {
-        continue;
-      }
-      var yes = spec.charAt(0) != '!';
-      if (!yes) {
-        spec = spec.substring(1);
-      }
-      if (spec.startsWith("#")) {
-        spec = spec.substring(1);
-        var id = Identifier.tryParse(spec);
-        (yes ? tagsYes : tagsNo).add(id);
-      } else {
-        (yes ? patternsYes : patternsNo).add(Pattern.compile(spec));
-      }
-    }
+    return filterMatches.matchAny(item, desc.exact);
   }
 
   @Override
