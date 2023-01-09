@@ -1,5 +1,7 @@
 package net.simplx.philter;
 
+import static net.simplx.philter.FilterBlock.FILTER;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 
@@ -62,6 +65,8 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   private static final Method IS_FULL_M = force.method("isFull");
   private static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
       BlockState.class, Inventory.class);
+  private static final Method CAN_MERGE_ITEMS_F = force.method("canMergeItems", ItemStack.class,
+      ItemStack.class);
 
   private FilterDesc desc;
   private String compiledMatches;
@@ -129,6 +134,10 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     return (Boolean) forceInvoke(IS_FULL_M);
   }
 
+  private boolean canMergeItems(ItemStack stack1, ItemStack stack2) {
+    return (Boolean) forceInvoke(CAN_MERGE_ITEMS_F, stack1, stack2);
+  }
+
   private void doServerTick(World world, BlockPos pos, BlockState state) {
     forceSet(TRANSFER_COOLDOWN_F, (int) forceGet(TRANSFER_COOLDOWN_F) - 1);
     forceSet(LAST_TICK_TIME_F, world.getTime());
@@ -147,10 +156,10 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (!needsCooldown() && state.get(HopperBlock.ENABLED)) {
       boolean bl = false;
       if (!isEmpty()) {
-        var filterState = state.with(FilterBlock.FACING, state.get(FilterBlock.FILTER));
+        var filterState = state.with(FilterBlock.FACING, state.get(FILTER));
         SimpleInventory filterInventory = new SimpleInventory(size());
         for (int i = 0; i < size(); i++) {
-          if (inFilter(getStack(i))) {
+          if (inFilter(getStack(i), world, pos, state)) {
             filterInventory.setStack(i, getStack(i));
           }
         }
@@ -185,15 +194,38 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     }
   }
 
-  private boolean inFilter(ItemStack hopperStack) {
+  private boolean inFilter(ItemStack hopperStack, World world, BlockPos pos,
+      BlockState state) {
     if (hopperStack.getCount() == 0) {
       return false;
     }
     return switch (desc.mode) {
       case NONE -> false;
-      case ONLY_SAME -> true;
+      case ONLY_SAME -> filterOnlySame(hopperStack, world, pos, state);
       case MATCHES -> filterMatches(hopperStack);
     };
+  }
+
+  private boolean filterOnlySame(ItemStack item, World world, BlockPos pos,
+      BlockState state) {
+    Direction direction = state.get(FILTER);
+    Inventory inventory = getInventoryAt(world, pos.offset(direction));
+    if (inventory == null) {
+      return false;
+    }
+    for (int i = 0; i < inventory.size(); i++) {
+      ItemStack invStack = inventory.getStack(i);
+      if (desc.exact) {
+        if (canMergeItems(invStack, item)) {
+          return true;
+        }
+      } else {
+        if (invStack.isItemEqual(item)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private boolean filterMatches(ItemStack item) {
