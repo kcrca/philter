@@ -72,6 +72,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private CyclingButtonWidget<Boolean> exactButton;
   private TextFieldWidget[] matchesFields;
   private ButtonWidget saveButton;
+  private Tooltip matchTooltip;
+  private boolean initializing;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -118,6 +120,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   protected void init() {
+    initializing = true;
     super.init();
 
     TextHelper th = new TextHelper();
@@ -146,19 +149,24 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         .tooltip(value -> th.tooltip("philter.filter.exact." + value + ".tooltip"))
         .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
             (button, exact) -> setExact(exact)));
-    Text matchesAltText = th.text("philter.filter_mode.matches_alt");
-    Tooltip matchTooltip = th.tooltip("philter.filter.mode.matches.tooltip");
+    matchTooltip = th.tooltip("philter.filter.mode.matches.tooltip");
     matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
+    boolean foundFocus = false;
     for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
-      int row = i % (MATCHES_MAX_COUNT / 2);
-      int col = i / (MATCHES_MAX_COUNT / 2);
+      int col = i % 2;
+      int row = i / 2;
       var field = matchesFields[i] = addDrawableChild(
           new TextFieldWidget(textRenderer, x + MATCHES_X + col * MATCHES_W / 2,
               y + MATCHES_Y + TEXT_H * row, MATCHES_W / 2, TEXT_H, th.text("")));
       final int index = i;
       field.setChangedListener(text -> matchChanged(index, text));
       // Set here instead of on creation, so all text is handled through the same change mechansim.
-      field.setText(i < desc.matches.size() ? desc.matches.get(i) : "");
+      String match = desc.match(i);
+      field.setText(match);
+      if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
+        foundFocus = true;
+        setInitialFocus(field);
+      }
       field.setTooltip(matchTooltip);
       field.visible = false;
     }
@@ -169,6 +177,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
             saveButtonW, BUTTON_H).tooltip(th.tooltip("philter.save.tooltip")).build());
 
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
+
+    initializing = false;
     reactToChange();
   }
 
@@ -190,17 +200,15 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     // Color the text based on validity.
     field.setEditableColor(0xffffff);
-    if (spec.isEmpty() || RESOURCE_PAT.matcher(spec).matches()) {
-      return;
+    field.setTooltip(matchTooltip);
+    if (!spec.isEmpty() && !RESOURCE_PAT.matcher(spec).matches()) {
+      try {
+        Pattern.compile(spec);
+      } catch (PatternSyntaxException e) {
+        field.setTooltip(Tooltip.of(Text.literal(e.getMessage())));
+        field.setEditableColor(0xff0000);
+      }
     }
-    try {
-      field.setTooltip(null);
-      Pattern.compile(spec);
-      return;
-    } catch (PatternSyntaxException e) {
-      field.setTooltip(Tooltip.of(Text.literal(e.getMessage())));
-    }
-    field.setEditableColor(0xff0000);
     reactToChange();
   }
 
@@ -219,6 +227,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void reactToChange() {
+    if (initializing) {
+      return;
+    }
     exactButton.visible = desc.mode != NONE;
     saveButton.visible = anyMatchChanged();
 
@@ -241,7 +252,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private boolean anyMatchChanged() {
     for (int i = 0; i < matchesFields.length; i++) {
-      String orig = i < desc.matches.size() ? desc.matches.get(i) : "";
+      String orig = desc.match(i);
       if (!matchesFields[i].getText().equals(orig)) {
         return true;
       }
@@ -261,6 +272,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private void save(ButtonWidget unused) {
     storeText();
     sendFilterDesc();
+    reactToChange();
   }
 
   private void sendFilterDesc() {

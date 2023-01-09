@@ -66,6 +66,10 @@ public class FilterDesc {
     }
   }
 
+  public String match(int index) {
+    return index >= matches.size() ? "" : matches.get(index);
+  }
+
   public void write(PacketByteBuf buf, BlockPos pos) {
     NbtCompound nbt = new NbtCompound();
     writeNbt(nbt);

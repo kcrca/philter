@@ -6,7 +6,7 @@
   "philter.filter.mode.tooltip": "Set sorting mode",
   "philter.filter.mode.none.tooltip": "Matching disabled",
   "philter.filter.mode.only_same.tooltip": "Matches things already in the target",
-  "philter.filter.mode.matches.tooltip": "Tags or regular expressions for matches",
+  "philter.filter.mode.matches.tooltip": "Tag or regular expression",
   "philter.filter_mode.matches_alt": "Match Specification",
   "philter.filter.save": "Save",
   "philter.save.tooltip": "Save changes to matches",
