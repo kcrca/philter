@@ -6,11 +6,10 @@ import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
-import static net.simplx.philter.layout.Horizontal.LEFT;
-import static net.simplx.philter.layout.Horizontal.RIGHT;
-import static net.simplx.philter.layout.Vertical.ABOVE;
-import static net.simplx.philter.layout.Vertical.BELOW;
-import static net.simplx.philter.layout.Vertical.MID;
+import static net.simplx.philter.mcgui.Horizontal.RIGHT;
+import static net.simplx.philter.mcgui.Vertical.ABOVE;
+import static net.simplx.philter.mcgui.Vertical.BELOW;
+import static net.simplx.philter.mcgui.Vertical.MID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Iterator;
@@ -32,8 +31,8 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.simplx.philter.layout.Layout;
-import net.simplx.philter.layout.Layout.Placer;
+import net.simplx.philter.mcgui.Layout;
+import net.simplx.philter.mcgui.Layout.Placer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

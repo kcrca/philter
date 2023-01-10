@@ -1,4 +1,4 @@
-package net.simplx.philter.layout;
+package net.simplx.philter.mcgui;
 
 import static com.google.common.collect.Streams.stream;
 
