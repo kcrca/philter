@@ -2,18 +2,21 @@ package net.simplx.philter;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
-import static net.simplx.philter.FilterDesc.MATCHES_MAX_COUNT;
 import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
+import static net.simplx.philter.layout.Horizontal.LEFT;
+import static net.simplx.philter.layout.Horizontal.RIGHT;
+import static net.simplx.philter.layout.Vertical.ABOVE;
+import static net.simplx.philter.layout.Vertical.BELOW;
+import static net.simplx.philter.layout.Vertical.MID;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -29,6 +32,8 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.simplx.philter.layout.Layout;
+import net.simplx.philter.layout.Layout.Placer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,13 +73,15 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private final FilterDesc desc;
 
-  private Text filterTitle;
+  private MutableText filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
   private TextFieldWidget[] matchesFields;
   private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
   private Tooltip matchTooltip;
   private boolean initializing;
+  private Placer titlePlace;
+  private Layout layout;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -124,77 +131,88 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     initializing = true;
     super.init();
 
-    TextHelper th = new TextHelper();
+    layout = new Layout(this, SCREEN_W, SCREEN_H);
+    layout.setPrefix("philter.filter");
 
     // Calculate the text- and font-relative values.
-    Text saveText = th.text("philter.filter.save");
-    Text exactText = th.text("philter.filter.exact");
-    Text allText = th.text("philter.filter.all");
-    Text anyText = th.text("philter.filter.any");
-    filterTitle = th.text("philter.filter.name").append(":");
+    Text saveText = layout.text("save");
+    filterTitle = layout.text("name").append(":");
 
-    int filterTitleW = th.textW(filterTitle) + textRenderer.getWidth(" ");
-    int modeW = th.buttonW(stream(values()).map(
-            mode -> th.text("philter.filter.mode." + mode.toString().toLowerCase()))
-        .collect(Collectors.toList()));
-    int allButtonW = th.buttonW(ImmutableList.of(anyText, allText));
-    int saveButtonW = th.buttonW(saveText);
+    titlePlace = layout.placer().w(layout.textW(filterTitle)).h(layout.textH).relX(MODE_X)
+        .align(ABOVE);
 
-    int modeX = x + MODE_X + filterTitleW;
-    addDrawableChild(
-        CyclingButtonWidget.builder(FilterScreen::filterText).values(values()).omitKeyText()
-            .initially(desc.mode).tooltip(value -> th.tooltip(
-                "philter.filter.mode." + value.toString().toLowerCase() + ".tooltip"))
-            .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
+    Placer p;
+    List<Text> modeTexts = stream(values()).map(
+        mode -> (Text) layout.text("mode." + mode.toString().toLowerCase())).toList();
+    p = layout.placer().withTexts(modeTexts).inButton().align(RIGHT, titlePlace)
+        .align(MID, titlePlace);
+    Iterator<Text> modeIt = modeTexts.iterator();
+    var modeButton = addDrawableChild(
+        CyclingButtonWidget.builder(which -> modeIt.next()).values(values()).omitKeyText()
+            .initially(desc.mode)
+            .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
+            .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode((FilterMode) m)));
 
-    int exactW = th.onOffButtonW(exactText);
-    int exactX = backgroundWidth - exactW - BORDER;
+    Text allText = layout.text("all");
+    Text anyText = layout.text("any");
+    p = layout.placer().withTexts(anyText, allText).inButton().align(RIGHT, modeButton)
+        .align(MID, titlePlace);
+    allButton = addDrawableChild(
+        CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
+            .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
+
+    Text exactText = layout.text("exact");
+    p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
+        .x(titlePlace.x()).align(BELOW, modeButton);
     exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
-        .tooltip(value -> th.tooltip("philter.filter.exact." + value + ".tooltip"))
-        .build(x + exactX, y + EXACT_Y, exactW, BUTTON_H, exactText,
-            (button, exact) -> setExact(exact)));
+        .tooltip(value -> layout.tooltip("exact." + value + ".tooltip"))
+        .build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
 
-    matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
-    boolean foundFocus = false;
-    for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
-      int col = i % 2;
-      int row = i / 2;
-      var field = matchesFields[i] = addDrawableChild(
-          new TextFieldWidget(textRenderer, x + MATCHES_X + col * MATCHES_W / 2,
-              y + MATCHES_Y + TEXT_H * row, MATCHES_W / 2, TEXT_H, th.text("")));
-      final int index = i;
-      field.setChangedListener(text -> matchChanged(index, text));
-      // Set here instead of on creation, so all text is handled through the same change mechansim.
-      String match = desc.match(i);
-      field.setText(match);
-      if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
-        foundFocus = true;
-        setInitialFocus(field);
-      }
-      field.visible = false;
-    }
-
-    allButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true)
-        .omitKeyText()
-        .build(x + ALL_X, y + ALL_Y, allButtonW, BUTTON_H, null, (button, all) -> setAll(all)));
-
-    int saveX = SCREEN_W - BORDER - th.buttonW(saveText);
+    p = layout.placer().withText(saveText).inButton().align(RIGHT).align(MID, exactButton);
     saveButton = addDrawableChild(
-        new ButtonWidget.Builder(saveText, this::save).dimensions(x + saveX, y + SAVE_Y,
-            saveButtonW, BUTTON_H).tooltip
-            (th.tooltip("philter.save.tooltip")).build());
+        new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h())
+            .tooltip(layout.tooltip("tooltip")).build());
 
-    setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
-
-    initializing = false;
-    reactToChange();
+    // addDrawableChild(
+    //     CyclingButtonWidget.builder((FilterMode value1) -> ly.text("mode." + value1.asString()))
+    //
+    //         .values(values()).omitKeyText().initially(desc.mode)
+    //         .tooltip(value -> ly.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
+    //         .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
+    //
+    // matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
+    // boolean foundFocus = false;
+    // for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
+    //   int col = i % 2;
+    //   int row = i / 2;
+    //   var field = matchesFields[i] = addDrawableChild(
+    //       new TextFieldWidget(textRenderer, x + MATCHES_X + col * MATCHES_W / 2,
+    //           y + MATCHES_Y + TEXT_H * row, MATCHES_W / 2, TEXT_H, ly.text("")));
+    //   final int index = i;
+    //   field.setChangedListener(text -> matchChanged(index, text));
+    //   // Set here instead of on creation, so all text is handled through the same change mechansim.
+    //   String match = desc.match(i);
+    //   field.setText(match);
+    //   if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
+    //     foundFocus = true;
+    //     setInitialFocus(field);
+    //   }
+    //   field.visible = false;
+    // }
+    // ;
+    //
+    // int saveX = SCREEN_W - BORDER - ly.buttonW(saveText);
+    //
+    // setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
+    //
+    // initializing = false;
+    // reactToChange();
   }
 
   @Override
   protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
     super.drawForeground(matrices, mouseX, mouseY);
-    textRenderer.draw(matrices, filterTitle, MODE_X, MODE_Y + (BUTTON_H - TEXT_H) / 2.0f,
-        TITLE_TEXT_COLOR);
+    layout.drawText(matrices, titlePlace, filterTitle, TITLE_TEXT_COLOR);
   }
 
   private void matchChanged(int i, String text) {
@@ -218,10 +236,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       }
     }
     reactToChange();
-  }
-
-  private static Text filterText(FilterMode value) {
-    return Text.translatable("philter.filter.mode." + value.asString());
   }
 
   private void setMode(FilterMode mode) {
@@ -265,6 +279,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private boolean anyMatchChanged() {
+    if (matchesFields == null) {
+      return false;
+    }
     for (int i = 0; i < matchesFields.length; i++) {
       String orig = desc.match(i);
       if (!matchesFields[i].getText().equals(orig)) {
