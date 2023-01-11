@@ -2,18 +2,20 @@ package net.simplx.philter;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
+import static net.simplx.philter.FilterDesc.MATCHES_MAX_COUNT;
 import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.PhilterMod.MOD_ID;
+import static net.simplx.philter.mcgui.Horizontal.LEFT;
 import static net.simplx.philter.mcgui.Horizontal.RIGHT;
 import static net.simplx.philter.mcgui.Vertical.ABOVE;
 import static net.simplx.philter.mcgui.Vertical.BELOW;
 import static net.simplx.philter.mcgui.Vertical.MID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import net.fabricmc.api.EnvType;
@@ -137,75 +139,67 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     Text saveText = layout.text("save");
     filterTitle = layout.text("name").append(":");
 
-    titlePlace = layout.placer().w(layout.textW(filterTitle)).h(layout.textH).relX(MODE_X)
-        .align(ABOVE);
+    titlePlace = layout.placer().w(layout.textW(filterTitle)).h(layout.textH).relX(MODE_X).y(ABOVE);
 
     Placer p;
-    List<Text> modeTexts = stream(values()).map(
-        mode -> (Text) layout.text("mode." + mode.toString().toLowerCase())).toList();
-    p = layout.placer().withTexts(modeTexts).inButton().align(RIGHT, titlePlace)
-        .align(MID, titlePlace);
-    Iterator<Text> modeIt = modeTexts.iterator();
+    Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text(
+        "mode." + mode.toString().toLowerCase());
+    p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
+        .x(RIGHT, titlePlace).y(MID, titlePlace);
     var modeButton = addDrawableChild(
-        CyclingButtonWidget.builder(which -> modeIt.next()).values(values()).omitKeyText()
+        CyclingButtonWidget.builder(modeTextGen).values((FilterMode[]) values()).omitKeyText()
             .initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode((FilterMode) m)));
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
-    p = layout.placer().withTexts(anyText, allText).inButton().align(RIGHT, modeButton)
-        .align(MID, titlePlace);
+    p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT)
+        .y(MID, titlePlace);
     allButton = addDrawableChild(
         CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");
     p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
-        .x(titlePlace.x()).align(BELOW, modeButton);
+        .x(titlePlace.x()).y(BELOW, modeButton);
     exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
         .tooltip(value -> layout.tooltip("exact." + value + ".tooltip"))
         .build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
 
-    p = layout.placer().withText(saveText).inButton().align(RIGHT).align(MID, exactButton);
+    p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, exactButton);
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h())
             .tooltip(layout.tooltip("tooltip")).build());
 
-    // addDrawableChild(
-    //     CyclingButtonWidget.builder((FilterMode value1) -> ly.text("mode." + value1.asString()))
-    //
-    //         .values(values()).omitKeyText().initially(desc.mode)
-    //         .tooltip(value -> ly.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
-    //         .build(modeX, y + MODE_Y, modeW, BUTTON_H, null, (button, mode) -> setMode(mode)));
-    //
-    // matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
-    // boolean foundFocus = false;
-    // for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
-    //   int col = i % 2;
-    //   int row = i / 2;
-    //   var field = matchesFields[i] = addDrawableChild(
-    //       new TextFieldWidget(textRenderer, x + MATCHES_X + col * MATCHES_W / 2,
-    //           y + MATCHES_Y + TEXT_H * row, MATCHES_W / 2, TEXT_H, ly.text("")));
-    //   final int index = i;
-    //   field.setChangedListener(text -> matchChanged(index, text));
-    //   // Set here instead of on creation, so all text is handled through the same change mechansim.
-    //   String match = desc.match(i);
-    //   field.setText(match);
-    //   if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
-    //     foundFocus = true;
-    //     setInitialFocus(field);
-    //   }
-    //   field.visible = false;
-    // }
-    // ;
-    //
-    // int saveX = SCREEN_W - BORDER - ly.buttonW(saveText);
-    //
-    // setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
-    //
-    // initializing = false;
-    // reactToChange();
+    Placer group = layout.placer().from(LEFT, titlePlace).to(RIGHT).y(BELOW, exactButton);
+    // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
+    // any text field padding, it's based on total width, so we set it after.
+    Placer first = group.clone().inTextField().w(group.w() / 2);
+
+    matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
+    boolean foundFocus = false;
+    for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
+      int col = i % 2;
+      int row = i / 2;
+      p = first.clone().x(group.x() + col * first.w()).y(group.y() + row * first.h());
+      var field = matchesFields[i] = addDrawableChild(
+          new TextFieldWidget(textRenderer, p.x(), p.y(), p.w(), p.h(), layout.text("")));
+      final int index = i;
+      field.setChangedListener(text -> matchChanged(index, text));
+      // Set here instead of on creation, so all text is handled through the same change mechansim.
+      String match = desc.match(i);
+      field.setText(match);
+      if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
+        foundFocus = true;
+        setInitialFocus(field);
+      }
+      field.visible = false;
+    }
+
+    setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
+    initializing = false;
+    reactToChange();
   }
 
   @Override

@@ -24,7 +24,7 @@ import net.simplx.philter.StaticForcer;
 @SuppressWarnings("ALL")
 public class Layout implements Forcer {
 
-  public class Placer {
+  public class Placer implements Cloneable {
 
     private int x, y;
     private int w, h;
@@ -38,6 +38,15 @@ public class Layout implements Forcer {
 
     Placer() {
       this(UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN);
+    }
+
+    @Override
+    public Placer clone() {
+      try {
+        return (Placer) super.clone();
+      } catch (CloneNotSupportedException e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     public int x() {
@@ -86,6 +95,12 @@ public class Layout implements Forcer {
       return this;
     }
 
+    public Placer at(int x, int y) {
+      this.x = x;
+      this.y = y;
+      return this;
+    }
+
     /**
      * Coord is screen relative.
      */
@@ -111,6 +126,13 @@ public class Layout implements Forcer {
       this.h = h;
       return this;
     }
+
+    public Placer size(int w, int h) {
+      this.w = w;
+      this.h = h;
+      return this;
+    }
+
 
     public Placer withText(String keyName) {
       return withText(text(keyName));
@@ -138,17 +160,15 @@ public class Layout implements Forcer {
       }
     }
 
-    public Placer align(Horizontal dir, ClickableWidget to) {
-      int toX = (int) forceGet(to, WIDGET_X_F);
-      int toW = (int) forceGet(to, WIDGET_WIDTH_F);
-      return align(dir, toX, toW);
+    public Placer x(Horizontal dir, ClickableWidget to) {
+      return x(dir, to.getX(), to.getWidth());
     }
 
-    public Placer align(Horizontal dir, Placer to) {
-      return align(dir, to.x(), to.w());
+    public Placer x(Horizontal dir, Placer to) {
+      return x(dir, to.x(), to.w());
     }
 
-    private Placer align(Horizontal dir, int toX, int toW) {
+    private Placer x(Horizontal dir, int toX, int toW) {
       x = switch (dir) {
         case LEFT -> toX - gapH - w();
         case CENTER -> toX + (toW - w()) / 2;
@@ -157,17 +177,15 @@ public class Layout implements Forcer {
       return this;
     }
 
-    public Placer align(Vertical dir, ClickableWidget to) {
-      int toY = (int) forceGet(to, WIDGET_Y_F);
-      int toH = (int) forceGet(to, WIDGET_HEIGHT_F);
-      return align(dir, toY, toH);
+    public Placer y(Vertical dir, ClickableWidget to) {
+      return y(dir, to.getY(), to.getHeight());
     }
 
-    public Placer align(Vertical dir, Placer to) {
-      return align(dir, to.y(), to.h());
+    public Placer y(Vertical dir, Placer to) {
+      return y(dir, to.y(), to.h());
     }
 
-    private Placer align(Vertical dir, int toY, int toH) {
+    private Placer y(Vertical dir, int toY, int toH) {
       y = switch (dir) {
         case ABOVE -> toY - gapH - h();
         case MID -> toY + (toH - h()) / 2;
@@ -176,7 +194,7 @@ public class Layout implements Forcer {
       return this;
     }
 
-    public Placer align(Horizontal dir) {
+    public Placer x(Horizontal dir) {
       x = switch (dir) {
         case LEFT -> screenX + borderW;
         case CENTER -> screenX + (screenY - w()) / 2;
@@ -185,7 +203,7 @@ public class Layout implements Forcer {
       return this;
     }
 
-    public Placer align(Vertical dir) {
+    public Placer y(Vertical dir) {
       y = switch (dir) {
         case ABOVE -> screenY + borderH;
         case MID -> screenY + (screenH - h()) / 2;
@@ -194,11 +212,150 @@ public class Layout implements Forcer {
       return this;
     }
 
+    private void validateDims() {
+      validate(w, "w");
+      validate(h, "h");
+    }
+
 
     public Placer inButton() {
-      w += 2 * buttonBorderW;
-      h += 2 * buttonBorderH;
+      if (w != UNKNOWN) {
+        w += 2 * buttonBorderW;
+      }
+      if (h != UNKNOWN) {
+        h += 2 * buttonBorderH;
+      }
       return this;
+    }
+
+    public Placer inTextField() {
+      if (w != UNKNOWN) {
+        w += 2;
+      }
+      if (h == UNKNOWN) {
+        h = textH;
+      } else {
+        h += 2;
+      }
+      return this;
+    }
+
+    private static int coord(Horizontal dir, Placer placer) {
+      return switch (dir) {
+        case LEFT -> placer.x();
+        case CENTER -> placer.x() + placer.w() / 2;
+        case RIGHT -> placer.x() + placer.w();
+      };
+    }
+
+    private static int coord(Horizontal dir, ClickableWidget widget) {
+      return switch (dir) {
+        case LEFT -> widget.getX();
+        case CENTER -> widget.getX() + widget.getWidth();
+        case RIGHT -> widget.getX() + widget.getWidth();
+      };
+    }
+
+    private int coord(Horizontal dir) {
+      return switch (dir) {
+        case LEFT -> screenX + borderW;
+        case CENTER -> screenX + screenW / 2;
+        case RIGHT -> screenX + screenW - borderW;
+      };
+    }
+
+    public record _ToClauseW(Placer thisPlacer, int startX) {
+
+      private Placer extract(int w) {
+        thisPlacer.w(w - startX);
+        if (thisPlacer.x == UNKNOWN) {
+          thisPlacer.x(startX);
+        }
+        return thisPlacer;
+      }
+
+      public Placer to(Horizontal dir, Placer placer) {
+        return extract(coord(dir, placer));
+      }
+
+      public Placer to(Horizontal dir, ClickableWidget widget) {
+        return extract(coord(dir, widget));
+      }
+
+      public Placer to(Horizontal dir) {
+        return extract(thisPlacer.coord(dir));
+      }
+    }
+
+    public _ToClauseW from(Horizontal dir, Placer placer) {
+      return new _ToClauseW(this, coord(dir, placer));
+    }
+
+    public _ToClauseH from(Horizontal dir, ClickableWidget widget) {
+      return new _ToClauseH(this, coord(dir, widget));
+    }
+
+    public _ToClauseH from(Horizontal dir) {
+      return new _ToClauseH(this, coord(dir));
+    }
+
+    private static int coord(Vertical dir, Placer placer) {
+      return switch (dir) {
+        case ABOVE -> placer.y();
+        case MID -> placer.y() + placer.h() / 2;
+        case BELOW -> placer.y() + placer.h();
+      };
+    }
+
+    private static int coord(Vertical dir, ClickableWidget widget) {
+      return switch (dir) {
+        case ABOVE -> widget.getY();
+        case MID -> widget.getY() + widget.getHeight();
+        case BELOW -> widget.getY() + widget.getHeight();
+      };
+    }
+
+    private int coord(Vertical dir) {
+      return switch (dir) {
+        case ABOVE -> screenY + borderH;
+        case MID -> screenY + screenH / 2;
+        case BELOW -> screenY + screenH - borderH;
+      };
+    }
+
+    public record _ToClauseH(Placer thisPlacer, int startY) {
+
+      private Placer extract(int coord) {
+        thisPlacer.h(coord - startY);
+        if (thisPlacer.y == UNKNOWN) {
+          thisPlacer.y = coord;
+        }
+        return thisPlacer;
+      }
+
+      public Placer to(Vertical dir, Placer placer) {
+        return extract(coord(dir, placer));
+      }
+
+      public Placer to(Vertical dir, ClickableWidget widget) {
+        return extract(coord(dir, widget));
+      }
+
+      public Placer to(Vertical dir) {
+        return extract(thisPlacer.coord(dir));
+      }
+    }
+
+    public _ToClauseH from(Vertical dir, Placer placer) {
+      return new _ToClauseH(this, coord(dir, placer));
+    }
+
+    public _ToClauseH from(Vertical dir, ClickableWidget widget) {
+      return new _ToClauseH(this, coord(dir, widget));
+    }
+
+    public _ToClauseH from(Vertical dir) {
+      return new _ToClauseH(this, coord(dir));
     }
   }
 
@@ -208,12 +365,6 @@ public class Layout implements Forcer {
   public static final int UNKNOWN = Integer.MIN_VALUE;
 
   private static final StaticForcer forceScreen = new StaticForcer(HandledScreen.class);
-  private static final StaticForcer forceElement = new StaticForcer(ClickableWidget.class);
-
-  private static final Field WIDGET_X_F = forceElement.field("x");
-  private static final Field WIDGET_Y_F = forceElement.field("y");
-  private static final Field WIDGET_WIDTH_F = forceElement.field("width");
-  private static final Field WIDGET_HEIGHT_F = forceElement.field("height");
 
   private static final Field SCREEN_X_F = forceScreen.field("x");
   private static final Field SCREEN_Y_F = forceScreen.field("y");
