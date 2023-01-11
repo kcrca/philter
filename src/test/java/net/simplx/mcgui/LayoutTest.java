@@ -212,34 +212,34 @@ class LayoutTest {
   @Test
   void relativeLeft() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().w(5).x(LEFT, anchorWidget);
-    assertThat(placerFromWidget.x()).isEqualTo(10 - GAP_W - 5);
+    Placer widgetPlacer = layout.placer().w(5).x(LEFT, anchorWidget);
+    assertThat(widgetPlacer.x()).isEqualTo(10 - GAP_W - 5);
 
     Placer anchorPlacer = layout.placer().w(30).x(10);
-    Placer placerFromPlacer = layout.placer().w(5).x(LEFT, anchorPlacer);
-    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+    Placer placerPlacer = layout.placer().w(5).x(LEFT, anchorPlacer);
+    assertThat(placerPlacer.x()).isEqualTo(widgetPlacer.x());
   }
 
   @Test
   void relativeCenter() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().w(5).x(CENTER, anchorWidget);
-    assertThat(placerFromWidget.x()).isEqualTo(10 + (30 - 5) / 2);
+    Placer widgetPlacer = layout.placer().w(5).x(CENTER, anchorWidget);
+    assertThat(widgetPlacer.x()).isEqualTo(10 + (30 - 5) / 2);
 
     Placer anchorPlacer = layout.placer().w(30).x(10);
-    Placer placerFromPlacer = layout.placer().w(5).x(CENTER, anchorPlacer);
-    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+    Placer placerPlacer = layout.placer().w(5).x(CENTER, anchorPlacer);
+    assertThat(placerPlacer.x()).isEqualTo(widgetPlacer.x());
   }
 
   @Test
   void relativeRight() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().w(5).x(RIGHT, anchorWidget);
-    assertThat(placerFromWidget.x()).isEqualTo(10 + 30 + GAP_W);
+    Placer widgetPlacer = layout.placer().w(5).x(RIGHT, anchorWidget);
+    assertThat(widgetPlacer.x()).isEqualTo(10 + 30 + GAP_W);
 
     Placer anchorPlacer = layout.placer().w(30).x(10);
-    Placer placerFromPlacer = layout.placer().w(5).x(RIGHT, anchorPlacer);
-    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+    Placer placerPlacer = layout.placer().w(5).x(RIGHT, anchorPlacer);
+    assertThat(placerPlacer.x()).isEqualTo(widgetPlacer.x());
   }
 
   @Test
@@ -263,34 +263,34 @@ class LayoutTest {
   @Test
   void relativeAbove() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().h(6).y(ABOVE, anchorWidget);
-    assertThat(placerFromWidget.y()).isEqualTo(20 - GAP_H - 6);
+    Placer widgetPlacer = layout.placer().h(6).y(ABOVE, anchorWidget);
+    assertThat(widgetPlacer.y()).isEqualTo(20 - GAP_H - 6);
 
     Placer anchorPlacer = layout.placer().h(40).y(20);
-    Placer placerFromPlacer = layout.placer().h(6).y(ABOVE, anchorPlacer);
-    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+    Placer placerPlacer = layout.placer().h(6).y(ABOVE, anchorPlacer);
+    assertThat(placerPlacer.y()).isEqualTo(widgetPlacer.y());
   }
 
   @Test
   void relativeMid() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().h(6).y(MID, anchorWidget);
-    assertThat(placerFromWidget.y()).isEqualTo(20 + (40 - 6) / 2);
+    Placer widgetPlacer = layout.placer().h(6).y(MID, anchorWidget);
+    assertThat(widgetPlacer.y()).isEqualTo(20 + (40 - 6) / 2);
 
     Placer anchorPlacer = layout.placer().h(40).y(20);
-    Placer placerFromPlacer = layout.placer().h(6).y(MID, anchorPlacer);
-    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+    Placer placerPlacer = layout.placer().h(6).y(MID, anchorPlacer);
+    assertThat(placerPlacer.y()).isEqualTo(widgetPlacer.y());
   }
 
   @Test
   void relativeBelow() {
     TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
-    Placer placerFromWidget = layout.placer().h(6).y(BELOW, anchorWidget);
-    assertThat(placerFromWidget.y()).isEqualTo(20 + 40 + GAP_H);
+    Placer widgetPlacer = layout.placer().h(6).y(BELOW, anchorWidget);
+    assertThat(widgetPlacer.y()).isEqualTo(20 + 40 + GAP_H);
 
     Placer anchorPlacer = layout.placer().h(40).y(20);
-    Placer placerFromPlacer = layout.placer().h(6).y(BELOW, anchorPlacer);
-    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+    Placer placerPlacer = layout.placer().h(6).y(BELOW, anchorPlacer);
+    assertThat(placerPlacer.y()).isEqualTo(widgetPlacer.y());
   }
 
   @Test
@@ -314,9 +314,8 @@ class LayoutTest {
   @Test
   void relativeXWithoutW() {
     for (var dir : List.of(CENTER, RIGHT)) {
-      assertThatThrownBy(() -> {
-        layout.placer().h(5).x(dir);
-      }).isInstanceOf(IllegalArgumentException.class);
+      assertThatThrownBy(() -> layout.placer().h(5).x(dir)).isInstanceOf(
+          IllegalArgumentException.class);
     }
     layout.placer().h(5).x(LEFT); // no exception
 
@@ -342,5 +341,43 @@ class LayoutTest {
           IllegalArgumentException.class);
     }
     layout.placer().h(5).y(BELOW, anchorWidget); // no exception
+  }
+
+  @Test
+  void inButton() {
+    Placer placer = layout.placer().withText("foo");
+    Placer buttoner = placer.clone().inButton();
+    // We don't want to assume the adjustments won't change, but they should exist and be positive.
+    assertThat(buttoner.w()).isGreaterThan(placer.w());
+    assertThat(buttoner.h()).isGreaterThan(placer.h());
+  }
+
+  @Test
+  void inTextField() {
+    Placer placer = layout.placer().withText("foo");
+    Placer texter = placer.clone().inTextField();
+    // We don't want to assume the adjustments won't change, but they should exist and be positive.
+    assertThat(texter.w()).isGreaterThan(placer.w());
+    assertThat(texter.h()).isGreaterThan(placer.h());
+  }
+
+  @Test
+  void fromToHoriz() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer widgetPlacer = layout.placer().from(LEFT, anchorWidget).to(RIGHT, anchorWidget);
+    assertThat(widgetPlacer.w()).isEqualTo(30);
+
+    Placer placer = layout.placer().from(LEFT).to(RIGHT);
+    assertThat(placer.w()).isEqualTo(SCREEN_W - 2 * BORDER_W);
+  }
+
+  @Test
+  void fromToVert() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer widgetPlacer = layout.placer().h(6).from(ABOVE, anchorWidget).to(BELOW, anchorWidget);
+    assertThat(widgetPlacer.h()).isEqualTo(40);
+
+    Placer placer = layout.placer().from(ABOVE).to(BELOW);
+    assertThat(placer.h()).isEqualTo(SCREEN_H - 2 * BORDER_H);
   }
 }

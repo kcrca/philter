@@ -6,6 +6,11 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
+/**
+ * This interface exists for testing. The minecraft code uses lots of fields, and fields aren't
+ * mockable. So to test something that uses Screen (like all of McGUI), we need to wrap that stuff
+ * inside an interface so we can mock that. This code is used internally.
+ */
 interface Graphics {
 
   int getScreenX();

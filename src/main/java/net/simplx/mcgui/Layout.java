@@ -248,7 +248,6 @@ public class Layout implements Forcer {
       validate(h, "h");
     }
 
-
     public Placer inButton() {
       if (w != UNKNOWN) {
         w += 2 * buttonBorderW;
@@ -269,6 +268,29 @@ public class Layout implements Forcer {
         h += 2;
       }
       return this;
+    }
+
+    public record _ToClauseHoriz(Placer thisPlacer, int startX) {
+
+      private Placer extract(int w) {
+        thisPlacer.w(w - startX);
+        if (thisPlacer.x == UNKNOWN) {
+          thisPlacer.x(startX);
+        }
+        return thisPlacer;
+      }
+
+      public Placer to(Horizontal dir, Placer placer) {
+        return extract(coord(dir, placer));
+      }
+
+      public Placer to(Horizontal dir, ClickableWidget widget) {
+        return extract(coord(dir, widget));
+      }
+
+      public Placer to(Horizontal dir) {
+        return extract(thisPlacer.coord(dir));
+      }
     }
 
     private static int coord(Horizontal dir, Placer placer) {
@@ -295,39 +317,39 @@ public class Layout implements Forcer {
       };
     }
 
-    public record _ToClauseW(Placer thisPlacer, int startX) {
+    public _ToClauseHoriz from(Horizontal dir, Placer placer) {
+      return new _ToClauseHoriz(this, coord(dir, placer));
+    }
 
-      private Placer extract(int w) {
-        thisPlacer.w(w - startX);
-        if (thisPlacer.x == UNKNOWN) {
-          thisPlacer.x(startX);
+    public _ToClauseHoriz from(Horizontal dir, ClickableWidget widget) {
+      return new _ToClauseHoriz(this, coord(dir, widget));
+    }
+
+    public _ToClauseHoriz from(Horizontal dir) {
+      return new _ToClauseHoriz(this, coord(dir));
+    }
+
+    public record _ToClauseVert(Placer thisPlacer, int startY) {
+
+      private Placer extract(int h) {
+        thisPlacer.h(h - startY);
+        if (thisPlacer.y == UNKNOWN) {
+          thisPlacer.y(startY);
         }
         return thisPlacer;
       }
 
-      public Placer to(Horizontal dir, Placer placer) {
+      public Placer to(Vertical dir, Placer placer) {
         return extract(coord(dir, placer));
       }
 
-      public Placer to(Horizontal dir, ClickableWidget widget) {
+      public Placer to(Vertical dir, ClickableWidget widget) {
         return extract(coord(dir, widget));
       }
 
-      public Placer to(Horizontal dir) {
+      public Placer to(Vertical dir) {
         return extract(thisPlacer.coord(dir));
       }
-    }
-
-    public _ToClauseW from(Horizontal dir, Placer placer) {
-      return new _ToClauseW(this, coord(dir, placer));
-    }
-
-    public _ToClauseH from(Horizontal dir, ClickableWidget widget) {
-      return new _ToClauseH(this, coord(dir, widget));
-    }
-
-    public _ToClauseH from(Horizontal dir) {
-      return new _ToClauseH(this, coord(dir));
     }
 
     private static int coord(Vertical dir, Placer placer) {
@@ -354,39 +376,16 @@ public class Layout implements Forcer {
       };
     }
 
-    public record _ToClauseH(Placer thisPlacer, int startY) {
-
-      private Placer extract(int coord) {
-        thisPlacer.h(coord - startY);
-        if (thisPlacer.y == UNKNOWN) {
-          thisPlacer.y = coord;
-        }
-        return thisPlacer;
-      }
-
-      public Placer to(Vertical dir, Placer placer) {
-        return extract(coord(dir, placer));
-      }
-
-      public Placer to(Vertical dir, ClickableWidget widget) {
-        return extract(coord(dir, widget));
-      }
-
-      public Placer to(Vertical dir) {
-        return extract(thisPlacer.coord(dir));
-      }
+    public _ToClauseVert from(Vertical dir, Placer placer) {
+      return new _ToClauseVert(this, coord(dir, placer));
     }
 
-    public _ToClauseH from(Vertical dir, Placer placer) {
-      return new _ToClauseH(this, coord(dir, placer));
+    public _ToClauseVert from(Vertical dir, ClickableWidget widget) {
+      return new _ToClauseVert(this, coord(dir, widget));
     }
 
-    public _ToClauseH from(Vertical dir, ClickableWidget widget) {
-      return new _ToClauseH(this, coord(dir, widget));
-    }
-
-    public _ToClauseH from(Vertical dir) {
-      return new _ToClauseH(this, coord(dir));
+    public _ToClauseVert from(Vertical dir) {
+      return new _ToClauseVert(this, coord(dir));
     }
   }
 

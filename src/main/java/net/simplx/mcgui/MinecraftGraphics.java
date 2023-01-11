@@ -13,7 +13,7 @@ import net.minecraft.text.Text;
 import net.simplx.philter.Forcer;
 import net.simplx.philter.StaticForcer;
 
-public class MinecraftGraphics implements Graphics, Forcer {
+class MinecraftGraphics implements Graphics, Forcer {
 
   private static final StaticForcer forceScreen = new StaticForcer(HandledScreen.class);
   private static final Field SCREEN_X_F = forceScreen.field("x");
