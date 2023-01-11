@@ -1,5 +1,11 @@
 package net.simplx.mcgui;
 
+import static net.simplx.mcgui.Horizontal.CENTER;
+import static net.simplx.mcgui.Horizontal.LEFT;
+import static net.simplx.mcgui.Horizontal.RIGHT;
+import static net.simplx.mcgui.Vertical.ABOVE;
+import static net.simplx.mcgui.Vertical.BELOW;
+import static net.simplx.mcgui.Vertical.MID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,6 +16,7 @@ import java.util.List;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.simplx.mcgui.Layout.Placer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,19 +29,27 @@ class LayoutTest {
 
   public static final int EN_W = 4;
   public static final int FONT_H = 10;
+  public static final int SCREEN_X = 11;
+  public static final int SCREEN_Y = 26;
+  public static final int SCREEN_W = 41;
+  public static final int SCREEN_H = 56;
+  public static final int GAP_W = 1;
+  public static final int GAP_H = 3;
+  public static final int BORDER_W = 7;
+  public static final int BORDER_H = 13;
   @Mock
-  Graphics grahpicsMock;
+  Graphics graphicsMock;
   private Layout layout;
 
   @BeforeEach
   void setUp() {
-    when(grahpicsMock.getWidth("n")).thenReturn(EN_W);
-    when(grahpicsMock.getFontHeight()).thenReturn(FONT_H);
-    when(grahpicsMock.getScreenX()).thenReturn(10);
-    when(grahpicsMock.getScreenY()).thenReturn(20);
-    when(grahpicsMock.getScreenW()).thenReturn(30);
-    when(grahpicsMock.getScreenH()).thenReturn(40);
-    layout = new Layout(grahpicsMock);
+    when(graphicsMock.getWidth("n")).thenReturn(EN_W);
+    when(graphicsMock.getFontHeight()).thenReturn(FONT_H);
+    when(graphicsMock.getScreenX()).thenReturn(SCREEN_X);
+    when(graphicsMock.getScreenY()).thenReturn(SCREEN_Y);
+    when(graphicsMock.getScreenW()).thenReturn(SCREEN_W);
+    when(graphicsMock.getScreenH()).thenReturn(SCREEN_H);
+    layout = new Layout(graphicsMock, GAP_W, GAP_H, BORDER_W, BORDER_H);
   }
 
   @Test
@@ -43,10 +58,10 @@ class LayoutTest {
     assertThat(layout.fontH).isEqualTo(FONT_H);
     assertThat(layout.textH).isGreaterThan(FONT_H);
     assertThat(layout.leadingH).isPositive();
-    assertThat(layout.borderW).isEqualTo(Layout.DEFAULT_BORDER);
-    assertThat(layout.borderH).isEqualTo(Layout.DEFAULT_BORDER);
-    assertThat(layout.gapW).isEqualTo(Layout.DEFAULT_GAP);
-    assertThat(layout.gapH).isEqualTo(Layout.DEFAULT_GAP);
+    assertThat(layout.borderW).isEqualTo(BORDER_W);
+    assertThat(layout.borderH).isEqualTo(BORDER_H);
+    assertThat(layout.gapW).isEqualTo(GAP_W);
+    assertThat(layout.gapH).isEqualTo(GAP_H);
   }
 
   @Test
@@ -71,29 +86,29 @@ class LayoutTest {
 
   @Test
   void textStrW_str() {
-    when(grahpicsMock.getWidth("foo")).thenReturn(17);
+    when(graphicsMock.getWidth("foo")).thenReturn(17);
     assertThat(layout.textStrW("foo")).isEqualTo(17);
   }
 
   @Test
   void textW_str() {
-    when(grahpicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
+    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
     assertThat(layout.textW("foo")).isEqualTo(17);
   }
 
   @Test
   void maxTextStrW() {
-    when(grahpicsMock.getWidth("1")).thenReturn(1);
-    when(grahpicsMock.getWidth("2")).thenReturn(2);
-    when(grahpicsMock.getWidth("3")).thenReturn(3);
+    when(graphicsMock.getWidth("1")).thenReturn(1);
+    when(graphicsMock.getWidth("2")).thenReturn(2);
+    when(graphicsMock.getWidth("3")).thenReturn(3);
     assertThat(layout.maxTextStrW(List.of("1", "2", "3"))).isEqualTo(3);
   }
 
   @Test
   void maxTextW() {
-    when(grahpicsMock.getWidth(Text.translatable("1"))).thenReturn(1);
-    when(grahpicsMock.getWidth(Text.translatable("2"))).thenReturn(2);
-    when(grahpicsMock.getWidth(Text.translatable("3"))).thenReturn(3);
+    when(graphicsMock.getWidth(Text.translatable("1"))).thenReturn(1);
+    when(graphicsMock.getWidth(Text.translatable("2"))).thenReturn(2);
+    when(graphicsMock.getWidth(Text.translatable("3"))).thenReturn(3);
     assertThat(layout.maxTextW(layout.texts(List.of("1", "2", "3")))).isEqualTo(3);
   }
 
@@ -115,29 +130,183 @@ class LayoutTest {
 
   @Test
   void buttonW() {
-    when(grahpicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
+    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
     assertThat(layout.buttonW("foo")).isGreaterThan(17);
   }
 
   @Test
   void onOffButtonW() {
-    when(grahpicsMock.getWidth(Text.translatable("options.on"))).thenReturn(5);
-    when(grahpicsMock.getWidth(Text.translatable("options.off"))).thenReturn(100);
-    when(grahpicsMock.getWidth(Text.translatable("foo"))).thenReturn(20);
+    when(graphicsMock.getWidth(Text.translatable("options.on"))).thenReturn(5);
+    when(graphicsMock.getWidth(Text.translatable("options.off"))).thenReturn(100);
+    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(20);
     assertThat(layout.onOffButtonW(layout.text("foo"))).isGreaterThan(120);
   }
 
   @Test
   void drawText() {
     layout.drawText(new MatrixStack(), layout.placer().at(17, 29), layout.text("foo"), -1);
-    verify(grahpicsMock).drawText(Mockito.any(), eq(Text.translatable("foo")), eq(7.0f), eq(9.0f),
+    verify(graphicsMock).drawText(Mockito.any(), eq(Text.translatable("foo")), eq(6.0f), eq(3.0f),
         eq(-1));
   }
 
   @Test
   void addDrawableChild() {
-    var element = new TextWidget(1, 2, 3, 4, layout.text("foo"), null);
+    TextWidget element = new TextWidget(1, 2, 3, 4, layout.text("foo"), null);
     layout.addDrawableChild(element);
-    verify(grahpicsMock).addDrawableChild(element);
+    verify(graphicsMock).addDrawableChild(element);
+  }
+
+  @Test
+  void newPlacer_allUnknown() {
+    Placer p = layout.placer();
+    assertThat(p.rawX()).isEqualTo(Layout.UNKNOWN);
+    assertThat(p.rawY()).isEqualTo(Layout.UNKNOWN);
+    assertThat(p.rawW()).isEqualTo(Layout.UNKNOWN);
+    assertThat(p.rawH()).isEqualTo(Layout.UNKNOWN);
+  }
+
+  @Test
+  void bulkSetters() {
+    Placer p = layout.placer().size(1, 2).at(3, 4);
+    assertThat(p.x()).isEqualTo(3);
+    assertThat(p.y()).isEqualTo(4);
+    assertThat(p.w()).isEqualTo(1);
+    assertThat(p.h()).isEqualTo(2);
+  }
+
+  @Test
+  void singeSetters() {
+    Placer p = layout.placer().w(1).h(2).x(3).y(4);
+    assertThat(p.x()).isEqualTo(3);
+    assertThat(p.y()).isEqualTo(4);
+    assertThat(p.w()).isEqualTo(1);
+    assertThat(p.h()).isEqualTo(2);
+  }
+
+  @Test
+  void relativeWork() {
+    Placer p = layout.placer().at(100, 200);
+    assertThat(p.relX()).isEqualTo(100 - SCREEN_X);
+    assertThat(p.relY()).isEqualTo(200 - SCREEN_Y);
+  }
+
+  @Test
+  void withText() {
+    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(50);
+    Placer p = layout.placer().withText("foo");
+    assertThat(p.w()).isEqualTo(50);
+    assertThat(p.h()).isEqualTo(layout.textH);
+  }
+
+  @Test
+  void withTexts() {
+    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(50);
+    when(graphicsMock.getWidth(Text.translatable("bar"))).thenReturn(60);
+    when(graphicsMock.getWidth(Text.translatable("baz"))).thenReturn(70);
+    Placer p = layout.placer().withTexts("foo", "bar", "baz");
+    assertThat(p.w()).isEqualTo(70);
+    assertThat(p.h()).isEqualTo(layout.textH);
+  }
+
+  @Test
+  void relativeLeft() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().w(5).x(LEFT, anchorWidget);
+    assertThat(placerFromWidget.x()).isEqualTo(10 - GAP_W - 5);
+
+    Placer anchorPlacer = layout.placer().w(30).x(10);
+    Placer placerFromPlacer = layout.placer().w(5).x(LEFT, anchorPlacer);
+    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+  }
+
+  @Test
+  void relativeCenter() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().w(5).x(CENTER, anchorWidget);
+    assertThat(placerFromWidget.x()).isEqualTo(10 + (30 - 5) / 2);
+
+    Placer anchorPlacer = layout.placer().w(30).x(10);
+    Placer placerFromPlacer = layout.placer().w(5).x(CENTER, anchorPlacer);
+    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+  }
+
+  @Test
+  void relativeRight() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().w(5).x(RIGHT, anchorWidget);
+    assertThat(placerFromWidget.x()).isEqualTo(10 + 30 + GAP_W);
+
+    Placer anchorPlacer = layout.placer().w(30).x(10);
+    Placer placerFromPlacer = layout.placer().w(5).x(RIGHT, anchorPlacer);
+    assertThat(placerFromPlacer.x()).isEqualTo(placerFromWidget.x());
+  }
+
+  @Test
+  void relativeLeftEdge() {
+    Placer placer = layout.placer().w(5).x(LEFT);
+    assertThat(placer.x()).isEqualTo(SCREEN_X + BORDER_W);
+  }
+
+  @Test
+  void relativeCenterEdge() {
+    Placer placer = layout.placer().w(5).x(CENTER);
+    assertThat(placer.x()).isEqualTo(SCREEN_X + (SCREEN_W - 5) / 2);
+  }
+
+  @Test
+  void relativeRightEdge() {
+    Placer placer = layout.placer().w(5).x(RIGHT);
+    assertThat(placer.x()).isEqualTo(SCREEN_X + SCREEN_W - BORDER_W - 5);
+  }
+
+  @Test
+  void relativeAbove() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().h(6).y(ABOVE, anchorWidget);
+    assertThat(placerFromWidget.y()).isEqualTo(20 - GAP_H - 6);
+
+    Placer anchorPlacer = layout.placer().h(40).y(20);
+    Placer placerFromPlacer = layout.placer().h(6).y(ABOVE, anchorPlacer);
+    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+  }
+
+  @Test
+  void relativeMid() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().h(6).y(MID, anchorWidget);
+    assertThat(placerFromWidget.y()).isEqualTo(20 + (40 - 6) / 2);
+
+    Placer anchorPlacer = layout.placer().h(40).y(20);
+    Placer placerFromPlacer = layout.placer().h(6).y(MID, anchorPlacer);
+    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+  }
+
+  @Test
+  void relativeBelow() {
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    Placer placerFromWidget = layout.placer().h(6).y(BELOW, anchorWidget);
+    assertThat(placerFromWidget.y()).isEqualTo(20 + 40 + GAP_H);
+
+    Placer anchorPlacer = layout.placer().h(40).y(20);
+    Placer placerFromPlacer = layout.placer().h(6).y(BELOW, anchorPlacer);
+    assertThat(placerFromPlacer.y()).isEqualTo(placerFromWidget.y());
+  }
+
+  @Test
+  void relativeAboveEdge() {
+    Placer placer = layout.placer().h(5).y(ABOVE);
+    assertThat(placer.y()).isEqualTo(SCREEN_Y + BORDER_H);
+  }
+
+  @Test
+  void relativeMidEdge() {
+    Placer placer = layout.placer().h(5).y(MID);
+    assertThat(placer.y()).isEqualTo(SCREEN_Y + (SCREEN_H - 5) / 2);
+  }
+
+  @Test
+  void relativeBelowEdge() {
+    Placer placer = layout.placer().h(5).y(BELOW);
+    assertThat(placer.y()).isEqualTo(SCREEN_Y + SCREEN_H - BORDER_H - 5);
   }
 }

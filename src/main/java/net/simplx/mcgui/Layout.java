@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -28,15 +29,12 @@ public class Layout implements Forcer {
     private int x, y;
     private int w, h;
 
-    Placer(int x, int y, int w, int h) {
-      this.x = x;
-      this.y = y;
-      this.w = w;
-      this.h = x;
-    }
 
     Placer() {
-      this(UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN);
+      this.x = UNKNOWN;
+      this.y = UNKNOWN;
+      this.w = UNKNOWN;
+      this.h = UNKNOWN;
     }
 
     @Override
@@ -46,6 +44,40 @@ public class Layout implements Forcer {
       } catch (CloneNotSupportedException e) {
         throw new IllegalStateException(e);
       }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Placer placer = (Placer) o;
+      return x == placer.x && y == placer.y && w == placer.w && h == placer.h;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(x, y, w, h);
+    }
+    // Raw methods for testing.
+
+    int rawX() {
+      return x;
+    }
+
+    int rawY() {
+      return y;
+    }
+
+    int rawW() {
+      return w;
+    }
+
+    int rawH() {
+      return h;
     }
 
     public int x() {
@@ -169,9 +201,9 @@ public class Layout implements Forcer {
 
     private Placer x(Horizontal dir, int toX, int toW) {
       x = switch (dir) {
-        case LEFT -> toX - gapH - w();
+        case LEFT -> toX - gapW - w();
         case CENTER -> toX + (toW - w()) / 2;
-        case RIGHT -> toX + toW + gapH;
+        case RIGHT -> toX + toW + gapW;
       };
       return this;
     }
@@ -196,7 +228,7 @@ public class Layout implements Forcer {
     public Placer x(Horizontal dir) {
       x = switch (dir) {
         case LEFT -> screenX + borderW;
-        case CENTER -> screenX + (screenY - w()) / 2;
+        case CENTER -> screenX + (screenW - w()) / 2;
         case RIGHT -> screenX + screenW - borderW - w();
       };
       return this;
