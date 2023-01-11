@@ -11,18 +11,13 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FilterDesc {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(FilterDesc.class);
 
   private static final String MATCHES = "Matches";
   private static final String MODE = "Mode";
   private static final String EXACT = "Exact";
   private static final String MATCH_ALL = "MatchAll";
-  static final int MATCHES_MAX_COUNT = 12;
 
   public FilterMode mode;
   public ImmutableList<String> matches;
@@ -30,10 +25,6 @@ public class FilterDesc {
   public boolean matchAll;
 
   public FilterDesc(FilterMode mode, List<String> matches, boolean exact) {
-    if (matches.size() > MATCHES_MAX_COUNT) {
-      LOGGER.warn(matches.size() + ": More than " + MATCHES_MAX_COUNT + " matches, truncated");
-      matches = matches.subList(0, MATCHES_MAX_COUNT);
-    }
     this.mode = mode;
     this.matches = ImmutableList.copyOf(matches);
     this.exact = exact;
@@ -78,7 +69,7 @@ public class FilterDesc {
       }
       nbt.put(MATCHES, nbtList);
       if (matchAll) {
-        nbt.putBoolean(MATCH_ALL, matchAll);
+        nbt.putBoolean(MATCH_ALL, true);
       }
     }
     nbt.putBoolean(EXACT, exact);

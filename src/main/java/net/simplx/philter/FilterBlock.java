@@ -38,8 +38,6 @@ public class FilterBlock extends HopperBlock {
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
-  public static final int MAX_FILTERS = 25;
-  public static final int MAX_FILTER_LEN = 50;
 
   private static final VoxelShape CENTER_SHAPE = Block.createCuboidShape(4, 4, 4, 12, 12, 12);
   private static final Map<Direction, VoxelShape> POINTING = new EnumMap<>(Direction.class);
@@ -118,8 +116,7 @@ public class FilterBlock extends HopperBlock {
       case NORTH -> Direction.EAST;
       case EAST -> Direction.SOUTH;
       case SOUTH -> Direction.WEST;
-      case WEST -> Direction.NORTH;
-      case DOWN -> Direction.NORTH;
+      case WEST, DOWN -> Direction.NORTH;
       case UP -> throw new IllegalStateException("Illegal direction for hopper: " + facing);
     };
     return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true);

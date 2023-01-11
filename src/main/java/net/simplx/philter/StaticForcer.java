@@ -12,10 +12,10 @@ public class StaticForcer implements Forcer {
   }
 
   public Field field(String name) {
-    return Forcer.field(this.clz, name);
+    return Forcer.field(clz, name);
   }
 
   public Method method(String name, Class<?>... parameterTypes) {
-    return Forcer.method(this.clz, name, parameterTypes);
+    return Forcer.method(clz, name, parameterTypes);
   }
 }

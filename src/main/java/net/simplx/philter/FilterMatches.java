@@ -36,7 +36,9 @@ public class FilterMatches {
       if (spec.startsWith("#")) {
         spec = spec.substring(1);
         var id = Identifier.tryParse(spec);
-        (yes ? tagsYes : tagsNo).add(id);
+        if (id != null) {
+          (yes ? tagsYes : tagsNo).add(id);
+        }
       } else {
         (yes ? patternsYes : patternsNo).add(Pattern.compile(spec));
       }
@@ -77,7 +79,8 @@ public class FilterMatches {
       boolean matchAll) {
     for (Pattern pattern : patterns) {
       Item it = item.getItem();
-      Optional<RegistryKey<Item>> key = it.getRegistryEntry().getKey();
+      @SuppressWarnings("deprecation") Optional<RegistryKey<Item>> key = it.getRegistryEntry()
+          .getKey();
       if (key.isEmpty()) {
         continue;
       }

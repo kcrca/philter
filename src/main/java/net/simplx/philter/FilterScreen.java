@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -51,24 +50,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final int SCREEN_H = 133;
   private static final int SCREEN_W = 346;
-  private static final int TEXT_H = MinecraftClient.getInstance().textRenderer.fontHeight + 2;
-  private static final int BUTTON_H = TEXT_H + 4;
-  private static final int BORDER = 8;
 
   private static final int MODE_X = 176;
-  private static final int MODE_Y = BORDER;
-  private static final int MODE_H = BUTTON_H;
-
-  private static final int EXACT_Y = MODE_Y;
-
-  private static final int ALL_X = MODE_X;
-  private static final int ALL_Y = MODE_Y + MODE_H + BORDER;
-
-  private static final int SAVE_Y = ALL_Y;
-
-  private static final int MATCHES_X = MODE_X;
-  private static final int MATCHES_Y = ALL_Y + BUTTON_H + BORDER;
-  private static final int MATCHES_W = SCREEN_W - MATCHES_X - BORDER;
 
   private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
 
@@ -79,7 +62,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private List<TextFieldWidget> matchesFields;
   private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
-  private Tooltip matchTooltip;
   private boolean initializing;
   private Placer titlePlace;
   private Layout layout;
@@ -112,10 +94,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
         .x(RIGHT, titlePlace).y(MID, titlePlace);
     var modeButton = addDrawableChild(
-        CyclingButtonWidget.builder(modeTextGen).values((FilterMode[]) values()).omitKeyText()
+        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText()
             .initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
-            .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode((FilterMode) m)));
+            .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
@@ -157,7 +139,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       matchesFields.add(field);
       final int index = i;
       field.setChangedListener(text -> matchChanged(index, text));
-      // Set here instead of on creation, so all text is handled through the same change mechansim.
+      // Set here instead of on creation, so all text is handled through the same change mechanism.
       String match = desc.match(i);
       field.setText(match);
       if (!foundFocus && match.isEmpty()) {
@@ -193,7 +175,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     // Color the text based on validity.
     field.setEditableColor(0xffffff);
-    field.setTooltip(matchTooltip);
     if (!spec.isEmpty() && !RESOURCE_PAT.matcher(spec).matches()) {
       try {
         Pattern.compile(spec);
