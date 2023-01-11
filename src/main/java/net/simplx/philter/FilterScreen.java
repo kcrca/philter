@@ -94,8 +94,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
         .x(RIGHT, titlePlace).y(MID, titlePlace);
     var modeButton = addDrawableChild(
-        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText()
-            .initially(desc.mode)
+        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
 

@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -383,8 +382,7 @@ public class Layout implements Forcer {
   public final int borderW, borderH;
   public final int gapW, gapH;
 
-  private final Screen screen;
-  private final TextRenderer textRenderer;
+  private final Graphics graphics;
   private final int screenX, screenY;
   private final int screenW, screenH;
   private final int buttonBorderW, buttonBorderH;
@@ -400,20 +398,27 @@ public class Layout implements Forcer {
   }
 
   public Layout(Screen screen, int gapW, int gapH, int borderW, int borderH) {
-    this.screen = screen;
+    this(new MinecraftGraphics(screen), gapW, gapH, borderW, borderH);
+  }
+
+  Layout(Graphics graphics) {
+    this(graphics, DEFAULT_GAP, DEFAULT_GAP, DEFAULT_BORDER, DEFAULT_BORDER);
+  }
+
+  Layout(Graphics graphics, int gapW, int gapH, int borderW, int borderH) {
+    this.graphics = graphics;
     this.gapW = gapW;
     this.gapH = gapH;
     this.borderW = borderW;
     this.borderH = borderH;
-    this.textRenderer = (TextRenderer) forceGet(screen, TEXT_RENDERER_F);
-    enW = textRenderer.getWidth("n");
-    fontH = textRenderer.fontHeight;
+    enW = graphics.getWidth("n");
+    fontH = graphics.getFontHeight();
     leadingH = Math.round(fontH * 0.2f);
     textH = fontH + leadingH;
-    screenX = (int) forceGet(screen, SCREEN_X_F);
-    screenY = (int) forceGet(screen, SCREEN_Y_F);
-    screenW = (int) forceGet(screen, SCREEN_WIDTH_F);
-    screenH = (int) forceGet(screen, SCREEN_HEIGHT_F);
+    screenX = graphics.getScreenX();
+    screenY = graphics.getScreenY();
+    screenW = graphics.getScreenW();
+    screenH = graphics.getScreenH();
     buttonBorderW = 2 * enW;
     buttonBorderH = Math.round(fontH * 0.3f);
     prefix = "";
@@ -424,25 +429,15 @@ public class Layout implements Forcer {
   }
 
   public void setPrefix(String prefix) {
-    if (prefix.charAt(prefix.length() - 1) != '.') {
+    prefix = prefix.trim();
+    if (!prefix.isEmpty() && prefix.charAt(prefix.length() - 1) != '.') {
       prefix += ".";
     }
     this.prefix = prefix;
   }
 
-  public Tooltip tooltip(String keyName) {
-    return Tooltip.of(text(keyName));
-  }
-
-  public MutableText text(String keyName) {
-    if (!prefix.isEmpty()) {
-      keyName = prefix + keyName;
-    }
-    return Text.translatable(keyName);
-  }
-
-  public MutableText literal(String str) {
-    return Text.literal(str);
+  public int textStrW(String str) {
+    return graphics.getWidth(str);
   }
 
   public int textW(String keyName) {
@@ -450,11 +445,15 @@ public class Layout implements Forcer {
   }
 
   public int textW(Text text) {
-    return textRenderer.getWidth(text);
+    return graphics.getWidth(text);
   }
 
   public Collection<Text> texts(Iterable<String> strs) {
     return stream(strs).map(str -> (Text) text(str)).toList();
+  }
+
+  public int maxTextStrW(Iterable<String> texts) {
+    return stream(texts).map(this::textStrW).max(Integer::compare).orElse(0);
   }
 
   public Collection<Text> texts(String keyName, String... others) {
@@ -477,6 +476,21 @@ public class Layout implements Forcer {
     return textW(text) + 2 * enW;
   }
 
+  public MutableText text(String keyName) {
+    if (!prefix.isEmpty()) {
+      keyName = prefix + keyName;
+    }
+    return Text.translatable(keyName);
+  }
+
+  public MutableText literal(String str) {
+    return Text.literal(str);
+  }
+
+  public Tooltip tooltip(String keyName) {
+    return Tooltip.of(text(keyName));
+  }
+
   public int buttonW(Iterable<Text> texts) {
     int maxW = 0;
     for (Text t : texts) {
@@ -492,15 +506,10 @@ public class Layout implements Forcer {
   }
 
   public void drawText(MatrixStack matrices, Placer placer, Text text, int color) {
-    textRenderer.draw(matrices, text, (float) placer.relX(), (float) placer.relY(), color);
+    graphics.drawText(matrices, text, (float) placer.relX(), (float) placer.relY(), color);
   }
 
-  @SuppressWarnings("unchecked")
-  protected <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
-    return (T) forceInvoke(screen, ADD_DRAWABLE_CHILD_M, element);
-  }
-
-  protected void remove(Element child) {
-    forceInvoke(screen, REMOVE_M, child);
+  public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
+    return graphics.addDrawableChild(element);
   }
 }
