@@ -1,4 +1,4 @@
-package net.simplx.philter.mcgui;
+package net.simplx.mcgui;
 
 public enum Horizontal {
   LEFT, CENTER, RIGHT

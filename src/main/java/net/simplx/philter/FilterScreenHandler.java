@@ -20,7 +20,8 @@ public class FilterScreenHandler extends HopperScreenHandler implements Forcer {
   private final BlockPos pos;
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
-    this(syncId, playerInventory, new SimpleInventory(INVENTORY_SIZE), new FilterDesc(buf), buf.readBlockPos());
+    this(syncId, playerInventory, new SimpleInventory(INVENTORY_SIZE), new FilterDesc(buf),
+        buf.readBlockPos());
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory,
