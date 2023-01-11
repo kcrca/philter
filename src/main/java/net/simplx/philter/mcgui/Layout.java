@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -21,7 +20,6 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.simplx.philter.Forcer;
 import net.simplx.philter.StaticForcer;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("ALL")
 public class Layout implements Forcer {
@@ -344,54 +342,6 @@ public class Layout implements Forcer {
     int onOffW = buttonW(
         List.of(Text.translatable("options.on"), Text.translatable("options.off")));
     return textW(text) + textW(Text.literal(": ")) + onOffW;
-  }
-
-  public Placer getData(Class<? extends Element> widgetClass, int w, int h, To to, Element other) {
-    return getData(w, h, to, (int) forceGet(other, WIDGET_X_F), (int) forceGet(other, WIDGET_Y_F),
-        (int) forceGet(other, WIDGET_WIDTH_F), (int) forceGet(other, WIDGET_HEIGHT_F));
-  }
-
-  public Placer getData(Class<? extends Element> widgetClass, int w, int h, To to, Screen screen) {
-    return getData(w, h, to, (int) forceGet(screen, SCREEN_X_F), (int) forceGet(screen, SCREEN_Y_F),
-        (int) forceGet(screen, SCREEN_WIDTH_F), (int) forceGet(screen, SCREEN_HEIGHT_F));
-  }
-
-  @NotNull
-  public Layout.Placer getButtonData(Placer placer, Text text) {
-    int x = fillIn(placer.x, () -> 0);
-    int y = fillIn(placer.y, () -> 0);
-    int w = fillIn(placer.w, () -> textW(text));
-    int h = fillIn(placer.h, () -> textH);
-    return new Placer(x, y, w + 2 * enW, h + 2 * 3);
-  }
-
-  @NotNull
-  public Layout.Placer getTextData(Placer placer, Text text) {
-    int x = fillIn(placer.x, () -> 0);
-    int y = fillIn(placer.y, () -> 0);
-    int contentW = fillIn(placer.w, () -> textW(text));
-    int contentH = fillIn(placer.h, () -> textH);
-    return new Placer(x, y, contentW, contentH);
-  }
-
-  private int fillIn(int value, Supplier<Integer> def) {
-    return value == UNKNOWN ? def.get() : value;
-  }
-
-  @NotNull
-  private Layout.Placer getData(int w, int h, To to, int ox, int oy, int ow, int oh) {
-    switch (to) {
-      case LEFT:
-        return new Placer(ox - w - gapW, oy, w, h);
-      case RIGHT:
-        return new Placer(ox + ow + gapW, oy, w, h);
-      case UP:
-        return new Placer(ox, oy - h - gapH, w, h);
-      case DOWN:
-        return new Placer(ox, oy + oh + gapH, w, h);
-      default:
-        throw new IllegalArgumentException(to + ": Unknown value");
-    }
   }
 
   public void drawText(MatrixStack matrices, Placer placer, Text text, int color) {
