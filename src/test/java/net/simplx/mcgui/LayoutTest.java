@@ -7,6 +7,7 @@ import static net.simplx.mcgui.Vertical.ABOVE;
 import static net.simplx.mcgui.Vertical.BELOW;
 import static net.simplx.mcgui.Vertical.MID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -308,5 +309,38 @@ class LayoutTest {
   void relativeBelowEdge() {
     Placer placer = layout.placer().h(5).y(BELOW);
     assertThat(placer.y()).isEqualTo(SCREEN_Y + SCREEN_H - BORDER_H - 5);
+  }
+
+  @Test
+  void relativeXWithoutW() {
+    for (var dir : List.of(CENTER, RIGHT)) {
+      assertThatThrownBy(() -> {
+        layout.placer().h(5).x(dir);
+      }).isInstanceOf(IllegalArgumentException.class);
+    }
+    layout.placer().h(5).x(LEFT); // no exception
+
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    for (var dir : List.of(CENTER, LEFT)) {
+      assertThatThrownBy(() -> layout.placer().h(5).x(dir, anchorWidget)).isInstanceOf(
+          IllegalArgumentException.class);
+    }
+    layout.placer().h(5).x(RIGHT, anchorWidget); // no exception
+  }
+
+  @Test
+  void relativeYWithoutH() {
+    for (var dir : List.of(MID, BELOW)) {
+      assertThatThrownBy(() -> layout.placer().w(6).y(dir)).isInstanceOf(
+          IllegalArgumentException.class);
+    }
+    layout.placer().h(5).y(ABOVE); // no exception
+
+    TextWidget anchorWidget = new TextWidget(10, 20, 30, 40, layout.text("foo"), null);
+    for (var dir : List.of(MID, ABOVE)) {
+      assertThatThrownBy(() -> layout.placer().w(6).y(dir, anchorWidget)).isInstanceOf(
+          IllegalArgumentException.class);
+    }
+    layout.placer().h(5).y(BELOW, anchorWidget); // no exception
   }
 }
