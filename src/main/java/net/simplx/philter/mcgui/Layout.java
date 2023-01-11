@@ -380,11 +380,10 @@ public class Layout implements Forcer {
   public final int fontH;
   public final int textH;
   public final int leadingH;
+  public final int borderW, borderH;
+  public final int gapW, gapH;
 
   private final Screen screen;
-  private final int screenWidth, screenHeight;
-  private final int gapW, gapH;
-  private final int borderW, borderH;
   private final TextRenderer textRenderer;
   private final int screenX, screenY;
   private final int screenW, screenH;
@@ -392,19 +391,16 @@ public class Layout implements Forcer {
 
   private String prefix;
 
-  public Layout(Screen screen, int w, int h) {
-    this(screen, w, h, DEFAULT_GAP, DEFAULT_GAP, DEFAULT_BORDER, DEFAULT_BORDER);
+  public Layout(Screen screen) {
+    this(screen, DEFAULT_BORDER, DEFAULT_BORDER);
   }
 
-  public Layout(Screen screen, int w, int h, int gap, int border) {
-    this(screen, w, h, gap, gap, border, border);
+  public Layout(Screen screen, int gap, int border) {
+    this(screen, gap, gap, border, border);
   }
 
-  public Layout(Screen screen, int width, int height, int gapW, int gapH, int borderW,
-      int borderH) {
+  public Layout(Screen screen, int gapW, int gapH, int borderW, int borderH) {
     this.screen = screen;
-    screenWidth = width;
-    screenHeight = height;
     this.gapW = gapW;
     this.gapH = gapH;
     this.borderW = borderW;

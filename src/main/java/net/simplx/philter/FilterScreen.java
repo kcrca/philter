@@ -2,7 +2,6 @@ package net.simplx.philter;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
-import static net.simplx.philter.FilterDesc.MATCHES_MAX_COUNT;
 import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
@@ -14,6 +13,7 @@ import static net.simplx.philter.mcgui.Vertical.BELOW;
 import static net.simplx.philter.mcgui.Vertical.MID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -76,7 +76,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private MutableText filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
-  private TextFieldWidget[] matchesFields;
+  private List<TextFieldWidget> matchesFields;
   private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
   private Tooltip matchTooltip;
@@ -93,46 +93,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     desc = handler.getFilterDesc();
   }
 
-  class TextHelper {
-
-    Tooltip tooltip(String keyName) {
-      return Tooltip.of(text(keyName));
-    }
-
-    MutableText text(String keyName) {
-      return Text.translatable(keyName);
-    }
-
-    final int enW = textRenderer.getWidth("n");
-
-    int textW(Text text) {
-      return textRenderer.getWidth(text);
-    }
-
-    int buttonW(Text text) {
-      return textW(text) + 2 * enW;
-    }
-
-    int buttonW(Iterable<Text> texts) {
-      int maxW = 0;
-      for (Text t : texts) {
-        maxW = Math.max(buttonW(t), maxW);
-      }
-      return maxW;
-    }
-
-    int onOffButtonW(Text text) {
-      int onOffW = buttonW(
-          List.of(Text.translatable("options.on"), Text.translatable("options.off")));
-      return textW(text) + textW(Text.literal(": ")) + onOffW;
-    }
-  }
-
   protected void init() {
     initializing = true;
     super.init();
 
-    layout = new Layout(this, SCREEN_W, SCREEN_H);
+    layout = new Layout(this);
     layout.setPrefix("philter.filter");
 
     // Calculate the text- and font-relative values.
@@ -154,8 +119,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
-    p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT)
-        .y(MID, titlePlace);
+    p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT).y(MID, titlePlace);
     allButton = addDrawableChild(
         CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
@@ -176,25 +140,35 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
     // any text field padding, it's based on total width, so we set it after.
     Placer first = group.clone().inTextField().w(group.w() / 2);
+    Placer bottom = first.y(BELOW);
 
-    matchesFields = new TextFieldWidget[MATCHES_MAX_COUNT];
+    matchesFields = new ArrayList<>();
     boolean foundFocus = false;
-    for (int i = 0; i < MATCHES_MAX_COUNT; i++) {
+    TextFieldWidget field = null;
+    for (int i = 0; true; i++) {
       int col = i % 2;
       int row = i / 2;
       p = first.clone().x(group.x() + col * first.w()).y(group.y() + row * first.h());
-      var field = matchesFields[i] = addDrawableChild(
-          new TextFieldWidget(textRenderer, p.x(), p.y(), p.w(), p.h(), layout.text("")));
+      if (p.y() > bottom.y()) {
+        break;
+      }
+      field = addDrawableChild(
+          new TextFieldWidget(textRenderer, p.x(), p.y(), p.w(), p.h(), Text.empty()));
+      matchesFields.add(field);
       final int index = i;
       field.setChangedListener(text -> matchChanged(index, text));
       // Set here instead of on creation, so all text is handled through the same change mechansim.
       String match = desc.match(i);
       field.setText(match);
-      if (!foundFocus && (match.isEmpty() || i == MATCHES_MAX_COUNT - 1)) {
+      if (!foundFocus && match.isEmpty()) {
         foundFocus = true;
         setInitialFocus(field);
       }
       field.visible = false;
+    }
+    // If we haven't found an empty field, put the focus on the last field.
+    if (!foundFocus) {
+      setInitialFocus(field);
     }
 
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
@@ -210,7 +184,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void matchChanged(int i, String text) {
     String spec = text.trim();
-    TextFieldWidget field = matchesFields[i];
+    TextFieldWidget field = matchesFields.get(i);
     if (!spec.equals(text)) {
       // This will cause recursion back into here, so just return.
       field.setText(spec);
@@ -255,13 +229,13 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     saveButton.visible = allButton.visible && anyMatchChanged();
 
     // We have to deal with focus before changing visibility
-    var wasVisible = matchesFields[0].visible;
+    var wasVisible = matchesFields.get(0).visible;
     boolean newVisible = desc.mode == MATCHES;
     if (!wasVisible && newVisible) {
-      setInitialFocus(matchesFields[0]);
+      setInitialFocus(matchesFields.get(0));
     } else if (wasVisible && !newVisible) {
-      if (stream(matchesFields).anyMatch(ClickableWidget::isFocused)) {
-        TextFieldWidget lastField = matchesFields[matchesFields.length - 1];
+      if (matchesFields.stream().anyMatch(ClickableWidget::isFocused)) {
+        TextFieldWidget lastField = matchesFields.get(matchesFields.size() - 1);
         setFocused(lastField);
         lastField.changeFocus(true);
       }
@@ -275,9 +249,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     if (matchesFields == null) {
       return false;
     }
-    for (int i = 0; i < matchesFields.length; i++) {
+    for (int i = 0; i < matchesFields.size(); i++) {
       String orig = desc.match(i);
-      if (!matchesFields[i].getText().equals(orig)) {
+      if (!matchesFields.get(i).getText().equals(orig)) {
         return true;
       }
     }
@@ -285,11 +259,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void setMatchesVisible(boolean newVisible) {
-    stream(matchesFields).forEach(field -> field.visible = newVisible);
+    matchesFields.forEach(field -> field.visible = newVisible);
   }
 
   private void storeText() {
-    desc.matches = stream(matchesFields).map(TextFieldWidget::getText)
+    desc.matches = matchesFields.stream().map(TextFieldWidget::getText)
         .filter(text -> !text.isBlank()).collect(toImmutableList());
   }
 
