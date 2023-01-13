@@ -18,6 +18,8 @@ class MinecraftGraphics implements Graphics, Forcer {
   private static final StaticForcer forceScreen = new StaticForcer(HandledScreen.class);
   private static final Field SCREEN_X_F = forceScreen.field("x");
   private static final Field SCREEN_Y_F = forceScreen.field("y");
+  private static final Field WIDTH_F = forceScreen.field("width");
+  private static final Field HEIGHT_F = forceScreen.field("height");
   private static final Field SCREEN_WIDTH_F = forceScreen.field("backgroundWidth");
   private static final Field SCREEN_HEIGHT_F = forceScreen.field("backgroundHeight");
   private static final Field TEXT_RENDERER_F = forceScreen.field("textRenderer");
@@ -27,6 +29,7 @@ class MinecraftGraphics implements Graphics, Forcer {
 
   private final Screen screen;
   private final TextRenderer textRenderer;
+  private final int windowW, windowH;
   private final int screenX, screenY;
   private final int screenW, screenH;
 
@@ -36,9 +39,10 @@ class MinecraftGraphics implements Graphics, Forcer {
     screenY = (int) forceGet(screen, SCREEN_Y_F);
     screenW = (int) forceGet(screen, SCREEN_WIDTH_F);
     screenH = (int) forceGet(screen, SCREEN_HEIGHT_F);
+    windowW = (int) forceGet(screen, WIDTH_F);
+    windowH = (int) forceGet(screen, HEIGHT_F);
     this.screen = screen;
   }
-
 
   @Override
   public int getScreenX() {
@@ -58,6 +62,21 @@ class MinecraftGraphics implements Graphics, Forcer {
   @Override
   public int getScreenH() {
     return screenH;
+  }
+
+  @Override
+  public int getWindowW() {
+    return windowW;
+  }
+
+  @Override
+  public int getWindowH() {
+    return windowH;
+  }
+
+  @Override
+  public void drawTexture(MatrixStack matrices, int x, int y, int u, int v, int w, int h) {
+    screen.drawTexture(matrices, x, y, u, v, w, h);
   }
 
   @Override

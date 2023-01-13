@@ -31,4 +31,9 @@ interface Graphics {
 
   <T extends Element & Drawable & Selectable> T addDrawableChild(T element);
 
+  int getWindowW();
+
+  int getWindowH();
+
+  void drawTexture(MatrixStack matrices, int x, int y, int u, int v, int w, int h);
 }

@@ -157,6 +157,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     reactToChange();
   }
 
+
   @Override
   protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
     super.drawForeground(matrices, mouseX, mouseY);

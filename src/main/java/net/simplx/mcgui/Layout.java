@@ -3,6 +3,7 @@ package net.simplx.mcgui;
 import static com.google.common.collect.Streams.stream;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -15,14 +16,27 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.LockButtonWidget;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.simplx.philter.Forcer;
+import net.minecraft.util.Identifier;
 import net.simplx.philter.StaticForcer;
 
-@SuppressWarnings("ALL")
-public class Layout implements Forcer {
+/**
+ * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgts (or other
+ * ones if you prefer). This is typically used in a mod's {@code }Screen} class to put up dialog
+ * boxes for custom blocks. For example, the following code will lay out three buttons along the top
+ * of that screen:
+ *
+ * <code>
+ *
+ * </code>
+ */
+@SuppressWarnings("UnusedReturnValue")
+public class Layout {
+
 
   public class Placer implements Cloneable {
 
@@ -31,10 +45,7 @@ public class Layout implements Forcer {
 
 
     Placer() {
-      this.x = UNKNOWN;
-      this.y = UNKNOWN;
-      this.w = UNKNOWN;
-      this.h = UNKNOWN;
+      x = y = w = h = UNKNOWN;
     }
 
     @Override
@@ -270,6 +281,14 @@ public class Layout implements Forcer {
       return this;
     }
 
+    public Placer lockButton() {
+      ensureLockButtonData();
+      w = lockButtonW;
+      h = lockButtonH;
+      return this;
+    }
+
+
     public record _ToClauseHoriz(Placer thisPlacer, int startX) {
 
       private Placer extract(int w) {
@@ -389,6 +408,14 @@ public class Layout implements Forcer {
     }
   }
 
+  private void ensureLockButtonData() {
+    if (lockButtonW == UNKNOWN) {
+      LockButtonWidget lb = new LockButtonWidget(0, 0, null);
+      lockButtonW = lb.getWidth();
+      lockButtonH = lb.getHeight();
+    }
+  }
+
   public static final int DEFAULT_GAP = 2;
   public static final int DEFAULT_BORDER = 6;
 
@@ -417,6 +444,8 @@ public class Layout implements Forcer {
   private final int screenX, screenY;
   private final int screenW, screenH;
   private final int buttonBorderW, buttonBorderH;
+
+  private int lockButtonW = UNKNOWN, lockButtonH = UNKNOWN;
 
   private String prefix;
 
@@ -535,6 +564,17 @@ public class Layout implements Forcer {
         List.of(Text.translatable("options.on"), Text.translatable("options.off")));
     return textW(text) + textW(Text.literal(": ")) + onOffW;
   }
+
+  public void drawBackground(MatrixStack matrices, Identifier texture, float delta, int mouseX,
+      int mouseY) {
+    RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+    RenderSystem.setShaderTexture(0, texture);
+    int x = (graphics.getWindowW() - graphics.getScreenW()) / 2;
+    int y = (graphics.getWindowH() - graphics.getScreenH()) / 2;
+    graphics.drawTexture(matrices, x, y, 0, 0, graphics.getScreenW(), graphics.getScreenH());
+  }
+
 
   public void drawText(MatrixStack matrices, Placer placer, Text text, int color) {
     graphics.drawText(matrices, text, (float) placer.relX(), (float) placer.relY(), color);
