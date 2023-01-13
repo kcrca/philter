@@ -1,0 +1,6 @@
+{
+    "parent": "philter:block/filter_side_tmpl",
+    "textures": {
+        "side": "philter:block/filter_outside"
+    }
+}
