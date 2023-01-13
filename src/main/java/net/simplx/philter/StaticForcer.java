@@ -18,4 +18,20 @@ public class StaticForcer implements Forcer {
   public Method method(String name, Class<?>... parameterTypes) {
     return Forcer.method(clz, name, parameterTypes);
   }
+
+  public Object forceGet(String name) {
+    return forceGet(this, name);
+  }
+
+  public Object forceGet(Object target, String name) {
+    return forceGet(target, Forcer.field(clz, name));
+  }
+
+  public void forceSet(String name, Object value) {
+    forceSet(Forcer.field(clz, name), value);
+  }
+
+  public void forceSet(Object target, String name, Object value) {
+    forceSet(target, Forcer.field(clz, name), value);
+  }
 }

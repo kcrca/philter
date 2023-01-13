@@ -73,8 +73,12 @@ public interface Forcer {
   }
 
   default void forceSet(Field field, Object value) {
+    forceSet(this, field, value);
+  }
+
+  default void forceSet(Object target, Field field, Object value) {
     try {
-      field.set(this, value);
+      field.set(target, value);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException(e);
     }

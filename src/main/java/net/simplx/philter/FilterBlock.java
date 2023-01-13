@@ -1,5 +1,7 @@
 package net.simplx.philter;
 
+import static net.minecraft.util.function.BooleanBiFunction.OR;
+
 import java.util.EnumMap;
 import java.util.Map;
 import net.minecraft.block.Block;
@@ -10,7 +12,6 @@ import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.Hopper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,7 +23,6 @@ import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -33,26 +33,52 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class FilterBlock extends HopperBlock {
+public class FilterBlock extends HopperBlock implements Forcer {
 
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
 
+  private static final StaticForcer forcer = new StaticForcer(HopperBlock.class);
+  private static final VoxelShape TOP_SHAPE = (VoxelShape) forcer.forceGet("TOP_SHAPE");
+  private static final VoxelShape MIDDLE_SHAPE = (VoxelShape) forcer.forceGet("MIDDLE_SHAPE");
+  private static final VoxelShape DOWN_SHAPE = (VoxelShape) forcer.forceGet("DOWN_SHAPE");
+  private static final VoxelShape EAST_SHAPE = (VoxelShape) forcer.forceGet("EAST_SHAPE");
+  private static final VoxelShape NORTH_SHAPE = (VoxelShape) forcer.forceGet("NORTH_SHAPE");
+  private static final VoxelShape SOUTH_SHAPE = (VoxelShape) forcer.forceGet("SOUTH_SHAPE");
+  private static final VoxelShape WEST_SHAPE = (VoxelShape) forcer.forceGet("WEST_SHAPE");
+  private static final VoxelShape DOWN_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
+      "DOWN_RAYCAST_SHAPE");
+  private static final VoxelShape EAST_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
+      "EAST_RAYCAST_SHAPE");
+  private static final VoxelShape NORTH_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
+      "NORTH_RAYCAST_SHAPE");
+  private static final VoxelShape SOUTH_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
+      "SOUTH_RAYCAST_SHAPE");
+  private static final VoxelShape WEST_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
+      "WEST_RAYCAST_SHAPE");
+
   private static final VoxelShape CENTER_SHAPE = Block.createCuboidShape(4, 4, 4, 12, 12, 12);
-  private static final Map<Direction, VoxelShape> POINTING = new EnumMap<>(Direction.class);
   private static final Map<Direction, Map<Direction, VoxelShape>> SHAPES = new EnumMap<>(
       Direction.class);
   private static final Map<Direction, Map<Direction, VoxelShape>> RAYCAST_SHAPES = new EnumMap<>(
       Direction.class);
 
   static {
-    POINTING.put(Direction.NORTH, Block.createCuboidShape(6, 6, 0, 10, 10, 4));
-    POINTING.put(Direction.SOUTH, Block.createCuboidShape(12, 6, 6, 16, 10, 10));
-    POINTING.put(Direction.EAST, Block.createCuboidShape(12, 6, 6, 16, 10, 10));
-    POINTING.put(Direction.WEST, Block.createCuboidShape(0, 6, 6, 4, 10, 10));
-    POINTING.put(Direction.UP, Block.createCuboidShape(6, 12, 6, 10, 16, 10));
-    POINTING.put(Direction.DOWN, Block.createCuboidShape(6, 0, 6, 10, 4, 10));
+    Map<Direction, VoxelShape> dirs = new EnumMap<>(Direction.class);
+    dirs.put(Direction.DOWN, DOWN_SHAPE);
+    dirs.put(Direction.UP, DOWN_SHAPE); // not used, but fails if nothing is set
+    dirs.put(Direction.EAST, EAST_SHAPE);
+    dirs.put(Direction.NORTH, NORTH_SHAPE);
+    dirs.put(Direction.SOUTH, SOUTH_SHAPE);
+    dirs.put(Direction.WEST, WEST_SHAPE);
+    Map<Direction, VoxelShape> raycast = new EnumMap<>(Direction.class);
+    raycast.put(Direction.DOWN, DOWN_RAYCAST_SHAPE);
+    raycast.put(Direction.UP, DOWN_RAYCAST_SHAPE); // not used, but fails if nothing is set
+    raycast.put(Direction.EAST, EAST_RAYCAST_SHAPE);
+    raycast.put(Direction.NORTH, NORTH_RAYCAST_SHAPE);
+    raycast.put(Direction.SOUTH, SOUTH_RAYCAST_SHAPE);
+    raycast.put(Direction.WEST, WEST_RAYCAST_SHAPE);
 
     for (Direction facing : Direction.values()) {
       Map<Direction, VoxelShape> shapes = new EnumMap<>(Direction.class);
@@ -60,12 +86,10 @@ public class FilterBlock extends HopperBlock {
       SHAPES.put(facing, shapes);
       RAYCAST_SHAPES.put(facing, raycastShapes);
       for (Direction filter : Direction.values()) {
-        VoxelShape pointers = VoxelShapes.combineAndSimplify(POINTING.get(facing),
-            POINTING.get(filter), BooleanBiFunction.OR);
-        shapes.put(filter,
-            VoxelShapes.combineAndSimplify(pointers, CENTER_SHAPE, BooleanBiFunction.OR));
-        raycastShapes.put(filter,
-            VoxelShapes.combineAndSimplify(pointers, Hopper.INSIDE_SHAPE, BooleanBiFunction.OR));
+        VoxelShape p = VoxelShapes.combineAndSimplify(dirs.get(facing), dirs.get(filter), OR);
+        shapes.put(filter, VoxelShapes.combineAndSimplify(p, CENTER_SHAPE, OR));
+        VoxelShape r = VoxelShapes.combineAndSimplify(raycast.get(facing), raycast.get(filter), OR);
+        raycastShapes.put(filter, VoxelShapes.combineAndSimplify(r, TOP_SHAPE, OR));
       }
     }
   }
