@@ -2,6 +2,7 @@ package net.simplx.philter;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
@@ -10,6 +11,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Material;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemGroups;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.screen.ScreenHandlerType;
@@ -39,11 +42,16 @@ public class PhilterMod implements ModInitializer {
   @Override
   public void onInitialize() {
     Registry.register(Registries.BLOCK, FILTER_ID, FILTER_BLOCK);
-    Registry.register(Registries.ITEM, FILTER_ID,
+    var blockItem = Registry.register(Registries.ITEM, FILTER_ID,
         new BlockItem(FILTER_BLOCK, new FabricItemSettings()));
     ServerPlayNetworking.registerGlobalReceiver(FILTER_ID,
         (server, player, handler, buf, responseSender) -> server.execute(
             () -> FilterBlockEntity.updateEntity(player, buf)));
+
+    ItemGroupEvents.modifyEntriesEvent(ItemGroups.REDSTONE).register(content -> {
+      content.addAfter(Items.HOPPER, blockItem);
+    });
+
   }
 
 }
