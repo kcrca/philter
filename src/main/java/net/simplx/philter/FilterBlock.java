@@ -2,6 +2,7 @@ package net.simplx.philter;
 
 import static net.minecraft.util.function.BooleanBiFunction.OR;
 
+import com.google.common.collect.Iterators;
 import java.util.EnumMap;
 import java.util.Map;
 import net.minecraft.block.Block;
@@ -12,6 +13,7 @@ import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.Hopper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -79,6 +81,13 @@ public class FilterBlock extends HopperBlock implements Forcer {
     raycast.put(Direction.NORTH, NORTH_RAYCAST_SHAPE);
     raycast.put(Direction.SOUTH, SOUTH_RAYCAST_SHAPE);
     raycast.put(Direction.WEST, WEST_RAYCAST_SHAPE);
+
+    // Now we fill in the top of the hopper, where the sorter machine lives
+    var voxels = Iterators.concat(dirs.entrySet().iterator(), raycast.entrySet().iterator());
+    while (voxels.hasNext()) {
+      var shape = voxels.next();
+      shape.setValue(VoxelShapes.combineAndSimplify(shape.getValue(), Hopper.INSIDE_SHAPE, OR));
+    }
 
     for (Direction facing : Direction.values()) {
       Map<Direction, VoxelShape> shapes = new EnumMap<>(Direction.class);
