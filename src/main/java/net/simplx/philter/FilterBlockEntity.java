@@ -1,12 +1,14 @@
 package net.simplx.philter;
 
 import static net.simplx.philter.FilterBlock.FILTER;
+import static net.simplx.philter.FilterBlock.FILTERED;
 
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
 import net.minecraft.block.entity.BlockEntity;
@@ -61,12 +63,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
+  private int flicker;
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
     desc = new FilterDesc(FilterMode.ONLY_SAME, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
+    flicker = 0;
   }
 
   static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {
@@ -124,6 +128,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
       setTransferCooldown(0);
       insertAndExtract(world, pos, state, () -> extract(world, this));
     }
+    if (flicker > 0) {
+      --flicker;
+      boolean newState = flicker > 0;
+      boolean curState = state.get(FILTERED);
+      if (newState != curState) {
+        world.setBlockState(pos, state.with(FILTERED, newState), Block.NOTIFY_LISTENERS);
+      }
+    }
   }
 
   @SuppressWarnings("UnusedReturnValue")
@@ -140,6 +152,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
         for (int i = 0; i < size(); i++) {
           if (inFilter(getStack(i), world, pos, state)) {
             filterInventory.setStack(i, getStack(i));
+            world.setBlockState(pos, state.with(FILTERED, true), Block.NOTIFY_LISTENERS);
+            flicker = 8;
+            break;
           }
         }
         if (!filterInventory.isEmpty() && insert(world, pos, filterState, this)) {

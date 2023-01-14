@@ -1,0 +1,16 @@
+{
+    "comment": "Top of the side-facing filter",
+    "ambientocclusion": false,
+    "textures": {
+        "particle": "philter:block/filter_side_cap_on",
+        "top": "philter:block/filter_side_cap_on"
+    },
+    "elements": [
+        {   "from": [ 0, 16, 0 ],
+            "to": [ 16, 16, 16 ],
+            "faces": {
+                "up":    { "texture": "#top", "cullface": "up" }
+            }
+        }
+    ]
+}

@@ -40,6 +40,7 @@ public class FilterBlock extends HopperBlock implements Forcer {
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
+  public static final BooleanProperty FILTERED = BooleanProperty.of("filtered");
 
   private static final StaticForcer forcer = new StaticForcer(HopperBlock.class);
   private static final VoxelShape TOP_SHAPE = (VoxelShape) forcer.forceGet("TOP_SHAPE");
@@ -132,7 +133,7 @@ public class FilterBlock extends HopperBlock implements Forcer {
 
   @Override
   protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-    builder.add(FACING, ENABLED, FILTER);
+    builder.add(FACING, ENABLED, FILTER, FILTERED);
   }
 
   @Override
@@ -152,7 +153,8 @@ public class FilterBlock extends HopperBlock implements Forcer {
       case WEST, DOWN -> Direction.NORTH;
       case UP -> throw new IllegalStateException("Illegal direction for hopper: " + facing);
     };
-    return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true);
+    return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
+        .with(FILTERED, false);
   }
 
   @Override
