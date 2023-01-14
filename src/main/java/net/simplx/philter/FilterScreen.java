@@ -103,6 +103,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT).y(MID, titlePlace);
     allButton = addDrawableChild(
         CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
+            .tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");

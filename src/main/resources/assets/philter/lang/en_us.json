@@ -1,18 +1,20 @@
 {
   "philter.filter.name": "Filter",
   "philter.filter.mode.only_same": "Only Same",
-  "philter.filter.mode.matches": "Matches",
+  "philter.filter.mode.matches": "Match",
   "philter.filter.mode.none": "None",
   "philter.filter.mode.tooltip": "Set sorting mode",
   "philter.filter.mode.none.tooltip": "Matching disabled",
-  "philter.filter.mode.only_same.tooltip": "Matches things already in the target",
+  "philter.filter.mode.only_same.tooltip": "Match things already in the target",
   "philter.filter.mode.matches.tooltip": "Tag or regular expression",
   "philter.filter_mode.matches_alt": "Match Specification",
   "philter.filter.save": "Save",
   "philter.filter.save.tooltip": "Save changes to matches",
   "philter.filter.exact": "Exact",
-  "philter.filter.exact.tooltip.true": "Exact matches only, including nbt",
-  "philter.filter.exact.tooltip.false": "Same type matches",
+  "philter.filter.exact.true.tooltip": "Exact match, including NBT",
+  "philter.filter.exact.false.tooltip": "Same type match",
   "philter.filter.any": "Any of",
-  "philter.filter.all": "All of"
+  "philter.filter.any.tooltip": "Filter accepts any match",
+  "philter.filter.all": "All of",
+  "philter.filter.all.tooltip": "Filter only accepts if all match"
 }
