@@ -1,6 +1,30 @@
 {
-    "parent": "philter:block/filter_side_tmpl",
+    "comment": "Bottom (pointing) of a side-facing hopper spout",
+    "ambientocclusion": false,
     "textures": {
-        "side": "philter:block/filter_outside"
-    }
+        "particle": "philter:block/filter",
+        "side": "philter:block/filter"
+    },
+    "elements": [
+        {   "from": [ 4, 4, 4 ],
+            "to": [ 12, 10, 12 ],
+            "faces": {
+                "down":  { "texture": "#side" },
+                "north": { "texture": "#side" },
+                "south": { "texture": "#side" },
+                "west":  { "texture": "#side" },
+                "east":  { "texture": "#side" }
+            }
+        },
+        {   "from": [ 6, 4, 0 ],
+            "to": [ 10, 8, 4 ],
+            "faces": {
+                "down":  { "texture": "#side" },
+                "up":    { "texture": "#side" },
+                "north": { "texture": "#side", "cullface": "north" },
+                "west":  { "texture": "#side" },
+                "east":  { "texture": "#side" }
+            }
+        }
+    ]
 }

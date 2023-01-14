@@ -1,18 +1,15 @@
 {
+    "comment": "Top of the down-facing filter",
     "ambientocclusion": false,
     "textures": {
-        "particle": "philter:block/filter_filter_outside",
-        "side": "philter:block/filter_filter_outside"
+        "particle": "philter:block/filter_down_cap",
+        "top": "philter:block/filter_down_cap"
     },
     "elements": [
-        {   "from": [ 5, 10, 5 ],
-            "to": [ 11, 16.05, 11 ],
+        {   "from": [ 0, 16, 0 ],
+            "to": [ 16, 16, 16 ],
             "faces": {
-                "up":    { "texture": "#side", "uv": [5, 11, 5, 11], "cullface": "up" },
-                "north": { "texture": "#side", "cullface": "north" },
-                "south": { "texture": "#side", "cullface": "south" },
-                "west":  { "texture": "#side", "cullface": "west" },
-                "east":  { "texture": "#side", "cullface": "east" }
+               "up":    { "texture": "#top", "cullface": "up" }
             }
         }
     ]

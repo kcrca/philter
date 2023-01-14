@@ -1,8 +1,9 @@
 {
+    "comment": "Bottom (pointing) of a side-facing filter spout, covers up part of the bottom section",
     "ambientocclusion": false,
     "textures": {
-        "particle": "philter:block/filter_filter_outside",
-        "side": "philter:block/filter_filter_outside"
+        "particle": "philter:block/filter_filter",
+        "side": "philter:block/filter_filter"
     },
     "elements": [
         {   "from": [ 3.95, 3.95, 3.95 ],
