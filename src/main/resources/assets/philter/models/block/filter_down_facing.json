@@ -1,5 +1,5 @@
 {
-    "comment": "Bottom (pointing) of a down-facing filter or hopper spout",
+    "comment": "Down-facing hopper top and spout",
     "ambientocclusion": false,
     "textures": {
 	"side": "philter:block/filter",

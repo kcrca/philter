@@ -1,5 +1,5 @@
 {
-    "comment": "Bottom (pointing) of a down-facing filter spout",
+    "comment": "Down-facing filter top and spout",
     "parent": "philter:block/filter_down_filter_tmpl",
     "textures": {
 	"top": "philter:block/filter_down_filter_top",

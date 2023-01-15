@@ -1,5 +1,5 @@
 {
-    "comment": "Top of the down-facing filter",
+    "comment": "Down-facing filter top and spout",
     "ambientocclusion": false,
     "textures": {
         "particle": "#top"

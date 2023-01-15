@@ -1,5 +1,5 @@
 {
-    "comment": "Bottom (pointing) of a side-facing hopper spout",
+    "comment": "Side-facing hopper top and spout",
     "ambientocclusion": false,
     "textures": {
 	"top": "philter:block/filter_side_facing_top",

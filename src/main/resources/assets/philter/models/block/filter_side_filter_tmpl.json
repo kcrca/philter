@@ -1,5 +1,5 @@
 {
-    "comment": "Bottom (pointing) of a side-facing filter spout, covers up part of the bottom section",
+    "comment": "Side-facing filter top and spout",
     "ambientocclusion": false,
     "textures": {
         "particle": "#top"

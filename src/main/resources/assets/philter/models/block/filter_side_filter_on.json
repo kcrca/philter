@@ -1,5 +1,5 @@
 {
-    "comment": "Bottom (pointing) of a side-facing filter spout, covers up part of the bottom section",
+    "comment": "Side-facing on filter top and spout",
     "parent": "philter:block/filter_side_filter_tmpl",
     "ambientocclusion": false,
     "textures": {
