@@ -23,6 +23,7 @@ import net.minecraft.stat.Stats;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -41,7 +42,7 @@ public class FilterBlock extends HopperBlock implements Forcer {
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
-  public static final BooleanProperty FILTERED = BooleanProperty.of("filtered");
+  public static final IntProperty FILTERED = IntProperty.of("filtered", 0, 1);
 
   private static final StaticForcer forcer = new StaticForcer(HopperBlock.class);
   private static final VoxelShape TOP_SHAPE = (VoxelShape) forcer.forceGet("TOP_SHAPE");
@@ -152,7 +153,7 @@ public class FilterBlock extends HopperBlock implements Forcer {
       Direction filter = directions[i];
       if (filter != Direction.UP && filter != facing) {
         return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
-            .with(FILTERED, false);
+            .with(FILTERED, 0);
       }
     }
     throw new IllegalStateException(

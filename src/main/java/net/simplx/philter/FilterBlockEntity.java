@@ -130,8 +130,8 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     }
     if (flicker > 0) {
       --flicker;
-      boolean newState = flicker > 0;
-      boolean curState = state.get(FILTERED);
+      int newState = flicker > 0 ? 1 : 0;
+      int curState = state.get(FILTERED);
       if (newState != curState) {
         world.setBlockState(pos, state.with(FILTERED, newState), Block.NOTIFY_LISTENERS);
       }
@@ -152,7 +152,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
         for (int i = 0; i < size(); i++) {
           if (inFilter(getStack(i), world, pos, state)) {
             filterInventory.setStack(i, getStack(i));
-            world.setBlockState(pos, state.with(FILTERED, true), Block.NOTIFY_LISTENERS);
+            world.setBlockState(pos, state.with(FILTERED, 1), Block.NOTIFY_LISTENERS);
             flicker = 8;
             break;
           }
