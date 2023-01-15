@@ -146,13 +146,11 @@ public class FilterBlock extends HopperBlock implements Forcer {
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     Direction direction = ctx.getSide().getOpposite();
     Direction facing = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
-    Direction filter = switch (facing) {
-      case NORTH -> Direction.EAST;
-      case EAST -> Direction.SOUTH;
-      case SOUTH -> Direction.WEST;
-      case WEST, DOWN -> Direction.NORTH;
-      case UP -> throw new IllegalStateException("Illegal direction for hopper: " + facing);
-    };
+    Direction[] directions = ctx.getPlacementDirections();
+    Direction filter = directions[1];
+    if (filter == Direction.UP) {
+      filter = directions[2];
+    }
     return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
         .with(FILTERED, false);
   }
