@@ -23,6 +23,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -108,17 +109,18 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     Text exactText = layout.text("exact");
     p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
-        .x(titlePlace.x()).y(BELOW, modeButton);
+        .x(titlePlace.x()).y(BELOW, layout.placer(modeButton));
     exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
         .tooltip(value -> layout.tooltip("exact." + value + ".tooltip"))
         .build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
 
-    p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, exactButton);
+    p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, layout.placer(exactButton));
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h())
             .tooltip(layout.tooltip("tooltip")).build());
 
-    Placer group = layout.placer().from(LEFT, titlePlace).to(RIGHT).y(BELOW, exactButton);
+    Placer group = layout.placer().from(LEFT, titlePlace).to(RIGHT)
+        .y(BELOW, layout.placer(exactButton));
     // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
     // any text field padding, it's based on total width, so we set it after.
     Placer first = group.clone().inTextField().w(group.w() / 2);
@@ -147,6 +149,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         setInitialFocus(field);
       }
       field.visible = false;
+
+      if (index == 0) {
+        p = layout.placer().checkbox().x(p.x() + p.w() - p.y()).y(MID, p);
+        addDrawableChild(new CheckboxWidget(p.x(), p.y(), p.w(), p.h(), Text.empty(), true, false));
+      }
     }
     // If we haven't found an empty field, put the focus on the last field.
     if (!foundFocus) {

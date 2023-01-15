@@ -36,19 +36,19 @@ public class DocScreen extends HandledScreen<DocScreenHandler> {
     layout.setPrefix("moodle");
     Placer p;
     Text button1Text = layout.text("button1");
-    p = layout.placer().withText(button1Text).x(LEFT).y(ABOVE).inButton();
+    Placer button1Placer = p = layout.placer().withText(button1Text).x(LEFT).y(ABOVE).inButton();
     var button1 = addDrawableChild(
         new ButtonWidget.Builder(button1Text, this::doStuff).dimensions(p.x(), p.y(), p.w(), p.h())
             .build());
     Text colorText = layout.text("colors");
     String[] colors = new String[]{"red", "green", "blue"};
-    p = layout.placer().withTexts(layout.texts(List.of(colors))).x(RIGHT, button1).y(MID, button1)
-        .inButton();
+    Placer colorButtonPlacer = layout.placer().withTexts(layout.texts(List.of(colors)))
+        .x(RIGHT, button1Placer).y(MID, button1Placer).inButton();
     var colorButton = addDrawableChild(
         CyclingButtonWidget.builder(name -> layout.text((String) name))
             .tooltip(name -> layout.tooltip(name + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, name) -> setColor(name)));
-    p = layout.placer().lockButton().x(colorButton.getX()).y(BELOW, colorButton);
+    p = layout.placer().lockButton().x(colorButton.getX()).y(BELOW, colorButtonPlacer);
     addDrawableChild(new LockButtonWidget(p.x(), p.y(), this::toggleLock));
   }
 

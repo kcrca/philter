@@ -202,54 +202,42 @@ public class Layout {
       }
     }
 
-    public Placer x(Horizontal dir, ClickableWidget to) {
-      return x(dir, to.getX(), to.getWidth());
-    }
-
     public Placer x(Horizontal dir, Placer to) {
-      return x(dir, to.x(), to.w());
-    }
-
-    private Placer x(Horizontal dir, int toX, int toW) {
       x = switch (dir) {
-        case LEFT -> toX - gapW - w();
-        case CENTER -> toX + (toW - w()) / 2;
-        case RIGHT -> toX + toW + gapW;
+        case LEFT -> to.x() - gapW - w();
+        case CENTER -> to.x() + (to.w() - w()) / 2;
+        case RIGHT -> to.x() + to.w() + gapW;
+        case LEFT_EDGE -> to.x();
+        case RIGHT_EDGE -> to.x() + to.w() - w();
       };
       return this;
     }
 
-    public Placer y(Vertical dir, ClickableWidget to) {
-      return y(dir, to.getY(), to.getHeight());
-    }
-
     public Placer y(Vertical dir, Placer to) {
-      return y(dir, to.y(), to.h());
-    }
-
-    private Placer y(Vertical dir, int toY, int toH) {
       y = switch (dir) {
-        case ABOVE -> toY - gapH - h();
-        case MID -> toY + (toH - h()) / 2;
-        case BELOW -> toY + toH + gapH;
+        case ABOVE -> to.y() - gapH - h();
+        case MID -> to.y() + (to.h() - h()) / 2;
+        case BELOW -> to.y() + to.h() + gapH;
+        case ABOVE_EDGE -> to.y();
+        case BELOW_EDGE -> to.y() + to.h() - h();
       };
       return this;
     }
 
     public Placer x(Horizontal dir) {
       x = switch (dir) {
-        case LEFT -> screenX + borderW;
+        case LEFT, LEFT_EDGE -> screenX + borderW;
         case CENTER -> screenX + (screenW - w()) / 2;
-        case RIGHT -> screenX + screenW - borderW - w();
+        case RIGHT, RIGHT_EDGE -> screenX + screenW - borderW - w();
       };
       return this;
     }
 
     public Placer y(Vertical dir) {
       y = switch (dir) {
-        case ABOVE -> screenY + borderH;
+        case ABOVE, ABOVE_EDGE -> screenY + borderH;
         case MID -> screenY + (screenH - h()) / 2;
-        case BELOW -> screenY + screenH - borderH - h();
+        case BELOW, BELOW_EDGE -> screenY + screenH - borderH - h();
       };
       return this;
     }
@@ -288,51 +276,53 @@ public class Layout {
       return this;
     }
 
+    public Placer checkbox() {
+      // It doesn't say this anywhere, but it's 20x20.
+      w = h = 20;
+      return this;
+    }
 
-    public record _ToClauseHoriz(Placer thisPlacer, int startX) {
+
+    public class _ToClauseHoriz {
+
+      private final int startX;
+
+      public _ToClauseHoriz(Placer thisPlacer, int startX) {
+        this.startX = startX;
+      }
 
       private Placer extract(int w) {
-        thisPlacer.w(w - startX);
-        if (thisPlacer.x == UNKNOWN) {
-          thisPlacer.x(startX);
+        w(w - startX);
+        if (x == UNKNOWN) {
+          x(startX);
         }
-        return thisPlacer;
+        return Placer.this;
       }
 
       public Placer to(Horizontal dir, Placer placer) {
         return extract(coord(dir, placer));
       }
 
-      public Placer to(Horizontal dir, ClickableWidget widget) {
-        return extract(coord(dir, widget));
-      }
-
       public Placer to(Horizontal dir) {
-        return extract(thisPlacer.coord(dir));
+        return extract(coord(dir));
       }
     }
 
-    private static int coord(Horizontal dir, Placer placer) {
+    private int coord(Horizontal dir, Placer placer) {
       return switch (dir) {
-        case LEFT -> placer.x();
+        case LEFT, LEFT_EDGE -> placer.x();
         case CENTER -> placer.x() + placer.w() / 2;
         case RIGHT -> placer.x() + placer.w();
+        case RIGHT_EDGE -> placer.x() + placer.w() - w();
       };
     }
 
-    private static int coord(Horizontal dir, ClickableWidget widget) {
-      return switch (dir) {
-        case LEFT -> widget.getX();
-        case CENTER -> widget.getX() + widget.getWidth();
-        case RIGHT -> widget.getX() + widget.getWidth();
-      };
-    }
 
     private int coord(Horizontal dir) {
       return switch (dir) {
-        case LEFT -> screenX + borderW;
+        case LEFT, LEFT_EDGE -> screenX + borderW;
         case CENTER -> screenX + screenW / 2;
-        case RIGHT -> screenX + screenW - borderW;
+        case RIGHT, RIGHT_EDGE -> screenX + screenW - borderW;
       };
     }
 
@@ -340,71 +330,60 @@ public class Layout {
       return new _ToClauseHoriz(this, coord(dir, placer));
     }
 
-    public _ToClauseHoriz from(Horizontal dir, ClickableWidget widget) {
-      return new _ToClauseHoriz(this, coord(dir, widget));
-    }
-
     public _ToClauseHoriz from(Horizontal dir) {
       return new _ToClauseHoriz(this, coord(dir));
     }
 
-    public record _ToClauseVert(Placer thisPlacer, int startY) {
+    class _ToClauseVert {
+
+      private final int startY;
+
+      _ToClauseVert(int startY) {
+        this.startY = startY;
+      }
 
       private Placer extract(int h) {
-        thisPlacer.h(h - startY);
-        if (thisPlacer.y == UNKNOWN) {
-          thisPlacer.y(startY);
+        h(h - startY);
+        if (y == UNKNOWN) {
+          y(startY);
         }
-        return thisPlacer;
+        return Placer.this;
       }
 
       public Placer to(Vertical dir, Placer placer) {
         return extract(coord(dir, placer));
       }
 
-      public Placer to(Vertical dir, ClickableWidget widget) {
-        return extract(coord(dir, widget));
-      }
-
       public Placer to(Vertical dir) {
-        return extract(thisPlacer.coord(dir));
+        return extract(coord(dir));
       }
     }
 
-    private static int coord(Vertical dir, Placer placer) {
+    private int coord(Vertical dir, Placer placer) {
       return switch (dir) {
         case ABOVE -> placer.y();
+        case ABOVE_EDGE -> placer.y() + h();
         case MID -> placer.y() + placer.h() / 2;
         case BELOW -> placer.y() + placer.h();
-      };
-    }
-
-    private static int coord(Vertical dir, ClickableWidget widget) {
-      return switch (dir) {
-        case ABOVE -> widget.getY();
-        case MID -> widget.getY() + widget.getHeight();
-        case BELOW -> widget.getY() + widget.getHeight();
+        case BELOW_EDGE -> placer.y() + placer.h() - w();
       };
     }
 
     private int coord(Vertical dir) {
       return switch (dir) {
-        case ABOVE -> screenY + borderH;
+        case ABOVE, ABOVE_EDGE -> screenY + borderH;
         case MID -> screenY + screenH / 2;
         case BELOW -> screenY + screenH - borderH;
+        case BELOW_EDGE -> screenY + screenH - borderH - h();
       };
     }
 
     public _ToClauseVert from(Vertical dir, Placer placer) {
-      return new _ToClauseVert(this, coord(dir, placer));
-    }
-
-    public _ToClauseVert from(Vertical dir, ClickableWidget widget) {
-      return new _ToClauseVert(this, coord(dir, widget));
+      return new _ToClauseVert(coord(dir, placer));
     }
 
     public _ToClauseVert from(Vertical dir) {
-      return new _ToClauseVert(this, coord(dir));
+      return new _ToClauseVert(coord(dir));
     }
   }
 
@@ -486,6 +465,11 @@ public class Layout {
 
   public Placer placer() {
     return new Placer();
+  }
+
+  public Placer placer(ClickableWidget widget) {
+    var placer = new Placer();
+    return placer.w(widget.getWidth()).h(widget.getHeight()).x(widget.getX()).y(widget.getY());
   }
 
   public void setPrefix(String prefix) {
