@@ -1,5 +1,5 @@
 {
-    "comment": "The top section of the filter which is always the same (except the top)",
+    "comment": "The top section of the filter that is always the same",
     "ambientocclusion": false,
     "textures": {
         "particle": "philter:block/filter",
