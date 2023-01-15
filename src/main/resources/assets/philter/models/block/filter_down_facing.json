@@ -3,9 +3,16 @@
     "ambientocclusion": false,
     "textures": {
 	"side": "philter:block/filter",
+	"top": "philter:block/filter_down_facing_top",
         "particle": "#side"
     },
     "elements": [
+        {   "from": [ 0, 16, 0 ],
+            "to": [ 16, 16, 16 ],
+            "faces": {
+               "up":     { "texture": "#top", "cullface": "up" }
+            }
+        },
         {   "from": [ 6, 0, 6 ],
             "to": [ 10, 4, 10 ],
             "faces": {

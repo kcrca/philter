@@ -2,10 +2,17 @@
     "comment": "Bottom (pointing) of a side-facing hopper spout",
     "ambientocclusion": false,
     "textures": {
-        "particle": "philter:block/filter",
-        "side": "philter:block/filter"
+	"top": "philter:block/filter_side_facing_top",
+        "side": "philter:block/filter",
+        "particle": "#side"
     },
     "elements": [
+        {   "from": [ 0, 16, 0 ],
+            "to": [ 16, 16, 16 ],
+            "faces": {
+               "up":     { "texture": "#top", "cullface": "up" }
+            }
+        },
         {   "from": [ 4, 4, 4 ],
             "to": [ 12, 10, 12 ],
             "faces": {

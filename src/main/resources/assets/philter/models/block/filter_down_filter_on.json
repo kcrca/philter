@@ -2,7 +2,7 @@
     "comment": "Bottom (pointing) of a down-facing filter spout",
     "parent": "philter:block/filter_down_filter_tmpl",
     "textures": {
-	"top": "philter:block/filter_filter_down_top_on",
+	"top": "philter:block/filter_down_filter_top_on",
 	"side": "philter:block/filter_filter_on"
     }
 }

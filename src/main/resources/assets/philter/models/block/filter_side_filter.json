@@ -3,7 +3,7 @@
     "parent": "philter:block/filter_side_filter_tmpl",
     "ambientocclusion": false,
     "textures": {
-        "top": "philter:block/filter_filter_side_top",
+        "top": "philter:block/filter_side_filter_top",
         "side": "philter:block/filter_filter"
     }
 }
