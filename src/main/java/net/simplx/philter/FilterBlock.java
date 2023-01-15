@@ -3,6 +3,7 @@ package net.simplx.philter;
 import static net.minecraft.util.function.BooleanBiFunction.OR;
 
 import com.google.common.collect.Iterators;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 import net.minecraft.block.Block;
@@ -147,12 +148,15 @@ public class FilterBlock extends HopperBlock implements Forcer {
     Direction direction = ctx.getSide().getOpposite();
     Direction facing = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
     Direction[] directions = ctx.getPlacementDirections();
-    Direction filter = directions[1];
-    if (filter == Direction.UP) {
-      filter = directions[2];
+    for (int i = 1; i < directions.length; i++) {
+      Direction filter = directions[i];
+      if (filter != Direction.UP && filter != facing) {
+        return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
+            .with(FILTERED, false);
+      }
     }
-    return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
-        .with(FILTERED, false);
+    throw new IllegalStateException(
+        "No valid filter direction found in " + Arrays.toString(directions));
   }
 
   @Override
