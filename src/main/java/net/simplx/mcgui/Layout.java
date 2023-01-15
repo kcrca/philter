@@ -15,6 +15,7 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.LockButtonWidget;
 import net.minecraft.client.render.GameRenderer;
@@ -253,11 +254,25 @@ public class Layout {
       }
       if (h != UNKNOWN) {
         h += 2 * buttonBorderH;
+       } else {
+        h = ButtonWidget.DEFAULT_HEIGHT;
       }
       return this;
     }
 
     public Placer inTextField() {
+      if (w != UNKNOWN) {
+        w += 2;
+      }
+      if (h == UNKNOWN) {
+        h = 20;
+      } else {
+        h += 2;
+      }
+      return this;
+    }
+
+    public Placer inLabel() {
       if (w != UNKNOWN) {
         w += 2;
       }
@@ -276,12 +291,11 @@ public class Layout {
       return this;
     }
 
-    public Placer checkbox() {
-      // It doesn't say this anywhere, but it's 20x20.
+    public Placer inCheckbox() {
+      // It doesn't say this anywhere, but it's 20x20.m
       w = h = 20;
       return this;
     }
-
 
     public class _ToClauseHoriz {
 
@@ -458,7 +472,7 @@ public class Layout {
     screenY = graphics.getScreenY();
     screenW = graphics.getScreenW();
     screenH = graphics.getScreenH();
-    buttonBorderW = 2 * enW;
+    buttonBorderW = enW;
     buttonBorderH = Math.round(fontH * 0.3f);
     prefix = "";
   }

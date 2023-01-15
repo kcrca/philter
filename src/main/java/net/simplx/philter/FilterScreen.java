@@ -2,6 +2,7 @@ package net.simplx.philter;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
+import static net.simplx.mcgui.Colors.LABEL_COLOR;
 import static net.simplx.mcgui.Horizontal.LEFT;
 import static net.simplx.mcgui.Horizontal.RIGHT;
 import static net.simplx.mcgui.Vertical.ABOVE;
@@ -23,7 +24,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -47,7 +47,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final Identifier TEXTURE = new Identifier(MOD_ID,
       "textures/gui/container/filter.png");
 
-  private static final int TITLE_TEXT_COLOR = 4210752; // A constant in minecraft source...somewhere?
+  private static final int TITLE_TEXT_COLOR = LABEL_COLOR; // A constant in minecraft source...somewhere?
 
   private static final int SCREEN_H = 133;
   private static final int SCREEN_W = 346;
@@ -92,8 +92,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     Placer p;
     Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text(
         "mode." + mode.toString().toLowerCase());
-    p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
-        .x(RIGHT, titlePlace).y(MID, titlePlace);
+    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
+        .x(RIGHT, titlePlace).y(ABOVE);
     var modeButton = addDrawableChild(
         CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
@@ -101,14 +101,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
-    p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT).y(MID, titlePlace);
+    p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT, modeP).y(ABOVE);
     allButton = addDrawableChild(
         CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
             .tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");
-    p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
+    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
         .x(titlePlace.x()).y(BELOW, layout.placer(modeButton));
     exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
         .tooltip(value -> layout.tooltip("exact." + value + ".tooltip"))
@@ -117,13 +117,12 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, layout.placer(exactButton));
     saveButton = addDrawableChild(
         new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h())
-            .tooltip(layout.tooltip("tooltip")).build());
+            .tooltip(layout.tooltip("save.tooltip")).build());
 
-    Placer group = layout.placer().from(LEFT, titlePlace).to(RIGHT)
-        .y(BELOW, layout.placer(exactButton));
+    Placer group = layout.placer().from(LEFT, titlePlace).to(RIGHT).y(BELOW, exactP);
     // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
     // any text field padding, it's based on total width, so we set it after.
-    Placer first = group.clone().inTextField().w(group.w() / 2);
+    Placer first = group.clone().h(layout.textH + 3).w(group.w() / 2);
     Placer bottom = first.y(BELOW);
 
     matchesFields = new ArrayList<>();
@@ -149,11 +148,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         setInitialFocus(field);
       }
       field.visible = false;
-
-      if (index == 0) {
-        p = layout.placer().checkbox().x(p.x() + p.w() - p.y()).y(MID, p);
-        addDrawableChild(new CheckboxWidget(p.x(), p.y(), p.w(), p.h(), Text.empty(), true, false));
-      }
     }
     // If we haven't found an empty field, put the focus on the last field.
     if (!foundFocus) {
