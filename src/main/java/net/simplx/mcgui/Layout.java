@@ -254,7 +254,7 @@ public class Layout {
       }
       if (h != UNKNOWN) {
         h += 2 * buttonBorderH;
-       } else {
+      } else {
         h = ButtonWidget.DEFAULT_HEIGHT;
       }
       return this;
@@ -305,10 +305,10 @@ public class Layout {
         this.startX = startX;
       }
 
-      private Placer extract(int w) {
-        w(w - startX);
-        if (x == UNKNOWN) {
-          x(startX);
+      private Placer extract(int x) {
+        w(Math.abs(x - startX));
+        if (Placer.this.x == UNKNOWN) {
+          x(Math.min(x, startX));
         }
         return Placer.this;
       }
@@ -319,6 +319,10 @@ public class Layout {
 
       public Placer to(Horizontal dir) {
         return extract(coord(dir));
+      }
+
+      public Placer to(int x) {
+        return extract(x);
       }
     }
 
@@ -348,7 +352,7 @@ public class Layout {
       return new _ToClauseHoriz(this, coord(dir));
     }
 
-    class _ToClauseVert {
+    public class _ToClauseVert {
 
       private final int startY;
 
@@ -356,10 +360,10 @@ public class Layout {
         this.startY = startY;
       }
 
-      private Placer extract(int h) {
-        h(h - startY);
-        if (y == UNKNOWN) {
-          y(startY);
+      private Placer extract(int y) {
+        h(Math.abs(y - startY));
+        if (Placer.this.y == UNKNOWN) {
+          y(Math.min(y, startY));
         }
         return Placer.this;
       }
@@ -370,6 +374,10 @@ public class Layout {
 
       public Placer to(Vertical dir) {
         return extract(coord(dir));
+      }
+
+      public Placer to(int y) {
+        return extract(y);
       }
     }
 

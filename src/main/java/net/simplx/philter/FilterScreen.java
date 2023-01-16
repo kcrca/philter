@@ -3,6 +3,7 @@ package net.simplx.philter;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
 import static net.simplx.mcgui.Colors.LABEL_COLOR;
+import static net.simplx.mcgui.Horizontal.CENTER;
 import static net.simplx.mcgui.Horizontal.LEFT;
 import static net.simplx.mcgui.Horizontal.RIGHT;
 import static net.simplx.mcgui.Vertical.ABOVE;
@@ -33,6 +34,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.RotationAxis;
 import net.simplx.mcgui.Layout;
 import net.simplx.mcgui.Layout.Placer;
 import org.slf4j.Logger;
@@ -46,10 +48,18 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final Identifier TEXTURE = new Identifier(MOD_ID,
       "textures/gui/container/filter.png");
+  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID,
+      "textures/block/filter_down_facing_top.png");
+  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID,
+      "textures/block/filter_down_filter_top_on.png");
+  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID,
+      "textures/block/filter_side_facing_top.png");
+  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID,
+      "textures/block/filter_side_filter_top_on.png");
 
   private static final int TITLE_TEXT_COLOR = LABEL_COLOR; // A constant in minecraft source...somewhere?
 
-  private static final int SCREEN_H = 133;
+  private static final int SCREEN_H = 233;
   private static final int SCREEN_W = 346;
 
   private static final int MODE_X = 176;
@@ -57,22 +67,27 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
 
   private final FilterDesc desc;
-
   private MutableText filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
   private List<TextFieldWidget> matchesFields;
+  private final int hopperWidth, hopperHeight;
+  private Layout layout;
   private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
   private boolean initializing;
   private Placer titlePlace;
-  private Layout layout;
+  private Placer directionPlace;
+  private Placer hopperArea;
+  private Placer directionMid;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
-    passEvents = false;
-    backgroundHeight = SCREEN_H;
     backgroundWidth = SCREEN_W;
-    playerInventoryTitleY = backgroundHeight - 94;
+    backgroundHeight = SCREEN_H;
+    passEvents = false;
+    hopperWidth = 176;
+    hopperHeight = 133;
+    playerInventoryTitleY = hopperHeight - 94;
     desc = handler.getFilterDesc();
   }
 
@@ -92,8 +107,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     Placer p;
     Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text(
         "mode." + mode.toString().toLowerCase());
-    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton()
-        .x(RIGHT, titlePlace).y(ABOVE);
+    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList())
+        .inButton().x(RIGHT, titlePlace).y(ABOVE);
     var modeButton = addDrawableChild(
         CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
@@ -153,8 +168,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     if (!foundFocus) {
       setInitialFocus(field);
     }
-
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
+
+    hopperArea = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
+        .to(hopperHeight - layout.borderH);
+    directionPlace = layout.placer().w(hopperArea.w()).from(BELOW, hopperArea).to(BELOW)
+        .x(hopperArea.x()).y(BELOW, hopperArea);
+    directionMid = layout.placer().size(32, 32).x(CENTER, directionPlace).y(MID, directionPlace);
+
     initializing = false;
     reactToChange();
   }
@@ -287,9 +308,32 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int midX = (width - backgroundWidth) / 2;
     int midY = (height - backgroundHeight) / 2;
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
+
+    RenderSystem.setShaderTexture(0, FILTER_SIDE_FACING_TOP);
+    drawTexture(matrices, directionMid.x(), directionMid.y(), 0, 0, directionMid.w(),
+        directionMid.h(), directionMid.w(), directionMid.h());
+    // drawHorizontalLine(matrices, -5, 15, 0, -1);
+    // drawVerticalLine(matrices, 0, -5, 15, -1);
+
+    matrices.push();
+    matrices.translate(directionMid.x() + 16, directionMid.y() + 16, 0);
+    matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(270));
+    matrices.translate(-16, -16, 0);
+    RenderSystem.setShaderTexture(0, FILTER_SIDE_FILTER_TOP);
+    drawTexture(matrices, 0, 0, 0, 0, directionMid.w(), directionMid.h(), directionMid.w(),
+        directionMid.h());
+    // drawHorizontalLine(matrices, -15, 5, 0, -1);
+    // drawVerticalLine(matrices, 0, -15, 5, -1);
+    matrices.pop();
   }
 
   @SuppressWarnings("unused")
+  private void drawBox(MatrixStack matrices, Placer p, int color) {
+    if (p != null) {
+      drawBox(matrices, p.x(), p.y(), p.w(), p.h(), color);
+    }
+  }
+
   private void drawBox(MatrixStack matrices, int x, int y, int width, int height, int color) {
     drawHorizontalLine(matrices, x, x + width, y, color);
     drawHorizontalLine(matrices, x, x + width, y + height, color);
