@@ -15,6 +15,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
@@ -73,12 +74,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     flicker = 0;
   }
 
-  static void updateEntity(ServerPlayerEntity player, PacketByteBuf buf) {
+  public static void updateEntity(PlayerEntity player, PacketByteBuf buf) {
     FilterDesc filterDesc = new FilterDesc(buf);
     BlockPos pos = buf.readBlockPos();
-    FilterBlockEntity entity = (FilterBlockEntity) player.getWorld().getBlockEntity(pos);
-    if (entity != null) {
-      entity.setFilterDesc(filterDesc);
+    var rawEntity = player.getWorld().getBlockEntity(pos);
+    if (rawEntity instanceof FilterBlockEntity) {
+      ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
     }
   }
 
