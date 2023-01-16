@@ -180,7 +180,6 @@ public class FilterBlock extends HopperBlock implements Forcer {
       BlockEntity blockEntity = world.getBlockEntity(pos);
       if (blockEntity instanceof FilterBlockEntity) {
         player.openHandledScreen((FilterBlockEntity) blockEntity);
-        player.incrementStat(Stats.INSPECT_HOPPER);
       }
       return ActionResult.CONSUME;
     }
