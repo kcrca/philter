@@ -1,5 +1,6 @@
 package net.simplx.philter;
 
+import static net.simplx.philter.FilterBlock.FACING;
 import static net.simplx.philter.FilterBlock.FILTER;
 import static net.simplx.philter.FilterBlock.FILTERED;
 
@@ -30,6 +31,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
+import net.simplx.mcgui.Forcer;
+import net.simplx.mcgui.StaticForcer;
 
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
@@ -81,6 +84,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (rawEntity instanceof FilterBlockEntity) {
       try {
         ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
+        buf.readEnumConstant(Direction.class);
+        Direction newFilterDir = buf.readEnumConstant(Direction.class);
+        if (rawEntity.getCachedState().get(FILTER) != newFilterDir) {
+          player.world.setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
+        }
+        rawEntity.markDirty();
       } finally {
         buf.release();
       }
@@ -152,7 +161,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     if (!needsCooldown() && state.get(HopperBlock.ENABLED)) {
       boolean bl = false;
       if (!isEmpty()) {
-        var filterState = state.with(FilterBlock.FACING, state.get(FILTER));
+        var filterState = state.with(FACING, state.get(FILTER));
         SimpleInventory filterInventory = new SimpleInventory(size());
         for (int i = 0; i < size(); i++) {
           if (inFilter(getStack(i), world, pos, state)) {
@@ -235,12 +244,16 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos);
+    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos,
+        getCachedState().get(FACING), getCachedState().get(FILTER));
   }
 
   @Override
   public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-    desc.write(buf, pos);
+    BlockState state = player.getWorld().getBlockState(pos);
+    Direction facing = state.get(FACING);
+    Direction filter = state.get(FILTER);
+    desc.write(buf, pos, facing, filter);
   }
 
   public void setFilterDesc(FilterDesc desc) {

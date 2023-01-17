@@ -2,6 +2,7 @@ package net.simplx.philter;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
+import static net.minecraft.util.math.Direction.DOWN;
 import static net.simplx.mcgui.Colors.LABEL_COLOR;
 import static net.simplx.mcgui.Horizontal.CENTER;
 import static net.simplx.mcgui.Horizontal.LEFT;
@@ -36,9 +37,13 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.util.math.RotationAxis;
 import net.simplx.mcgui.Layout;
 import net.simplx.mcgui.Layout.Placer;
+import net.simplx.mcgui.RadioButtonWidget;
+import net.simplx.mcgui.RadioButtons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +63,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       "textures/block/filter_side_facing_top.png");
   private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID,
       "textures/block/filter_side_filter_top_on.png");
+  public static final int TOP_SIZE = 32;
+  public static final int TOP_MID = TOP_SIZE / 2;
 
   private static final int TITLE_TEXT_COLOR = LABEL_COLOR; // A constant in minecraft source...somewhere?
 
@@ -67,7 +74,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final int MODE_X = 176;
 
   private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
-
+  private RadioButtons<Direction> directionButtons;
   private final FilterDesc desc;
   private MutableText filterTitle;
   private CyclingButtonWidget<Boolean> exactButton;
@@ -78,9 +85,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private ButtonWidget saveButton;
   private boolean initializing;
   private Placer titlePlace;
-  private Placer directionPlace;
-  private Placer hopperArea;
-  private Placer directionMid;
+  private Placer topP;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -172,14 +177,41 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
 
-    hopperArea = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
+    Placer hopperArea = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
         .to(hopperHeight - layout.borderH);
-    directionPlace = layout.placer().w(hopperArea.w()).from(BELOW, hopperArea).to(BELOW)
+    Placer mid = layout.placer().w(hopperArea.w()).from(BELOW, hopperArea).to(BELOW)
         .x(hopperArea.x()).y(BELOW, hopperArea);
-    directionMid = layout.placer().size(32, 32).x(CENTER, directionPlace).y(MID, directionPlace);
+    topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(MID, mid);
+
+    boolean facingDown = handler.facing == DOWN;
+    Direction dir = facingDown ? handler.filter : handler.facing;
+    directionButtons = new RadioButtons<>();
+    for (int i = 0; i < 4; i++) {
+      Direction toDir = dir == handler.facing ? DOWN : dir;
+      System.out.println(toDir);
+      Placer q = layout.placer().inCheckbox();
+      Text text = dir == DOWN ? Text.literal(toDir.toString()) : null;
+      switch (i) {
+        case 1 -> q.x(RIGHT, topP).y(MID, topP);
+        case 2 -> q.x(CENTER, topP).y(BELOW, topP);
+        case 3 -> q.x(LEFT, topP).y(MID, topP);
+        case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
+      }
+      directionButtons.add(
+          addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), text)));
+      dir = dir.rotateClockwise(Axis.Y);
+    }
+    System.out.println(handler.filter);
+    directionButtons.setUpdateCallback(this::setFitlerDir);
+    directionButtons.findButton(handler.filter).setChecked(true);
 
     initializing = false;
     reactToChange();
+  }
+
+  private Void setFitlerDir(RadioButtons<Direction> unused, Direction dir) {
+    handler.filter = dir;
+    return null;
   }
 
 
@@ -281,7 +313,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void sendFilterDesc() {
     try {
-      ClientPlayNetworking.send(FILTER_ID, FilterDesc.packetBuf(desc, handler.getPos()));
+      ClientPlayNetworking.send(FILTER_ID,
+          desc.packetBuf(handler.getPos(), handler.facing, handler.filter));
     } catch (NullPointerException e) {
       LOGGER.error("Unexpected null", e);
     }
@@ -310,21 +343,21 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int midY = (height - backgroundHeight) / 2;
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
 
-    RenderSystem.setShaderTexture(0, FILTER_SIDE_FACING_TOP);
-    drawTexture(matrices, directionMid.x(), directionMid.y(), 0, 0, directionMid.w(),
-        directionMid.h(), directionMid.w(), directionMid.h());
-    // drawHorizontalLine(matrices, -5, 15, 0, -1);
-    // drawVerticalLine(matrices, 0, -5, 15, -1);
+    RenderSystem.setShaderTexture(0,
+        handler.facing == DOWN ? FILTER_DOWN_FACING_TOP : FILTER_SIDE_FACING_TOP);
+    drawTexture(matrices, topP.x(), topP.y(), 0, 0, topP.w(), topP.h(), topP.w(), topP.h());
 
+    RadioButtonWidget<Direction> button = directionButtons.getOn();
     matrices.push();
-    matrices.translate(directionMid.x() + 16, directionMid.y() + 16, 0);
-    matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(270));
-    matrices.translate(-16, -16, 0);
-    RenderSystem.setShaderTexture(0, FILTER_SIDE_FILTER_TOP);
-    drawTexture(matrices, 0, 0, 0, 0, directionMid.w(), directionMid.h(), directionMid.w(),
-        directionMid.h());
-    // drawHorizontalLine(matrices, -15, 5, 0, -1);
-    // drawVerticalLine(matrices, 0, -15, 5, -1);
+    matrices.translate(topP.x() + TOP_MID, topP.y() + TOP_MID, 0);
+    if (button.getValue() == DOWN) {
+      RenderSystem.setShaderTexture(0, FILTER_DOWN_FILTER_TOP);
+    } else {
+      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(button.getIndex() * 90));
+      RenderSystem.setShaderTexture(0, FILTER_SIDE_FILTER_TOP);
+    }
+    matrices.translate(-TOP_MID, -TOP_MID, 0);
+    drawTexture(matrices, 0, 0, 0, 0, topP.w(), topP.h(), topP.w(), topP.h());
     matrices.pop();
   }
 

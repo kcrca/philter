@@ -12,6 +12,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 public class FilterDesc {
 
@@ -61,9 +62,9 @@ public class FilterDesc {
     }
   }
 
-  public static PacketByteBuf packetBuf(FilterDesc desc, BlockPos pos) {
+  public PacketByteBuf packetBuf(BlockPos pos, Direction facing, Direction filter) {
     var buf = PacketByteBufs.create();
-    desc.write(buf, pos);
+    write(buf, pos, facing, filter);
     return buf;
   }
 
@@ -86,10 +87,13 @@ public class FilterDesc {
     return index >= matches.size() ? "" : matches.get(index);
   }
 
-  public void write(PacketByteBuf buf, BlockPos pos) {
+  public void write(PacketByteBuf buf, BlockPos pos, Direction facing,
+      Direction filter) {
     NbtCompound nbt = new NbtCompound();
     writeNbt(nbt);
     buf.writeNbt(nbt);
     buf.writeBlockPos(pos);
+    buf.writeEnumConstant(facing);
+    buf.writeEnumConstant(filter);
   }
 }

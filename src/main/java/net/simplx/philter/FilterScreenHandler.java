@@ -11,25 +11,31 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.HopperScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.simplx.mcgui.Forcer;
 
 public class FilterScreenHandler extends HopperScreenHandler implements Forcer {
 
   public static final Field TYPE_F = Forcer.field(ScreenHandler.class, "type");
 
   private final FilterDesc filterDesc;
-  private final BlockPos pos;
+   final BlockPos pos;
+   final Direction facing;
+   Direction filter;
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
     this(syncId, playerInventory, new SimpleInventory(INVENTORY_SIZE), new FilterDesc(buf),
-        buf.readBlockPos());
+        buf.readBlockPos(), buf.readEnumConstant(Direction.class), buf.readEnumConstant(Direction.class));
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory,
-      FilterDesc filterDesc, BlockPos pos) {
+      FilterDesc filterDesc, BlockPos pos, Direction facing, Direction filter) {
     super(syncId, playerInventory, inventory);
     forceSet(TYPE_F, FILTER_SCREEN_HANDLER);
     this.filterDesc = filterDesc;
     this.pos = pos;
+    this.facing = facing;
+    this.filter = filter;
   }
 
   public FilterDesc getFilterDesc() {
