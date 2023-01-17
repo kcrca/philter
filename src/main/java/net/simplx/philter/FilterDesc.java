@@ -5,6 +5,7 @@ import static net.simplx.philter.FilterMode.ONLY_SAME;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -58,6 +59,12 @@ public class FilterDesc {
       matches = ImmutableList.of();
       exact = true;
     }
+  }
+
+  public static PacketByteBuf packetBuf(FilterDesc desc, BlockPos pos) {
+    var buf = PacketByteBufs.create();
+    desc.write(buf, pos);
+    return buf;
   }
 
   public void writeNbt(NbtCompound nbt) {

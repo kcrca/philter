@@ -79,7 +79,11 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     BlockPos pos = buf.readBlockPos();
     var rawEntity = player.getWorld().getBlockEntity(pos);
     if (rawEntity instanceof FilterBlockEntity) {
-      ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
+      try {
+        ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
+      } finally {
+        buf.release();
+      }
     }
   }
 

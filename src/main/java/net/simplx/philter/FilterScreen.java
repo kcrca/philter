@@ -12,6 +12,7 @@ import static net.simplx.mcgui.Vertical.MID;
 import static net.simplx.philter.FilterMode.MATCHES;
 import static net.simplx.philter.FilterMode.NONE;
 import static net.simplx.philter.FilterMode.values;
+import static net.simplx.philter.PhilterMod.FILTER_ID;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -279,8 +281,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void sendFilterDesc() {
     try {
-      //noinspection ConstantConditions
-      client.player.networkHandler.sendPacket(new FilterPacket(desc, handler.getPos()));
+      ClientPlayNetworking.send(FILTER_ID, FilterDesc.packetBuf(desc, handler.getPos()));
     } catch (NullPointerException e) {
       LOGGER.error("Unexpected null", e);
     }
