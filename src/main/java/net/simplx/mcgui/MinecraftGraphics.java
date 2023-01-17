@@ -10,8 +10,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import net.simplx.philter.Forcer;
-import net.simplx.philter.StaticForcer;
 
 class MinecraftGraphics implements Graphics, Forcer {
 
