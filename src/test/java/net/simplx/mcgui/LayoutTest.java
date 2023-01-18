@@ -336,6 +336,7 @@ class LayoutTest {
     Placer placer = layout.placer().h(5).y(BELOW);
     assertThat(placer.y()).isEqualTo(SCREEN_Y + SCREEN_H - BORDER_H - 5);
   }
+
   @Test
   void relativeBelowScreenEdge() {
     Placer placer = layout.placer().h(5).y(BELOW_EDGE);

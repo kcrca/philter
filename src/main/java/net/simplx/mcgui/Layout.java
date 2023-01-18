@@ -25,10 +25,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
- * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgts (or other
- * ones if you prefer). This is typically used in a mod's {@code }Screen} class to put up dialog
- * boxes for custom blocks. For example, the following code will lay out three buttons along the top
- * of that screen:
+ * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgets (or
+ * other ones if you prefer). This is typically used in a mod's {@code Screen} class to put up
+ * dialog boxes for custom blocks. For example, the following code will lay out three buttons along
+ * the top of that screen:
  *
  * <code>
  *

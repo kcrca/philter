@@ -149,8 +149,7 @@ public class FilterBlock extends HopperBlock implements Forcer {
   @Override
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     Direction direction = ctx.getSide().getOpposite();
-    Direction facing1 = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
-    Direction facing = facing1;
+    Direction facing = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
     Direction[] directions = ctx.getPlacementDirections();
     for (int i = 1; i < directions.length; i++) {
       Direction filter = directions[i];

@@ -45,10 +45,8 @@ public class PhilterMod implements ModInitializer {
               () -> FilterBlockEntity.updateEntity(player, buf));
         });
 
-    ItemGroupEvents.modifyEntriesEvent(ItemGroups.REDSTONE).register(content -> {
-      content.addAfter(Items.HOPPER, blockItem);
-    });
-
+    ItemGroupEvents.modifyEntriesEvent(ItemGroups.REDSTONE)
+        .register(content -> content.addAfter(Items.HOPPER, blockItem));
   }
 
 }

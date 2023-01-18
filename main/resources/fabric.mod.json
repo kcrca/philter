@@ -8,7 +8,7 @@
   "description": "",
   "authors": [],
   "contact": {},
-  "license": "MIT",
+  "license": "CC BY 4.0",
   "icon": "assets/philter/icon.png",
   "environment": "client",
   "entrypoints": {
@@ -16,12 +16,9 @@
       "net.simplx.philter.client.PhilterClient"
     ],
     "main": [
-      "net.simplx.philter.Philter"
+      "net.simplx.philter.PhilterMod"
     ]
   },
-  "mixins": [
-    "philter.mixins.json"
-  ],
   "depends": {
     "fabricloader": ">=0.14.12",
     "fabric": "*",

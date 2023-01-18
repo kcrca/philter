@@ -200,14 +200,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
           addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
       dir = dir.rotateClockwise(Axis.Y);
     }
-    directionButtons.setUpdateCallback(this::setFitlerDir);
+    directionButtons.setUpdateCallback(this::setFilterDir);
     directionButtons.findButton(handler.filter).setChecked(true);
 
     initializing = false;
     reactToChange();
   }
 
-  private Void setFitlerDir(RadioButtons<Direction> unused, Direction dir) {
+  private Void setFilterDir(RadioButtons<Direction> unused, Direction dir) {
     handler.filter = dir;
     return null;
   }
@@ -343,7 +343,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
 
     Placer p = layout.placer().x(LEFT).y(BELOW, hopperArea).inLabel();
-    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH, LABEL_COLOR);
+    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH,
+        LABEL_COLOR);
 
     drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();

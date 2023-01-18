@@ -9,8 +9,8 @@ own widget and layout tools, which are definitely usually nicer, designed on
 actual GUI toolkit principles. regularized, relatively complete.
 
 The downsides are that they aren't skinable by resource pack makers, and they
-don't adapt to changes to the the base Minecraft GUI tools. For example, if a
-new accessibility feature is added to Minecraft, these kits will need to
+don't adapt to changes to the base Minecraft GUI tools. For example, if a new
+accessibility feature is added to Minecraft, these kits will need to
 re-implement it for you to get it.
 
 McGUI instead asks the question: If one wre stuck with the Minecraft GUI system,
@@ -76,5 +76,5 @@ This is equivalent to `new Text("moodle.button1")`. Let's pick this apart.
   the button to the width and height to allow for bevels and to avoid cramping
   the text.
 
-With that, the placer knows where we want to put something. And use that in adding
-the first button child.
+With that, the placer knows where we want to put something. And use that in
+adding the first button child.

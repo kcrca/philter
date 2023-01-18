@@ -2,7 +2,6 @@ package net.simplx.mcgui;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import net.simplx.mcgui.Forcer;
 
 public class StaticForcer implements Forcer {
 

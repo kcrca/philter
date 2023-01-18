@@ -70,10 +70,9 @@ class RadioButtonsTest {
   @Test
   void buttonsChangedSetToNull() {
     RadioButtons<Integer> buttons = new RadioButtons<>();
-    RadioButtons<Integer> noButtons = null;
     RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE, 0, 0, 10, 10, null);
     button.setButtons(buttons);
-    button.setButtons(noButtons);
+    button.setButtons(null);
     assertThat(buttons.getOn()).isNull();
     assertThat(button.getButtons()).isNull();
   }
