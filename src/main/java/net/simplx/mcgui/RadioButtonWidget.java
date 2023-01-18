@@ -13,7 +13,7 @@ public class RadioButtonWidget<T> extends CheckboxWidget implements Forcer {
   private int index;
 
   public RadioButtonWidget(T value, int x, int y, int width, int height, Text message) {
-    this(value, x, y, width, height, message, false);
+    this(value, x, y, width, height, message, message != null && !message.getString().isBlank());
   }
 
   public RadioButtonWidget(T value, int x, int y, int width, int height, Text message,

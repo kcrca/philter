@@ -13,6 +13,7 @@
   "philter.filter.exact": "Exact",
   "philter.filter.exact.true.tooltip": "Exact match, including NBT",
   "philter.filter.exact.false.tooltip": "Same type match",
+  "philter.filter.filter_dir": "Direction:",
   "philter.filter.any": "Any of",
   "philter.filter.any.tooltip": "Filter accepts any match",
   "philter.filter.all": "All of",

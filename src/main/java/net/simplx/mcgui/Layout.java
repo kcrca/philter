@@ -588,4 +588,8 @@ public class Layout {
   public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
     return graphics.addDrawableChild(element);
   }
+
+  public Placer screenPlace() {
+    return placer().size(screenW, screenH).at(screenX, screenY);
+  }
 }

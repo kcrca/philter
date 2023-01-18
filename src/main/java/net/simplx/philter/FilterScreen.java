@@ -76,7 +76,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private static final Pattern RESOURCE_PAT = Pattern.compile("!?#[-a-z0-9_./]+");
   private RadioButtons<Direction> directionButtons;
   private final FilterDesc desc;
-  private MutableText filterTitle;
+  private MutableText titleText;
   private CyclingButtonWidget<Boolean> exactButton;
   private List<TextFieldWidget> matchesFields;
   private final int hopperWidth, hopperHeight;
@@ -86,6 +86,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private boolean initializing;
   private Placer titlePlace;
   private Placer topP;
+  private Placer hopperArea;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -107,16 +108,16 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     // Calculate the text- and font-relative values.
     Text saveText = layout.text("save");
-    filterTitle = layout.text("name").append(":");
-
-    titlePlace = layout.placer().w(layout.textW(filterTitle)).h(layout.textH).relX(MODE_X).y(ABOVE);
+    titleText = layout.text("name").append(":");
+    titlePlace = layout.placer().withText(titleText).x(x + MODE_X).y(ABOVE);
 
     Placer p;
     Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text(
         "mode." + mode.toString().toLowerCase());
     Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList())
         .inButton().x(RIGHT, titlePlace).y(ABOVE);
-    var modeButton = addDrawableChild(
+    titlePlace.y(MID, modeP);
+    CyclingButtonWidget<FilterMode> modeButton = addDrawableChild(
         CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode)
             .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
             .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
@@ -177,7 +178,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
 
-    Placer hopperArea = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
+    hopperArea = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
         .to(hopperHeight - layout.borderH);
     Placer mid = layout.placer().w(hopperArea.w()).from(BELOW, hopperArea).to(BELOW)
         .x(hopperArea.x()).y(BELOW, hopperArea);
@@ -188,9 +189,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     directionButtons = new RadioButtons<>();
     for (int i = 0; i < 4; i++) {
       Direction toDir = dir == handler.facing ? DOWN : dir;
-      System.out.println(toDir);
       Placer q = layout.placer().inCheckbox();
-      Text text = dir == DOWN ? Text.literal(toDir.toString()) : null;
       switch (i) {
         case 1 -> q.x(RIGHT, topP).y(MID, topP);
         case 2 -> q.x(CENTER, topP).y(BELOW, topP);
@@ -198,10 +197,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
       }
       directionButtons.add(
-          addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), text)));
+          addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
       dir = dir.rotateClockwise(Axis.Y);
     }
-    System.out.println(handler.filter);
     directionButtons.setUpdateCallback(this::setFitlerDir);
     directionButtons.findButton(handler.filter).setChecked(true);
 
@@ -218,7 +216,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   @Override
   protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
     super.drawForeground(matrices, mouseX, mouseY);
-    layout.drawText(matrices, titlePlace, filterTitle, TITLE_TEXT_COLOR);
+    layout.drawText(matrices, titlePlace, titleText, TITLE_TEXT_COLOR);
   }
 
   private void matchChanged(int i, String text) {
@@ -342,6 +340,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int midX = (width - backgroundWidth) / 2;
     int midY = (height - backgroundHeight) / 2;
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
+
+    Placer p = layout.placer().x(LEFT).y(BELOW, hopperArea).inLabel();
+    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH, LABEL_COLOR);
 
     drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();
