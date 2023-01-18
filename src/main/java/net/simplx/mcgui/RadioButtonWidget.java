@@ -50,7 +50,7 @@ public class RadioButtonWidget<T> extends CheckboxWidget implements Forcer {
   }
 
   public RadioButtons<T> getButtons() {
-    return this.buttons;
+    return buttons;
   }
 
   /**
