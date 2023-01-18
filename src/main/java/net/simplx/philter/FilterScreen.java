@@ -68,7 +68,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final int TITLE_TEXT_COLOR = LABEL_COLOR; // A constant in minecraft source...somewhere?
 
-  private static final int SCREEN_H = 233;
+  private static final int SCREEN_H = 227;
   private static final int SCREEN_W = 346;
 
   private static final int MODE_X = 176;
