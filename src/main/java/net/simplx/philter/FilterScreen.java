@@ -184,7 +184,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(MID, mid);
 
     boolean facingDown = handler.facing == DOWN;
-    Direction dir = facingDown ? handler.filter : handler.facing;
+    Direction dir = handler.userFacingDir;
     directionButtons = new RadioButtons<>();
     for (int i = 0; i < 4; i++) {
       Direction toDir = dir == handler.facing ? DOWN : dir;
@@ -343,18 +343,20 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int midY = (height - backgroundHeight) / 2;
     drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
 
-    RenderSystem.setShaderTexture(0,
-        handler.facing == DOWN ? FILTER_DOWN_FACING_TOP : FILTER_SIDE_FACING_TOP);
-    drawTexture(matrices, topP.x(), topP.y(), 0, 0, topP.w(), topP.h(), topP.w(), topP.h());
-
+    drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();
+    drawTop(matrices, button.getValue(), FILTER_DOWN_FILTER_TOP, FILTER_SIDE_FILTER_TOP);
+  }
+
+  void drawTop(MatrixStack matrices, Direction dir, Identifier down, Identifier side) {
     matrices.push();
     matrices.translate(topP.x() + TOP_MID, topP.y() + TOP_MID, 0);
-    if (button.getValue() == DOWN) {
-      RenderSystem.setShaderTexture(0, FILTER_DOWN_FILTER_TOP);
+    if (dir == DOWN) {
+      RenderSystem.setShaderTexture(0, down);
     } else {
-      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(button.getIndex() * 90));
-      RenderSystem.setShaderTexture(0, FILTER_SIDE_FILTER_TOP);
+      int rot = (dir.getHorizontal() - handler.userFacingDir.getHorizontal()) * 90;
+      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
+      RenderSystem.setShaderTexture(0, side);
     }
     matrices.translate(-TOP_MID, -TOP_MID, 0);
     drawTexture(matrices, 0, 0, 0, 0, topP.w(), topP.h(), topP.w(), topP.h());

@@ -68,6 +68,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
   private FilterDesc desc;
   private FilterMatches filterMatches;
   private int flicker;
+  private Direction userFacingDir;
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
@@ -254,10 +255,16 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     Direction facing = state.get(FACING);
     Direction filter = state.get(FILTER);
     desc.write(buf, pos, facing, filter);
+    buf.writeEnumConstant(userFacingDir);
   }
 
   public void setFilterDesc(FilterDesc desc) {
     this.desc = desc;
     markDirty();
+  }
+
+  public void setActionDir(Direction userFacingDir) {
+
+    this.userFacingDir = userFacingDir;
   }
 }

@@ -19,6 +19,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.DirectionProperty;
@@ -148,7 +149,8 @@ public class FilterBlock extends HopperBlock implements Forcer {
   @Override
   public BlockState getPlacementState(ItemPlacementContext ctx) {
     Direction direction = ctx.getSide().getOpposite();
-    Direction facing = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
+    Direction facing1 = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
+    Direction facing = facing1;
     Direction[] directions = ctx.getPlacementDirections();
     for (int i = 1; i < directions.length; i++) {
       Direction filter = directions[i];
@@ -179,8 +181,16 @@ public class FilterBlock extends HopperBlock implements Forcer {
       return ActionResult.SUCCESS;
     } else {
       BlockEntity blockEntity = world.getBlockEntity(pos);
-      if (blockEntity instanceof FilterBlockEntity) {
-        player.openHandledScreen((FilterBlockEntity) blockEntity);
+      if (blockEntity instanceof FilterBlockEntity fbe) {
+        ItemPlacementContext ctx = new ItemPlacementContext(player, hand, ItemStack.EMPTY, hit);
+        fbe.setActionDir(null);
+        for (var dir : ctx.getPlacementDirections()) {
+          if (dir.getAxis() != Axis.Y) {
+            fbe.setActionDir(dir);
+            break;
+          }
+        }
+        player.openHandledScreen(fbe);
       }
       return ActionResult.CONSUME;
     }

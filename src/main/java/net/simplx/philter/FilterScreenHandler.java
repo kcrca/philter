@@ -19,13 +19,16 @@ public class FilterScreenHandler extends HopperScreenHandler implements Forcer {
   public static final Field TYPE_F = Forcer.field(ScreenHandler.class, "type");
 
   private final FilterDesc filterDesc;
-   final BlockPos pos;
-   final Direction facing;
-   Direction filter;
+  final BlockPos pos;
+  final Direction facing;
+  Direction userFacingDir;
+  Direction filter;
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
     this(syncId, playerInventory, new SimpleInventory(INVENTORY_SIZE), new FilterDesc(buf),
-        buf.readBlockPos(), buf.readEnumConstant(Direction.class), buf.readEnumConstant(Direction.class));
+        buf.readBlockPos(), buf.readEnumConstant(Direction.class),
+        buf.readEnumConstant(Direction.class));
+    userFacingDir = buf.readEnumConstant(Direction.class);
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory,
