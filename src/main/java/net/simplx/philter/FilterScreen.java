@@ -230,9 +230,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     // Color the text based on validity.
     field.setEditableColor(0xffffff);
+    field.setTooltip(null);
     if (!spec.isEmpty() && !RESOURCE_PAT.matcher(spec).matches()) {
       try {
-        Pattern.compile(spec);
+        Pattern.compile(spec, Pattern.CASE_INSENSITIVE);
       } catch (PatternSyntaxException e) {
         field.setTooltip(Tooltip.of(Text.literal(e.getMessage())));
         field.setEditableColor(0xff0000);

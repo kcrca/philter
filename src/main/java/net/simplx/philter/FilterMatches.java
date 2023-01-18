@@ -40,7 +40,7 @@ public class FilterMatches {
           (yes ? tagsYes : tagsNo).add(id);
         }
       } else {
-        (yes ? patternsYes : patternsNo).add(Pattern.compile(spec));
+        (yes ? patternsYes : patternsNo).add(Pattern.compile(spec, Pattern.CASE_INSENSITIVE));
       }
     }
 
@@ -94,7 +94,7 @@ public class FilterMatches {
           nbtStr = new StringNbtWriter().apply(nbt);
         }
       }
-      boolean isIn = pattern.matcher(id.toString() + nbtStr).matches() == yes
+      boolean isIn = pattern.matcher(id.toString() + nbtStr).find() == yes
           || id.getNamespace().equals("minecraft")
           && pattern.matcher(id.getPath() + nbtStr).matches() == yes;
       if (!matchAll && isIn == yes) {

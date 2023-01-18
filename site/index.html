@@ -1,0 +1,199 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Philter filtering mod</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta name="description"
+        content="Philter's filter gives you a super hopper that will filter certain items to a different place"/>
+  <meta name="keywords" content="philter, filter">
+  <meta name="keywords" content="minecraft, game, mod, fiber">
+</head>
+
+<!-- version: 1.0 -->
+
+<body>
+<div class="outer">
+
+  <div class="heading">
+    <h1>Philter</h1>
+    <h3>A Filtering super-hopper</h3>
+    <i>Version 1.0</i>
+  </div>
+
+  <div class="menu">
+    <table summary="Site links">
+      <tr>
+        <td class="tablinks Overview" onclick="openTab(event, 'Overview')">Overview</td>
+        <td class="tablinks Downloads" onclick="openTab(event, 'Downloads')">Downloads</td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="Overview" class="tabcontent">
+    <p>
+      The Philter mod gives you a filter super-hopper that works with vanilla Minecraft or any mod.
+      Any kinds of items can be diverted into a different
+      output container. Otherwise, it just passes them along like any other hopper.
+
+    <p>
+      Here's what it looks like in action:
+      <img src="visual.png" alt="a filter in place">
+
+    <p>
+      Overall the filter is a steel-blue hopper, and it has a redstone insert that does the
+      filtering. The blue
+      tab on the filter's top shows where normal items are directed. The redstone stripe flashes
+      when an item
+      is instead filtered to the hopper on the right.
+
+    <p>
+      You can set up the filter using its UI:
+      <img src="only_same_mode.png" alt="filter UI in 'Only Same' mode">
+
+    <p>
+      The area in the upper left is the basic hopper UI, and works just the same. On the right is
+      the filter
+      configuration. Here it is in "Only Same" mode, which means it will only put items into the
+      filter that
+      are already present in the target container. So if the target hopper has planks of every type,
+      only planks
+      will be diverted, and other item will continue onward.
+
+    <p>
+      The "Exact" button is off, so modifications will be ignored. If the target had iron
+      chestplate, this would allow
+      damaged or enchanted iron chestplates to also be put in the target. If "Exact" were on, only
+      chestplate that had
+      the same damage and enchantment would be diverted.
+
+    <p>
+      The other primary mode is "Match", where you specify tags and regular expressions to tell the
+      filter what to do:
+      <img src="matches_mode.png" alt="filter UI in 'Only Same' mode">
+
+    <p>
+      Here we've told the filter to match blocks that are covered by the tag "#wool" (all kinds of
+      wool) plus anything
+      that has "dirt" in the name. "Any of" can be switched to "All of", which would mean the item
+      would have to both
+      match "#wool" and have "dirt" in the name (which nothing does, so ...).
+
+    <p>
+      In "Match" mode, "Exact" means that NBT value will be included when string matching. So you
+      could match any item
+      that was enchanted with the pattern ".*Enchantments.*" because that string appears in the NBT
+      of enchanted items.
+
+    <p><a href="https://minecraft.fandom.com/wiki/Tag?so=search#Java_Edition_2">The list of standard
+      tags</a> will probably be helpful.
+      As for regular expressions, there are many tutorials on the web. Generally, text matches the
+      same text except for special symbols.
+      The most important are:
+    <ul>
+      <li><b><code>.</code></b> matches any single character, so "d.rt" matches both "dirt" and
+        "dart".
+      <li><b><code>*</code></b> means "zero or more repetitions", so ".*" means "zero or more of any
+        characters".
+      <li><b><code>^</code></b> matches the start of the text, so you could say "anything whose name
+        starts with blue" with the pattern "^blue.*", which would not match light blue things.
+      <li><b><code>$</code></b> matches the end of the text.
+    </ul>
+
+    The filter finds a match anywhere in the string unless you anchor it to the start and/or end of
+    the text. It also ignores
+    the case of the text, so "enchantments" would match both "enchantments" and "Enchantments".
+
+    <p>
+      Finally, the mode "None" just turns off the filtering entirely.
+
+    <p>
+      The third part of the UI, the part below your inventory, allows you to change the direction of
+      the filter. Like
+      a hopper, a filter can point in any direction but up, but also it cannot point in the same
+      direction as the regular
+      hopper output. When you place a filter, the filtered output is defined by how you're pointing,
+      but you can change
+      it afterwards using this part of the UI.
+
+  </div>
+
+  <div id="Downloads" class="tabcontent">
+    <p>
+    <div class="menu">
+      <table class="downloads" summary="downloads">
+        <tr>
+          <td onclick="window.location='philter-1.0.jar'">
+	      <div>
+	      <img src="logo_128.png" alt="philter"/> Download Philter
+	      </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="menu">
+    <table summary="Site links">
+      <tr>
+        <td class="tablinks Overview" onclick="openTab(event, 'Overview')">Overview</td>
+        <td class="tablinks Downloads" onclick="openTab(event, 'Downloads')">Downloads</td>
+      </tr>
+    </table>
+  </div>
+
+  <!--CopyrightBegin -->
+<p class="license"><a rel="license" href="http://creativecommons.org/licenses/by/4.0/">
+    <img align="right"
+         alt="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by/4.0/88x31.png"/></a>
+    <span
+            xmlns:dct="http://purl.org/dc/terms/"
+            property="dct:title">Philter Mod for Minecraft</span> by <a
+            xmlns:cc="http://creativecommons.org/ns#" href="claritypack.com/philter" property="cc:attributionName"
+            rel="cc:attributionURL">claritypack.com/philter</a>
+    <br>is licensed under a <a rel="license"
+                               href="http://creativecommons.org/licenses/by/4.0/">Creative
+        Commons Attribution 4.0 International License</a>.
+    <br>© 2022-2023 by Ken Arnold. Based on a work at <a
+            xmlns:dct="http://purl.org/dc/terms/" href="https://github.com/kcrca/philter" rel="dct:source">https://github.com/kcrca/philter</a>.
+    <!--CopyrightEnd-->
+  <p class="timestamp">Page Last Edited: Jan 18 01:05:49 2023
+
+</div>
+
+<script>
+
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(tabName).style.display = "block";
+    activeButtons = document.getElementsByClassName(tabName);
+    for (i = 0; i < activeButtons.length; i++) {
+        activeButtons[i].className += " active";
+    }
+}
+
+tab_name = location.hash.substring(1);
+if (!tab_name) {
+    tab_name = "Overview";
+}
+
+document.addEventListener("DOMContentLoaded", function(event) { 
+    openTab(null, tab_name);
+});
+
+
+</script>
+</body>
+
+</html>
