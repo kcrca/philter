@@ -76,6 +76,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     desc = new FilterDesc(FilterMode.ONLY_SAME, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
     flicker = 0;
+    this.transferCooldown = 0;
   }
 
   public static void updateEntity(PlayerEntity player, PacketByteBuf buf) {
