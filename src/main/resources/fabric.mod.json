@@ -1,4 +1,5 @@
 {
+  "accessWidener" : "modid.accesswidener",
   "schemaVersion": 1,
   "id": "philter",
   "version": "${version}",
