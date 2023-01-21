@@ -16,7 +16,7 @@ class MinecraftGraphics implements Graphics {
   private final int screenX, screenY;
   private final int screenW, screenH;
 
-  public MinecraftGraphics(HandledScreen  <?> screen) {
+  public MinecraftGraphics(HandledScreen<?> screen) {
     textRenderer = screen.textRenderer;
     screenX = screen.x;
     screenY = screen.y;
