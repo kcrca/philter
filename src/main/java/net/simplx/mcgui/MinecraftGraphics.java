@@ -1,44 +1,29 @@
 package net.simplx.mcgui;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
-class MinecraftGraphics implements Graphics, Forcer {
+class MinecraftGraphics implements Graphics {
 
-  private static final StaticForcer forceScreen = new StaticForcer(HandledScreen.class);
-  private static final Field SCREEN_X_F = forceScreen.field("x");
-  private static final Field SCREEN_Y_F = forceScreen.field("y");
-  private static final Field WIDTH_F = forceScreen.field("width");
-  private static final Field HEIGHT_F = forceScreen.field("height");
-  private static final Field SCREEN_WIDTH_F = forceScreen.field("backgroundWidth");
-  private static final Field SCREEN_HEIGHT_F = forceScreen.field("backgroundHeight");
-  private static final Field TEXT_RENDERER_F = forceScreen.field("textRenderer");
-
-  private static final Method ADD_DRAWABLE_CHILD_M = forceScreen.method("addDrawableChild",
-      Element.class);
-
-  private final Screen screen;
+  private final HandledScreen<?> screen;
   private final TextRenderer textRenderer;
   private final int windowW, windowH;
   private final int screenX, screenY;
   private final int screenW, screenH;
 
-  public MinecraftGraphics(Screen screen) {
-    textRenderer = (TextRenderer) forceGet(screen, TEXT_RENDERER_F);
-    screenX = (int) forceGet(screen, SCREEN_X_F);
-    screenY = (int) forceGet(screen, SCREEN_Y_F);
-    screenW = (int) forceGet(screen, SCREEN_WIDTH_F);
-    screenH = (int) forceGet(screen, SCREEN_HEIGHT_F);
-    windowW = (int) forceGet(screen, WIDTH_F);
-    windowH = (int) forceGet(screen, HEIGHT_F);
+  public MinecraftGraphics(HandledScreen  <?> screen) {
+    textRenderer = screen.textRenderer;
+    screenX = screen.x;
+    screenY = screen.y;
+    screenW = screen.backgroundWidth;
+    screenH = screen.backgroundHeight;
+    windowW = screen.width;
+    windowH = screen.height;
     this.screen = screen;
   }
 
@@ -94,9 +79,7 @@ class MinecraftGraphics implements Graphics, Forcer {
     textRenderer.draw(matrices, text, x, y, color);
   }
 
-  @SuppressWarnings("unchecked")
   public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
-    return (T) forceInvoke(screen, ADD_DRAWABLE_CHILD_M, element);
+    return screen.addDrawableChild(element);
   }
-
 }

@@ -5,14 +5,11 @@ import static net.simplx.philter.FilterBlock.FILTER;
 import static net.simplx.philter.FilterBlock.FILTERED;
 
 import com.google.common.collect.ImmutableList;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.HopperBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -31,8 +28,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
-import net.simplx.mcgui.Forcer;
-import net.simplx.mcgui.StaticForcer;
 
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
@@ -49,21 +44,7 @@ import net.simplx.mcgui.StaticForcer;
  * {@link FilterBlockEntity#onEntityCollided}.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
-    ExtendedScreenHandlerFactory {
-
-  private static final StaticForcer force = new StaticForcer(HopperBlockEntity.class);
-  private static final Field TRANSFER_COOLDOWN_F = force.field("transferCooldown");
-  private static final Field LAST_TICK_TIME_F = force.field("lastTickTime");
-  private static final Field TYPE_F = Forcer.field(BlockEntity.class, "type");
-  private static final Method NEEDS_COOLDOWN_M = force.method("needsCooldown");
-  private static final Method SET_TRANSFER_COOLDOWN_M = force.method("setTransferCooldown",
-      int.class);
-  private static final Method IS_FULL_M = force.method("isFull");
-  private static final Method INSERT_M = force.method("insert", World.class, BlockPos.class,
-      BlockState.class, Inventory.class);
-  private static final Method CAN_MERGE_ITEMS_F = force.method("canMergeItems", ItemStack.class,
-      ItemStack.class);
+public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
@@ -72,11 +53,10 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
-    forceSet(TYPE_F, PhilterMod.FILTER_BLOCK_ENTITY);
+    type = PhilterMod.FILTER_BLOCK_ENTITY;
     desc = new FilterDesc(FilterMode.ONLY_SAME, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
     flicker = 0;
-    this.transferCooldown = 0;
   }
 
   public static void updateEntity(PlayerEntity player, PacketByteBuf buf) {
@@ -120,26 +100,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
     blockEntity.doServerTick(world, pos, state);
   }
 
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  private boolean needsCooldown() {
-    return (Boolean) forceInvoke(NEEDS_COOLDOWN_M);
-  }
-
-  private void setTransferCooldown(int transferCooldown) {
-    forceInvoke(SET_TRANSFER_COOLDOWN_M, transferCooldown);
-  }
-
-  private boolean isFull() {
-    return (Boolean) forceInvoke(IS_FULL_M);
-  }
-
-  private boolean canMergeItems(ItemStack stack1, ItemStack stack2) {
-    return (Boolean) forceInvoke(CAN_MERGE_ITEMS_F, stack1, stack2);
-  }
-
   private void doServerTick(World world, BlockPos pos, BlockState state) {
-    forceSet(TRANSFER_COOLDOWN_F, (int) forceGet(TRANSFER_COOLDOWN_F) - 1);
-    forceSet(LAST_TICK_TIME_F, world.getTime());
+    transferCooldown--;
+    lastTickTime = world.getTime();
     if (!needsCooldown()) {
       setTransferCooldown(0);
       insertAndExtract(world, pos, state, () -> extract(world, this));
@@ -189,10 +152,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements Forcer,
       }
     }
     return false;
-  }
-
-  private boolean insert(World world, BlockPos pos, BlockState state, Inventory inventory) {
-    return (boolean) forceInvoke(INSERT_M, world, pos, state, inventory);
   }
 
   public void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity) {

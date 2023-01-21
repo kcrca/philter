@@ -1,12 +1,9 @@
 package net.simplx.mcgui;
 
-import java.lang.reflect.Field;
 import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.text.Text;
 
-public class RadioButtonWidget<T> extends CheckboxWidget implements Forcer {
-
-  private static final Field CHECKED_F = new StaticForcer(CheckboxWidget.class).field("checked");
+public class RadioButtonWidget<T> extends CheckboxWidget {
 
   private RadioButtons<T> buttons;
   private final T value;
@@ -57,7 +54,7 @@ public class RadioButtonWidget<T> extends CheckboxWidget implements Forcer {
    * Internal call to force this on.
    */
   void setCheckedInternal(boolean on) {
-    forceSet(CHECKED_F, on);
+    checked = on;
   }
 
   /**

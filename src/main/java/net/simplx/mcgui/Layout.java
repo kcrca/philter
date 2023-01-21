@@ -4,8 +4,6 @@ import static com.google.common.collect.Streams.stream;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -421,17 +419,6 @@ public class Layout {
 
   public static final int UNKNOWN = Integer.MIN_VALUE;
 
-  private static final StaticForcer forceScreen = new StaticForcer(HandledScreen.class);
-
-  private static final Field SCREEN_X_F = forceScreen.field("x");
-  private static final Field SCREEN_Y_F = forceScreen.field("y");
-  private static final Field SCREEN_WIDTH_F = forceScreen.field("backgroundWidth");
-  private static final Field SCREEN_HEIGHT_F = forceScreen.field("backgroundHeight");
-  private static final Field TEXT_RENDERER_F = forceScreen.field("textRenderer");
-
-  private static final Method ADD_DRAWABLE_CHILD_M = forceScreen.method("addDrawableChild",
-      Element.class);
-  private static final Method REMOVE_M = forceScreen.method("remove", Element.class);
 
   public final int enW;
   public final int fontH;
@@ -449,15 +436,15 @@ public class Layout {
 
   private String prefix;
 
-  public Layout(Screen screen) {
+  public Layout(HandledScreen<?> screen) {
     this(screen, DEFAULT_BORDER, DEFAULT_BORDER);
   }
 
-  public Layout(Screen screen, int gap, int border) {
+  public Layout(HandledScreen<?> screen, int gap, int border) {
     this(screen, gap, gap, border, border);
   }
 
-  public Layout(Screen screen, int gapW, int gapH, int borderW, int borderH) {
+  public Layout(HandledScreen<?> screen, int gapW, int gapH, int borderW, int borderH) {
     this(new MinecraftGraphics(screen), gapW, gapH, borderW, borderH);
   }
 

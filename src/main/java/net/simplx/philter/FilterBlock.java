@@ -35,35 +35,14 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.simplx.mcgui.Forcer;
-import net.simplx.mcgui.StaticForcer;
 import org.jetbrains.annotations.Nullable;
 
-public class FilterBlock extends HopperBlock implements Forcer {
+public class FilterBlock extends HopperBlock {
 
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
   public static final IntProperty FILTERED = IntProperty.of("filtered", 0, 1);
-
-  private static final StaticForcer forcer = new StaticForcer(HopperBlock.class);
-  private static final VoxelShape TOP_SHAPE = (VoxelShape) forcer.forceGet("TOP_SHAPE");
-  private static final VoxelShape MIDDLE_SHAPE = (VoxelShape) forcer.forceGet("MIDDLE_SHAPE");
-  private static final VoxelShape DOWN_SHAPE = (VoxelShape) forcer.forceGet("DOWN_SHAPE");
-  private static final VoxelShape EAST_SHAPE = (VoxelShape) forcer.forceGet("EAST_SHAPE");
-  private static final VoxelShape NORTH_SHAPE = (VoxelShape) forcer.forceGet("NORTH_SHAPE");
-  private static final VoxelShape SOUTH_SHAPE = (VoxelShape) forcer.forceGet("SOUTH_SHAPE");
-  private static final VoxelShape WEST_SHAPE = (VoxelShape) forcer.forceGet("WEST_SHAPE");
-  private static final VoxelShape DOWN_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
-      "DOWN_RAYCAST_SHAPE");
-  private static final VoxelShape EAST_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
-      "EAST_RAYCAST_SHAPE");
-  private static final VoxelShape NORTH_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
-      "NORTH_RAYCAST_SHAPE");
-  private static final VoxelShape SOUTH_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
-      "SOUTH_RAYCAST_SHAPE");
-  private static final VoxelShape WEST_RAYCAST_SHAPE = (VoxelShape) forcer.forceGet(
-      "WEST_RAYCAST_SHAPE");
 
   private static final VoxelShape CENTER_SHAPE = Block.createCuboidShape(4, 4, 4, 12, 12, 12);
   private static final Map<Direction, Map<Direction, VoxelShape>> SHAPES = new EnumMap<>(
