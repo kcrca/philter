@@ -32,16 +32,15 @@ import net.minecraft.world.World;
 /**
  * This implementation is ... suboptimal. This block is effectively a hopper, but neither
  * HopperVBlock nor HopperBlocKEntity are designed for subclasses. So this is a mash-up of forced
- * semi-inheritance and copies where needed. The alternative is to simply copy the entire hopper
- * entity class and tweak it. This way, at least what <em>can</em> be inherited is inherited.
+ * semi-inheritance (via access-widenere) and copies where needed. The alternative is to simply copy
+ * the entire hopper entity class and tweak it. This way, at least what <em>can</em> be inherited is
+ * inherited.
  *
- * This is entirely to be able to re-write the insert() method to check the filter before doing any
- * move. The static serverTick() here simply invokes doServerTick() as an instance method, which
- * mirrors the static HopperBlockState.serverTick() (non-statically) and so on until we get to
- * insert(). Everything below that we just invoke the superclass method (honestly or dishonestly).
- *
- * This also requires handling entities dropped on top specially because of course it does; see
- * {@link FilterBlockEntity#onEntityCollided}.
+ * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to
+ * check the filter before doing any move. The static {@link #serverTick} here simply invokes {@link
+ * #doServerTick} as an instance method, which mirrors the static {@link
+ * HopperBlockEntity#serverTick} (non-statically) and so on until we get to {@link
+ * #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
 @SuppressWarnings("SameParameterValue")
 public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
