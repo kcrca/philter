@@ -1,7 +1,7 @@
 package net.simplx.philter;
 
 import static java.util.Objects.requireNonNull;
-import static net.simplx.philter.FilterMode.ONLY_SAME;
+import static net.simplx.philter.FilterMode.SAME_AS;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class FilterDesc {
   @SuppressWarnings("SimplifiableConditionalExpression")
   public FilterDesc(NbtCompound nbt) {
     try {
-      mode = ONLY_SAME;
+      mode = SAME_AS;
       if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
         mode = FilterMode.valueOf(nbt.getString(MODE));
       }
@@ -56,7 +56,7 @@ public class FilterDesc {
       matchAll = nbt.contains(MATCH_ALL, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
       exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
     } catch (IllegalArgumentException | NullPointerException e) {
-      mode = ONLY_SAME;
+      mode = SAME_AS;
       matches = ImmutableList.of();
       exact = true;
     }

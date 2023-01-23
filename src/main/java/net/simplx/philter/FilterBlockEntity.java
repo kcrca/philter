@@ -54,7 +54,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
     type = PhilterMod.FILTER_BLOCK_ENTITY;
-    desc = new FilterDesc(FilterMode.ONLY_SAME, ImmutableList.of(), false);
+    desc = new FilterDesc(FilterMode.SAME_AS, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
     flicker = 0;
   }
@@ -169,12 +169,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
     }
     return switch (desc.mode) {
       case NONE -> false;
-      case ONLY_SAME -> filterOnlySame(hopperStack, world, pos, state);
+      case SAME_AS -> filterSameAs(hopperStack, world, pos, state);
       case MATCHES -> filterMatches(hopperStack);
     };
   }
 
-  private boolean filterOnlySame(ItemStack item, World world, BlockPos pos, BlockState state) {
+  private boolean filterSameAs(ItemStack item, World world, BlockPos pos, BlockState state) {
     Direction direction = state.get(FILTER);
     Inventory inventory = getInventoryAt(world, pos.offset(direction));
     if (inventory == null) {

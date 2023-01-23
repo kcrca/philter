@@ -1,11 +1,11 @@
 {
   "philter.filter.name": "Filter",
-  "philter.filter.mode.only_same": "Only Same",
+  "philter.filter.mode.same_as": "Same As",
   "philter.filter.mode.matches": "Match",
   "philter.filter.mode.none": "None",
   "philter.filter.mode.tooltip": "Set sorting mode",
   "philter.filter.mode.none.tooltip": "Matching disabled",
-  "philter.filter.mode.only_same.tooltip": "Match things already in the target",
+  "philter.filter.mode.same_as.tooltip": "Match things already in the target",
   "philter.filter.mode.matches.tooltip": "Tag or regular expression",
   "philter.filter_mode.matches_alt": "Match Specification",
   "philter.filter.save": "Save",
