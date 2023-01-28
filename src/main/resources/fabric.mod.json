@@ -19,7 +19,7 @@
     ]
   },
   "mixins": [
-    "philter.mixins.json"
+      "philter.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.12",

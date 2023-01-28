@@ -33,8 +33,6 @@ import net.minecraft.util.Identifier;
  */
 @SuppressWarnings("UnusedReturnValue")
 public class Layout {
-
-
   public class Placer implements Cloneable {
 
     private int x, y;

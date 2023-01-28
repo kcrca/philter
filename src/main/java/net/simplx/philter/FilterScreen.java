@@ -1,40 +1,12 @@
 package net.simplx.philter;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.Arrays.stream;
-import static net.minecraft.util.math.Direction.DOWN;
-import static net.simplx.mcgui.Colors.LABEL_COLOR;
-import static net.simplx.mcgui.Horizontal.CENTER;
-import static net.simplx.mcgui.Horizontal.LEFT;
-import static net.simplx.mcgui.Horizontal.RIGHT;
-import static net.simplx.mcgui.Vertical.ABOVE;
-import static net.simplx.mcgui.Vertical.BELOW;
-import static net.simplx.mcgui.Vertical.MID;
-import static net.simplx.mcgui.Vertical.TOP_EDGE;
-import static net.simplx.philter.FilterMode.MATCHES;
-import static net.simplx.philter.FilterMode.NONE;
-import static net.simplx.philter.FilterMode.SAME_AS;
-import static net.simplx.philter.FilterMode.values;
-import static net.simplx.philter.PhilterMod.FILTER_ID;
-import static net.simplx.philter.PhilterMod.MOD_ID;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.MultilineTextWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.*;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
@@ -50,6 +22,24 @@ import net.simplx.mcgui.RadioButtonWidget;
 import net.simplx.mcgui.RadioButtons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.stream;
+import static net.minecraft.util.math.Direction.DOWN;
+import static net.simplx.mcgui.Colors.LABEL_COLOR;
+import static net.simplx.mcgui.Horizontal.*;
+import static net.simplx.mcgui.Vertical.*;
+import static net.simplx.philter.FilterMode.values;
+import static net.simplx.philter.FilterMode.*;
+import static net.simplx.philter.FilterScreenHandler.EXAMPLES_GRID_X;
+import static net.simplx.philter.FilterScreenHandler.EXAMPLES_GRID_Y;
+import static net.simplx.philter.PhilterMod.FILTER_ID;
+import static net.simplx.philter.PhilterMod.MOD_ID;
 
 @SuppressWarnings("SameParameterValue")
 @Environment(EnvType.CLIENT)
@@ -57,8 +47,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FilterScreen.class);
 
-  private static final Identifier TEXTURE = new Identifier(MOD_ID,
-      "textures/gui/container/filter.png");
+  private static final Identifier TEXTURE = new Identifier(MOD_ID, "textures/gui/container/filter.png");
   public static final int TEXTURE_WIDTH = 512;
   public static final int TEXTURE_HEIGHT = 256;
 
@@ -96,6 +85,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private Layout layout;
   private CyclingButtonWidget<Boolean> allButton;
   private ButtonWidget saveButton;
+  private MultilineTextWidget exampleText;
   private boolean initializing;
   private Placer titlePlace;
   private Placer topP;
@@ -126,38 +116,36 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     titlePlace = layout.placer().withText(titleText).x(x + MODE_X).y(ABOVE);
 
     Placer p;
-    Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text(
-        "mode." + mode.toString().toLowerCase());
-    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList())
-        .inButton().x(RIGHT, titlePlace).y(ABOVE);
+    Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text("mode." + mode.toString().toLowerCase());
+    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton().x(RIGHT,
+        titlePlace).y(ABOVE);
     titlePlace.y(MID, modeP);
     CyclingButtonWidget<FilterMode> modeButton = addDrawableChild(
-        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode)
-            .tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip"))
-            .build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
+        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode).tooltip(
+            value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip")).build(p.x(), p.y(), p.w(),
+            p.h(), null, (button, m) -> setMode(m)));
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
     p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT, modeP).y(ABOVE);
     allButton = addDrawableChild(
-        CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText()
-            .tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip"))
-            .build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
+        CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText().tooltip(
+            value -> layout.tooltip((value ? "all" : "any") + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null,
+            (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");
-    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton()
-        .x(titlePlace.x()).y(BELOW, layout.placer(modeButton));
-    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact)
-        .tooltip(value -> layout.tooltip("exact." + value + ".tooltip"))
-        .build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
+    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton().x(
+        titlePlace.x()).y(BELOW, layout.placer(modeButton));
+    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact).tooltip(
+        value -> layout.tooltip("exact." + value + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), exactText,
+        (button, exact) -> setExact(exact)));
 
     p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, layout.placer(exactButton));
     saveButton = addDrawableChild(
-        new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h())
-            .tooltip(layout.tooltip("save.tooltip")).build());
+        new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h()).tooltip(
+            layout.tooltip("save.tooltip")).build());
 
-    Placer shifting = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP)
-        .to(BELOW);
+    Placer shifting = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP).to(BELOW);
 
     // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
     // any text field padding, it's based on total width, so we set it after.
@@ -174,8 +162,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       if (p.y() > bottom.y()) {
         break;
       }
-      field = addDrawableChild(
-          new TextFieldWidget(textRenderer, p.x(), p.y(), p.w(), p.h(), Text.empty()));
+      field = addDrawableChild(new TextFieldWidget(textRenderer, p.x(), p.y(), p.w(), p.h(), Text.empty()));
       matchesFields.add(field);
       final int index = i;
       field.setChangedListener(text -> matchChanged(index, text));
@@ -194,18 +181,20 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
 
-    hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE)
-        .to(hopperHeight - layout.borderH);
-    Placer mid = layout.placer().w(hopperP.w()).from(BELOW, hopperP).to(BELOW).x(hopperP.x())
-        .y(BELOW, hopperP);
+    hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE).to(hopperHeight - layout.borderH);
+    Placer mid = layout.placer().w(hopperP.w()).from(BELOW, hopperP).to(BELOW).x(hopperP.x()).y(BELOW, hopperP);
     topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(MID, mid);
-    examplesP = layout.placer().size(EXAMPLES_W, EXAMPLES_H).x(CENTER, shifting)
-        .y(TOP_EDGE, shifting);
-    // handler.initializeSlots(examplesP.x() - x + EXAMPLES_BORDER + 1,
-    //     examplesP.y() - y + EXAMPLES_BORDER - 1, layout.slotW, layout.slotH);
+    examplesP = layout.placer().size(EXAMPLES_W, EXAMPLES_H).x(CENTER, shifting).y(TOP_EDGE, shifting);
+    int examplesX = examplesP.x() - x + EXAMPLES_BORDER + 1;
+    int examplesY = examplesP.y() - y + EXAMPLES_BORDER - 1;
+    if (examplesX != EXAMPLES_GRID_X || examplesY != EXAMPLES_GRID_Y) {
+      LOGGER.warn(
+          String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X, EXAMPLES_GRID_Y,
+              examplesX, examplesY));
+    }
     p = layout.placer().w(shifting.w()).x(CENTER, examplesP).y(BELOW, examplesP);
-    addDrawableChild(p.place(
-        MultilineTextWidget.createCentered(shifting.w(), textRenderer, layout.text("examples"))));
+    exampleText = addDrawableChild(
+        p.place(MultilineTextWidget.createCentered(shifting.w(), textRenderer, layout.text("examples"))));
 
     boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
@@ -219,8 +208,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         case 3 -> q.x(LEFT, topP).y(MID, topP);
         case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
       }
-      directionButtons.add(
-          addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
+      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
       dir = dir.rotateClockwise(Axis.Y);
     }
     directionButtons.setUpdateCallback(this::setFilterDir);
@@ -286,10 +274,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     exactButton.visible = desc.mode != NONE;
     allButton.visible = desc.mode == MATCHES;
     saveButton.visible = allButton.visible && anyMatchChanged();
+    exampleText.visible = desc.mode == SAME_AS;
     Arrays.stream(handler.filterSlots).forEach(slot -> slot.setEnabled(desc.mode == SAME_AS));
 
     // We have to deal with focus before changing visibility
-    var wasVisible = matchesFields.get(0).visible;
+    boolean wasVisible = matchesFields.get(0).visible;
     boolean newVisible = desc.mode == MATCHES;
     if (!wasVisible && newVisible) {
       setInitialFocus(matchesFields.get(0));
@@ -323,8 +312,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void storeText() {
-    desc.matches = matchesFields.stream().map(TextFieldWidget::getText)
-        .filter(text -> !text.isBlank()).collect(toImmutableList());
+    desc.matches = matchesFields.stream().map(TextFieldWidget::getText).filter(text -> !text.isBlank()).collect(
+        toImmutableList());
   }
 
   private void save(ButtonWidget unused) {
@@ -335,8 +324,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void sendFilterDesc() {
     try {
-      ClientPlayNetworking.send(FILTER_ID,
-          desc.packetBuf(handler.getPos(), handler.facing, handler.filter));
+      ClientPlayNetworking.send(FILTER_ID, desc.packetBuf(handler.getPos(), handler.facing, handler.filter));
     } catch (NullPointerException e) {
       LOGGER.error("Unexpected null", e);
     }
@@ -363,8 +351,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     RenderSystem.setShaderTexture(0, TEXTURE);
     int midX = (width - backgroundWidth) / 2;
     int midY = (height - backgroundHeight) / 2;
-    drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, TEXTURE_WIDTH,
-        TEXTURE_HEIGHT);
+    drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
     if (desc.mode == SAME_AS) {
       Placer p = examplesP;
@@ -372,8 +359,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
 
     Placer p = layout.placer().x(LEFT).y(BELOW, hopperP).inLabel();
-    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH,
-        LABEL_COLOR);
+    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH, LABEL_COLOR);
 
     drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();

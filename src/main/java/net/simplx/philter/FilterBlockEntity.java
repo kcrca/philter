@@ -1,12 +1,6 @@
 package net.simplx.philter;
 
-import static net.minecraft.util.math.Direction.UP;
-import static net.simplx.philter.FilterBlock.FACING;
-import static net.simplx.philter.FilterBlock.FILTER;
-import static net.simplx.philter.FilterBlock.FILTERED;
-
 import com.google.common.collect.ImmutableList;
-import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -17,7 +11,6 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -32,6 +25,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import static net.minecraft.util.math.Direction.UP;
+import static net.simplx.philter.FilterBlock.*;
 
 /**
  * This block is effectively a hopper, but neither {@link HopperBlock} nor {@link HopperBlockEntity}
@@ -129,8 +127,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
     return Text.translatable("philter.filter.name");
   }
 
-  public static void serverTick(World world, BlockPos pos, BlockState state,
-      FilterBlockEntity blockEntity) {
+  public static void serverTick(World world, BlockPos pos, BlockState state, FilterBlockEntity blockEntity) {
     blockEntity.doServerTick(world, pos, state);
   }
 
@@ -152,8 +149,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   }
 
   @SuppressWarnings("UnusedReturnValue")
-  private boolean insertAndExtract(World world, BlockPos pos, BlockState state,
-      BooleanSupplier booleanSupplier) {
+  private boolean insertAndExtract(World world, BlockPos pos, BlockState state, BooleanSupplier booleanSupplier) {
     if (world.isClient) {
       return false;
     }
@@ -190,10 +186,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
 
   public void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity) {
     if (entity instanceof ItemEntity && VoxelShapes.matchesAnywhere(
-        VoxelShapes.cuboid(entity.getBoundingBox().offset(-pos.getX(), -pos.getY(), -pos.getZ())),
-        getInputAreaShape(), BooleanBiFunction.AND)) {
-      insertAndExtract(world, pos, state,
-          () -> HopperBlockEntity.extract(this, (ItemEntity) entity));
+        VoxelShapes.cuboid(entity.getBoundingBox().offset(-pos.getX(), -pos.getY(), -pos.getZ())), getInputAreaShape(),
+        BooleanBiFunction.AND)) {
+      insertAndExtract(world, pos, state, () -> HopperBlockEntity.extract(this, (ItemEntity) entity));
     }
   }
 
@@ -209,13 +204,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   }
 
   private boolean filterSameAs(ItemStack item, World world, BlockPos pos, BlockState state) {
-    Direction direction = state.get(FILTER);
-    Inventory inventory = getInventoryAt(world, pos.offset(direction));
-    if (inventory == null) {
-      return false;
-    }
-    for (int i = 0; i < inventory.size(); i++) {
-      ItemStack invStack = inventory.getStack(i);
+    List<ItemStack> examples = getExamples(world, pos, state);
+    if (examples == null) return false;
+    for (ItemStack invStack : examples) {
       if (desc.exact) {
         if (canMergeItems(invStack, item)) {
           return true;
@@ -229,18 +220,44 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
     return false;
   }
 
+  @Nullable
+  private List<ItemStack> getExamples(World world, BlockPos pos, BlockState state) {
+    List<ItemStack> examples = new ArrayList<>();
+    DefaultedList<ItemStack> exampleInv = getInvStackList();
+    for (int i = INVENTORY_SIZE; i < INVENTORY_SIZE + EXAMPLES_COUNT; i++) {
+      ItemStack itemStack = exampleInv.get(i);
+      if (!itemStack.isEmpty()) {
+        examples.add(itemStack);
+      }
+    }
+    if (exampleInv.isEmpty()) {
+      Direction direction = state.get(FILTER);
+      Inventory inventory = getInventoryAt(world, pos.offset(direction));
+      if (inventory == null) {
+        return null;
+      }
+      for (int i = 0; i < inventory.size(); i++) {
+        ItemStack itemStack = inventory.getStack(i);
+        if (!itemStack.isEmpty()) {
+          examples.add(itemStack);
+        }
+      }
+    }
+    return examples;
+  }
+
   private boolean filterMatches(ItemStack item) {
     if (!filterMatches.input.equals(desc.matches)) {
       filterMatches = new FilterMatches(desc.matches);
     }
-    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true)
-        : filterMatches.matchAny(item, desc.exact, false);
+    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true) : filterMatches.matchAny(item, desc.exact,
+        false);
   }
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos,
-        getCachedState().get(FACING), getCachedState().get(FILTER));
+    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING),
+        getCachedState().get(FILTER));
   }
 
   @Override
