@@ -105,5 +105,4 @@ public class FilterMatches {
     }
     return matchAll;
   }
-
 }

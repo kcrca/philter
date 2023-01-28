@@ -5,6 +5,9 @@
 *.ipr
 *.iws
 
+# single char temp files
+?
+
 # IntelliJ
 out/
 # mpeltonen/sbt-idea plugin

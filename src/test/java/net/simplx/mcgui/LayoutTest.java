@@ -6,9 +6,9 @@ import static net.simplx.mcgui.Horizontal.LEFT_EDGE;
 import static net.simplx.mcgui.Horizontal.RIGHT;
 import static net.simplx.mcgui.Horizontal.RIGHT_EDGE;
 import static net.simplx.mcgui.Vertical.ABOVE;
-import static net.simplx.mcgui.Vertical.ABOVE_EDGE;
+import static net.simplx.mcgui.Vertical.TOP_EDGE;
 import static net.simplx.mcgui.Vertical.BELOW;
-import static net.simplx.mcgui.Vertical.BELOW_EDGE;
+import static net.simplx.mcgui.Vertical.BOTOTM_EDGE;
 import static net.simplx.mcgui.Vertical.MID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -288,7 +288,7 @@ class LayoutTest {
   @Test
   void relativeAboveEdge() {
     Placer anchorPlacer = layout.placer().h(40).y(20);
-    Placer p = layout.placer().h(6).y(ABOVE_EDGE, anchorPlacer);
+    Placer p = layout.placer().h(6).y(TOP_EDGE, anchorPlacer);
     assertThat(p.y()).isEqualTo(20);
   }
 
@@ -309,7 +309,7 @@ class LayoutTest {
   @Test
   void relativeBelowEdge() {
     Placer anchorPlacer = layout.placer().h(40).y(20);
-    Placer p = layout.placer().h(6).y(BELOW_EDGE, anchorPlacer);
+    Placer p = layout.placer().h(6).y(BOTOTM_EDGE, anchorPlacer);
     assertThat(p.y()).isEqualTo(20 + 40 - 6);
   }
 
@@ -321,7 +321,7 @@ class LayoutTest {
 
   @Test
   void relativeAboveEdgeScreen() {
-    Placer placer = layout.placer().h(5).y(ABOVE_EDGE);
+    Placer placer = layout.placer().h(5).y(TOP_EDGE);
     assertThat(placer.y()).isEqualTo(SCREEN_Y + BORDER_H);
   }
 
@@ -339,7 +339,7 @@ class LayoutTest {
 
   @Test
   void relativeBelowScreenEdge() {
-    Placer placer = layout.placer().h(5).y(BELOW_EDGE);
+    Placer placer = layout.placer().h(5).y(BOTOTM_EDGE);
     assertThat(placer.y()).isEqualTo(SCREEN_Y + SCREEN_H - BORDER_H - 5);
   }
 

@@ -1,5 +1,6 @@
 package net.simplx.philter;
 
+import static net.minecraft.util.math.Direction.UP;
 import static net.simplx.philter.FilterBlock.FACING;
 import static net.simplx.philter.FilterBlock.FILTER;
 import static net.simplx.philter.FilterBlock.FILTERED;
@@ -16,6 +17,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -23,18 +25,19 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * This implementation is ... suboptimal. This block is effectively a hopper, but neither
- * HopperVBlock nor HopperBlocKEntity are designed for subclasses. So this is a mash-up of forced
- * semi-inheritance (via access-widenere) and copies where needed. The alternative is to simply copy
- * the entire hopper entity class and tweak it. This way, at least what <em>can</em> be inherited is
- * inherited.
+ * This block is effectively a hopper, but neither {@link HopperBlock} nor {@link HopperBlockEntity}
+ * are designed for subclasses. So this is a mash-up of forced inheritance (via access-widener) and
+ * copies where needed. The alternative is to simply copy the entire hopper entity class and tweak
+ * it. This way, at least what <em>can</em> be inherited is inherited.
  *
  * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to
  * check the filter before doing any move. The static {@link #serverTick} here simply invokes {@link
@@ -45,6 +48,22 @@ import net.minecraft.world.World;
 @SuppressWarnings("SameParameterValue")
 public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
 
+  static final int EXAMPLES_COUNT = 16;
+
+  private static final int[] HOPPER_SLOTS;
+  private static final int[] EXAMPLE_SLOTS;
+
+  static {
+    HOPPER_SLOTS = new int[INVENTORY_SIZE];
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
+      HOPPER_SLOTS[i] = i;
+    }
+    EXAMPLE_SLOTS = new int[EXAMPLES_COUNT];
+    for (int i = 0; i < EXAMPLES_COUNT; i++) {
+      EXAMPLE_SLOTS[i] = i + INVENTORY_SIZE;
+    }
+  }
+
   private FilterDesc desc;
   private FilterMatches filterMatches;
   private int flicker;
@@ -52,6 +71,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
+    setInvStackList(DefaultedList.ofSize(INVENTORY_SIZE + EXAMPLES_COUNT, ItemStack.EMPTY));
     type = PhilterMod.FILTER_BLOCK_ENTITY;
     desc = new FilterDesc(FilterMode.SAME_AS, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
@@ -75,6 +95,21 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
         buf.release();
       }
     }
+  }
+
+  /**
+   * Overridden so it only examines the hopper's part of the inventory.j
+   */
+  public boolean isFull() {
+    DefaultedList<ItemStack> invStackList = getInvStackList();
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
+      ItemStack itemStack = invStackList.get(i);
+      if (!itemStack.isEmpty() && itemStack.getCount() == itemStack.getMaxCount()) {
+        continue;
+      }
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -126,16 +161,16 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
       boolean bl = false;
       if (!isEmpty()) {
         var filterState = state.with(FACING, state.get(FILTER));
-        SimpleInventory filterInventory = new SimpleInventory(size());
+        SimpleInventory tmpInventory = new SimpleInventory(size());
         for (int i = 0; i < size(); i++) {
           if (inFilter(getStack(i), world, pos, state)) {
-            filterInventory.setStack(i, getStack(i));
+            tmpInventory.setStack(i, getStack(i));
             world.setBlockState(pos, state.with(FILTERED, 1), Block.NOTIFY_LISTENERS);
             flicker = 8;
             break;
           }
         }
-        if (!filterInventory.isEmpty() && insert(world, pos, filterState, this)) {
+        if (!tmpInventory.isEmpty() && insert(world, pos, filterState, this)) {
           bl = true;
         } else {
           bl = insert(world, pos, state, this);
@@ -225,5 +260,17 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   public void setActionDir(Direction userFacingDir) {
 
     this.userFacingDir = userFacingDir;
+  }
+
+  public int[] getAvailableSlots(Direction side) {
+    return side == UP ? EXAMPLE_SLOTS : HOPPER_SLOTS;
+  }
+
+  public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+    return false;
+  }
+
+  public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    return false;
   }
 }

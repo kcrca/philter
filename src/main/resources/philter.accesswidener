@@ -10,6 +10,7 @@ accessible	method	net/minecraft/block/entity/HopperBlockEntity	setTransferCooldo
 accessible	method	net/minecraft/block/entity/HopperBlockEntity	isFull			()Z
 accessible	method	net/minecraft/block/entity/HopperBlockEntity	canMergeItems		(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)Z
 accessible	method	net/minecraft/block/entity/HopperBlockEntity	insert			(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/inventory/Inventory;)Z
+extendable	method	net/minecraft/block/entity/HopperBlockEntity	isFull			()Z
 
 mutable		field	net/minecraft/block/entity/BlockEntity		type			Lnet/minecraft/block/entity/BlockEntityType;
 accessible	field	net/minecraft/block/entity/BlockEntity		type			Lnet/minecraft/block/entity/BlockEntityType;
@@ -41,3 +42,4 @@ accessible	method	net/minecraft/client/gui/screen/Screen		addDrawableChild	(Lnet
 accessible	method	net/minecraft/client/gui/screen/Screen		remove			(Lnet/minecraft/client/gui/Element;)V
 
 accessible	field	net/minecraft/client/gui/widget/CheckboxWidget	checked			Z
+accessible	field	net/minecraft/client/gui/widget/ClickableWidget	height			I

@@ -88,6 +88,22 @@ public class Layout {
       return h;
     }
 
+    boolean hasX() {
+      return x != UNKNOWN;
+    }
+
+    boolean hasY() {
+      return y != UNKNOWN;
+    }
+
+    boolean hasW() {
+      return w != UNKNOWN;
+    }
+
+    boolean hasH() {
+      return h != UNKNOWN;
+    }
+
     public int x() {
       validate(x, "x");
       return x;
@@ -213,10 +229,12 @@ public class Layout {
     public Placer y(Vertical dir, Placer to) {
       y = switch (dir) {
         case ABOVE -> to.y() - gapH - h();
+        case TOP_EDGE -> to.y();
+        case TOP -> to.y();
         case MID -> to.y() + (to.h() - h()) / 2;
+        case BOTTOM -> to.y() + to.h();
+        case BOTOTM_EDGE -> to.y() + to.h() - h();
         case BELOW -> to.y() + to.h() + gapH;
-        case ABOVE_EDGE -> to.y();
-        case BELOW_EDGE -> to.y() + to.h() - h();
       };
       return this;
     }
@@ -232,9 +250,9 @@ public class Layout {
 
     public Placer y(Vertical dir) {
       y = switch (dir) {
-        case ABOVE, ABOVE_EDGE -> screenY + borderH;
+        case ABOVE, TOP, TOP_EDGE -> screenY + borderH;
         case MID -> screenY + (screenH - h()) / 2;
-        case BELOW, BELOW_EDGE -> screenY + screenH - borderH - h();
+        case BELOW, BOTTOM, BOTOTM_EDGE -> screenY + screenH - borderH - h();
       };
       return this;
     }
@@ -291,6 +309,23 @@ public class Layout {
       // It doesn't say this anywhere, but it's 20x20.m
       w = h = 20;
       return this;
+    }
+
+    public <T extends ClickableWidget> T place(T widget) {
+      if (hasX()) {
+        widget.setX(x());
+      }
+      if (hasY()) {
+        widget.setY(y());
+      }
+      if (hasW()) {
+        widget.setWidth(w());
+      }
+      // Dunno why there isn't a setHeight, but there isn't, so I've used access-widener.
+      if (hasH()) {
+        widget.height = h();
+      }
+      return widget;
     }
 
     public class _ToClauseHoriz {
@@ -379,20 +414,22 @@ public class Layout {
 
     private int coord(Vertical dir, Placer placer) {
       return switch (dir) {
-        case ABOVE -> placer.y();
-        case ABOVE_EDGE -> placer.y() + h();
+        case ABOVE -> placer.y() - gapH;
+        case TOP -> placer.y();
+        case TOP_EDGE -> placer.y() + h();
         case MID -> placer.y() + placer.h() / 2;
-        case BELOW -> placer.y() + placer.h();
-        case BELOW_EDGE -> placer.y() + placer.h() - w();
+        case BOTTOM -> placer.y() + placer.h();
+        case BELOW -> placer.y() + placer.h() + gapH;
+        case BOTOTM_EDGE -> placer.y() + placer.h() - w();
       };
     }
 
     private int coord(Vertical dir) {
       return switch (dir) {
-        case ABOVE, ABOVE_EDGE -> screenY + borderH;
+        case ABOVE, TOP, TOP_EDGE -> screenY + borderH;
         case MID -> screenY + screenH / 2;
-        case BELOW -> screenY + screenH - borderH;
-        case BELOW_EDGE -> screenY + screenH - borderH - h();
+        case BELOW, BOTTOM -> screenY + screenH - borderH;
+        case BOTOTM_EDGE -> screenY + screenH - borderH - h();
       };
     }
 
@@ -425,6 +462,8 @@ public class Layout {
   public final int leadingH;
   public final int borderW, borderH;
   public final int gapW, gapH;
+
+  public final int slotW, slotH;
 
   private final Graphics graphics;
   private final int screenX, screenY;
@@ -467,6 +506,10 @@ public class Layout {
     screenH = graphics.getScreenH();
     buttonBorderW = enW;
     buttonBorderH = Math.round(fontH * 0.3f);
+
+    slotW = 18;
+    slotH = 18;
+
     prefix = "";
   }
 
