@@ -4,10 +4,8 @@
   "package": "net.simplx.philter.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-      "ScreenHandlerMixin"
   ],
   "client": [
-      "ScreenHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

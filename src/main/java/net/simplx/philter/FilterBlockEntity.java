@@ -11,7 +11,6 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -29,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
-import static net.minecraft.util.math.Direction.UP;
 import static net.simplx.philter.FilterBlock.*;
 
 /**
@@ -44,23 +42,11 @@ import static net.simplx.philter.FilterBlock.*;
  * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory, ExtendedScreenHandlerFactory {
+public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
 
   static final int EXAMPLES_COUNT = 16;
-
-  private static final int[] HOPPER_SLOTS;
-  private static final int[] EXAMPLE_SLOTS;
-
-  static {
-    HOPPER_SLOTS = new int[INVENTORY_SIZE];
-    for (int i = 0; i < INVENTORY_SIZE; i++) {
-      HOPPER_SLOTS[i] = i;
-    }
-    EXAMPLE_SLOTS = new int[EXAMPLES_COUNT];
-    for (int i = 0; i < EXAMPLES_COUNT; i++) {
-      EXAMPLE_SLOTS[i] = i + INVENTORY_SIZE;
-    }
-  }
+  static final int EXAMPLES_START = INVENTORY_SIZE;
+  static final int EXAMPLES_END = EXAMPLES_START + EXAMPLES_COUNT;
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
@@ -164,7 +150,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
       if (!isEmpty()) {
         var filterState = state.with(FACING, state.get(FILTER));
         SimpleInventory tmpInventory = new SimpleInventory(size());
-        for (int i = 0; i < size(); i++) {
+        for (int i = 0; i < INVENTORY_SIZE; i++) {
           if (inFilter(getStack(i), world, pos, state)) {
             tmpInventory.setStack(i, getStack(i));
             world.setBlockState(pos, state.with(FILTERED, 1), Block.NOTIFY_LISTENERS);
@@ -230,13 +216,13 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   private List<ItemStack> getExamples(World world, BlockPos pos, BlockState state) {
     List<ItemStack> examples = new ArrayList<>();
     DefaultedList<ItemStack> exampleInv = getInvStackList();
-    for (int i = INVENTORY_SIZE; i < INVENTORY_SIZE + EXAMPLES_COUNT; i++) {
+    for (int i = EXAMPLES_START; i < EXAMPLES_END; i++) {
       ItemStack itemStack = exampleInv.get(i);
       if (!itemStack.isEmpty()) {
         examples.add(itemStack);
       }
     }
-    if (exampleInv.isEmpty()) {
+    if (examples.isEmpty()) {
       Direction direction = state.get(FILTER);
       Inventory inventory = getInventoryAt(world, pos.offset(direction));
       if (inventory == null) {
@@ -283,20 +269,5 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   public void setActionDir(Direction userFacingDir) {
 
     this.userFacingDir = userFacingDir;
-  }
-
-  @Override
-  public int[] getAvailableSlots(Direction side) {
-    return side == UP ? EXAMPLE_SLOTS : HOPPER_SLOTS;
-  }
-
-  @Override
-  public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-    return dir != UP;
-  }
-
-  @Override
-  public boolean canExtract(int slot, ItemStack stack, Direction dir) {
-    return dir != UP;
   }
 }
