@@ -11,6 +11,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -32,19 +33,18 @@ import static net.minecraft.util.math.Direction.UP;
 import static net.simplx.philter.FilterBlock.*;
 
 /**
- * This block is effectively a hopper, but neither {@link HopperBlock} nor {@link HopperBlockEntity}
- * are designed for subclasses. So this is a mash-up of forced inheritance (via access-widener) and
- * copies where needed. The alternative is to simply copy the entire hopper entity class and tweak
- * it. This way, at least what <em>can</em> be inherited is inherited.
+ * This block is effectively a hopper, but neither {@link HopperBlock} nor {@link HopperBlockEntity} are designed for
+ * subclasses. So this is a mash-up of forced inheritance (via access-widener) and copies where needed. The alternative
+ * is to simply copy the entire hopper entity class and tweak it. This way, at least what <em>can</em> be inherited is
+ * inherited.
  *
- * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to
- * check the filter before doing any move. The static {@link #serverTick} here simply invokes {@link
- * #doServerTick} as an instance method, which mirrors the static {@link
- * HopperBlockEntity#serverTick} (non-statically) and so on until we get to {@link
- * #insertAndExtract}. Everything below that we just invoke the superclass method.
+ * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to check the filter before
+ * doing any move. The static {@link #serverTick} here simply invokes {@link #doServerTick} as an instance method, which
+ * mirrors the static {@link HopperBlockEntity#serverTick} (non-statically) and so on until we get to
+ * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
+public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory, ExtendedScreenHandlerFactory {
 
   static final int EXAMPLES_COUNT = 16;
 
@@ -93,6 +93,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
         buf.release();
       }
     }
+  }
+
+  @Override
+  public boolean isEmpty() {
+    this.checkLootInteraction(null);
+    return this.getInvStackList().subList(0, INVENTORY_SIZE).stream().allMatch(ItemStack::isEmpty);
   }
 
   /**
@@ -279,15 +285,18 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
     this.userFacingDir = userFacingDir;
   }
 
+  @Override
   public int[] getAvailableSlots(Direction side) {
     return side == UP ? EXAMPLE_SLOTS : HOPPER_SLOTS;
   }
 
+  @Override
   public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-    return false;
+    return dir != UP;
   }
 
+  @Override
   public boolean canExtract(int slot, ItemStack stack, Direction dir) {
-    return false;
+    return dir != UP;
   }
 }

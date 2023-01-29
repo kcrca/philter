@@ -100,7 +100,7 @@ public class FilterScreenHandler extends ScreenHandler {
 
     ItemStack slotStack = slot.getStack();
     ItemStack retVal = slotStack.copy();
-    int playerStart = SLOT_COUNT;
+    int playerStart = SLOT_COUNT + EXAMPLES_COUNT;
     int playerEnd = playerStart + player.getInventory().main.size();
     if (slotNum >= playerStart && slotNum < playerEnd) {
       // Move the player's inventory into the hoopper slots

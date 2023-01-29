@@ -24,8 +24,12 @@ public class FilterSlot extends Slot {
   }
 
   @Override
+  public int getMaxItemCount() {
+    return 1;
+  }
+
+  @Override
   public boolean canInsert(ItemStack stack) {
-    System.out.printf("enabled: %s\n", isEnabled());
     return isEnabled();
   }
 }
