@@ -1,15 +1,18 @@
 {
   "philter.filter.name": "Filter",
+
   "philter.filter.mode.tooltip": "Set sorting mode",
+
   "philter.filter.mode.same_as": "Same As",
-  "philter.filter.mode.same_as.tooltip": "Match things already in the target",
+  "philter.filter.mode.same_as.tooltip": "Same as the examples",
+
   "philter.filter.mode.matches": "Match",
   "philter.filter.mode.matches.tooltip": "Tag or regular expression",
   "philter.filter_mode.matches_alt": "Match Specification",
+
   "philter.filter.mode.none": "None",
   "philter.filter.mode.none.tooltip": "Matching disabled",
-  "philter.filter.mode.examples": "By Example",
-  "philter.filter.mode.examples.tooltip": "Match from examples",
+
   "philter.filter.save": "Save",
   "philter.filter.save.tooltip": "Save changes to matches",
   "philter.filter.exact": "Exact",
@@ -20,5 +23,5 @@
   "philter.filter.any.tooltip": "Filter accepts any match",
   "philter.filter.all": "All of",
   "philter.filter.all.tooltip": "Filter only accepts if all match",
-  "philter.filter.examples": "If no examples are here, the target container's items will be the examples."
+  "philter.filter.examples": "If there are no examples here, the target container's items will be the examples."
 }

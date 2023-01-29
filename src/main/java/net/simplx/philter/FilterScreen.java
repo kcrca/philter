@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.*;
@@ -91,6 +92,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private Placer topP;
   private Placer hopperP;
   private Placer examplesP;
+  private Placer exampleBgP;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -145,11 +147,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h()).tooltip(
             layout.tooltip("save.tooltip")).build());
 
-    Placer shifting = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP).to(BELOW);
+    Placer changing = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP).to(BELOW);
 
     // inTextField adjust any known dimension for text field boundaries, but the width doesn't need
     // any text field padding, it's based on total width, so we set it after.
-    Placer first = shifting.clone().h(layout.textH + 3).w(shifting.w() / 2);
+    Placer first = changing.clone().h(layout.textH + 3).w(changing.w() / 2);
     Placer bottom = first.y(BELOW);
 
     matchesFields = new ArrayList<>();
@@ -158,7 +160,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     for (int i = 0; true; i++) {
       int col = i % 2;
       int row = i / 2;
-      p = first.clone().x(shifting.x() + col * first.w()).y(shifting.y() + row * first.h());
+      p = first.clone().x(changing.x() + col * first.w()).y(changing.y() + row * first.h());
       if (p.y() > bottom.y()) {
         break;
       }
@@ -184,17 +186,22 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE).to(hopperHeight - layout.borderH);
     Placer mid = layout.placer().w(hopperP.w()).from(BELOW, hopperP).to(BELOW).x(hopperP.x()).y(BELOW, hopperP);
     topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(MID, mid);
-    examplesP = layout.placer().size(EXAMPLES_W, EXAMPLES_H).x(CENTER, shifting).y(TOP_EDGE, shifting);
+    examplesP = layout.placer().size(EXAMPLES_W, EXAMPLES_H).x(CENTER, changing).y(TOP_EDGE, changing);
+    examplesP.y(examplesP.y() - 12); // line it up with the top of the player's inventory
     int examplesX = examplesP.x() - x + EXAMPLES_BORDER + 1;
-    int examplesY = examplesP.y() - y + EXAMPLES_BORDER - 1;
+    int examplesY = examplesP.y() - y + EXAMPLES_BORDER + 1;
     if (examplesX != EXAMPLES_GRID_X || examplesY != EXAMPLES_GRID_Y) {
       LOGGER.warn(
           String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X, EXAMPLES_GRID_Y,
               examplesX, examplesY));
     }
-    p = layout.placer().w(shifting.w()).x(CENTER, examplesP).y(BELOW, examplesP);
+    p = layout.placer().w(changing.w() * 3 / 4).x(CENTER, examplesP).y(BELOW, examplesP);
+    int width1 = changing.w() * 3 / 4;
     exampleText = addDrawableChild(
-        p.place(MultilineTextWidget.createCentered(shifting.w(), textRenderer, layout.text("examples"))));
+        p.place(MultilineTextWidget.createCentered(width1, textRenderer, layout.text("examples"))));
+    int bgBorder = 3;
+    exampleBgP = layout.placer().size(exampleText.getWidth() + 2 * bgBorder, exampleText.getHeight() + 2 * bgBorder).at(
+        exampleText.getX() - bgBorder, exampleText.getY() - bgBorder);
 
     boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
@@ -356,6 +363,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     if (desc.mode == SAME_AS) {
       Placer p = examplesP;
       drawTexture(matrices, p.x(), p.y(), SCREEN_W, 0, p.w(), p.h(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+      p = exampleBgP;
+      DrawableHelper.fill(matrices, p.x(), p.y(), p.endX(), p.endY(), 0xff404040);
     }
 
     Placer p = layout.placer().x(LEFT).y(BELOW, hopperP).inLabel();

@@ -19,7 +19,7 @@ public class FilterScreenHandler extends ScreenHandler {
   static final int EXAMPLES_GRID_COLS = 4;
   static final int EXAMPLES_GRID_ROWS = 4;
   static final int EXAMPLES_GRID_X = 223;
-  static final int EXAMPLES_GRID_Y = 62;
+  static final int EXAMPLES_GRID_Y = 51;
 
   private final FilterDesc filterDesc;
   private final Inventory inventory;
@@ -40,12 +40,12 @@ public class FilterScreenHandler extends ScreenHandler {
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
     this(syncId, playerInventory, new SimpleInventory(SLOT_COUNT + EXAMPLES_COUNT), new FilterDesc(buf),
-        buf.readBlockPos(), buf.readEnumConstant(Direction.class), buf.readEnumConstant(Direction.class));
+        buf.readBlockPos(), buf.readEnumConstant(Direction.class), buf.readEnumConstant(Direction.class), false);
     userFacingDir = buf.readEnumConstant(Direction.class);
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterDesc filterDesc,
-      BlockPos pos, Direction facing, Direction filter) {
+      BlockPos pos, Direction facing, Direction filter, boolean onServer) {
     super(FILTER_SCREEN_HANDLER, syncId);
     this.inventory = inventory;
     checkSize(inventory, SLOT_COUNT + EXAMPLES_COUNT);
@@ -57,10 +57,10 @@ public class FilterScreenHandler extends ScreenHandler {
       addSlot(new Slot(inventory, i, 44 + i * 18, 20));
     }
     int slotNum = 0;
+    boolean alwaysEnabled = onServer;
     for (int slotRow = 0; slotRow < EXAMPLES_GRID_ROWS; slotRow++) {
       for (int slotCol = 0; slotCol < EXAMPLES_GRID_COLS; slotCol++) {
         // On the server side these are always enabled.
-        boolean alwaysEnabled = userFacingDir == null;
         FilterSlot slot = new FilterSlot(this.inventory, SLOT_COUNT + slotNum, EXAMPLES_GRID_X + slotCol * 18,
             EXAMPLES_GRID_Y + 18 * slotRow, alwaysEnabled);
         filterSlots[slotNum++] = slot;

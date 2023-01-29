@@ -125,6 +125,14 @@ public class Layout {
       return y - screenY;
     }
 
+    public int endX() {
+      return x() + w();
+    }
+
+    public int endY() {
+      return y() + h();
+    }
+
     public int w() {
       validate(w, "w");
       return w;

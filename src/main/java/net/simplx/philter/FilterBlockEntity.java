@@ -249,7 +249,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
     return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING),
-        getCachedState().get(FILTER));
+        getCachedState().get(FILTER), true);
   }
 
   @Override
