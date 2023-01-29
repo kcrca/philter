@@ -45,8 +45,8 @@ public class PhilterMod implements ModInitializer {
               () -> FilterBlockEntity.updateEntity(player, buf));
         });
 
+    //noinspection UnstableApiUsage
     ItemGroupEvents.modifyEntriesEvent(ItemGroups.REDSTONE)
         .register(content -> content.addAfter(Items.HOPPER, blockItem));
   }
-
 }

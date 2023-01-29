@@ -1,12 +1,5 @@
 package net.simplx.mcguidoc;
 
-import static net.simplx.mcgui.Horizontal.LEFT;
-import static net.simplx.mcgui.Horizontal.RIGHT;
-import static net.simplx.mcgui.Vertical.ABOVE;
-import static net.simplx.mcgui.Vertical.BELOW;
-import static net.simplx.mcgui.Vertical.MID;
-
-import java.util.List;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
@@ -17,6 +10,10 @@ import net.minecraft.text.Text;
 import net.simplx.mcgui.Layout;
 import net.simplx.mcgui.Layout.Placer;
 import net.simplx.philter.FilterScreenHandler;
+import java.util.List;
+import static net.simplx.mcgui.Horizontal.LEFT;
+import static net.simplx.mcgui.Horizontal.RIGHT;
+import static net.simplx.mcgui.Vertical.*;
 
 public class LayoutDoc extends HandledScreen<FilterScreenHandler> {
 
@@ -63,5 +60,4 @@ public class LayoutDoc extends HandledScreen<FilterScreenHandler> {
   private void toggleLock(ButtonWidget button) {
 
   }
-
 }

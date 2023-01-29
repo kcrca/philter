@@ -44,7 +44,8 @@ public class FilterScreenHandler extends ScreenHandler {
     userFacingDir = buf.readEnumConstant(Direction.class);
   }
 
-  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterDesc filterDesc, BlockPos pos, Direction facing, Direction filter) {
+  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterDesc filterDesc,
+      BlockPos pos, Direction facing, Direction filter) {
     super(FILTER_SCREEN_HANDLER, syncId);
     this.inventory = inventory;
     checkSize(inventory, SLOT_COUNT + EXAMPLES_COUNT);

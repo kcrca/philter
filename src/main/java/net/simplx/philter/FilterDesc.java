@@ -1,10 +1,6 @@
 package net.simplx.philter;
 
-import static java.util.Objects.requireNonNull;
-import static net.simplx.philter.FilterMode.SAME_AS;
-
 import com.google.common.collect.ImmutableList;
-import java.util.List;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -13,6 +9,9 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import java.util.List;
+import static java.util.Objects.requireNonNull;
+import static net.simplx.philter.FilterMode.SAME_AS;
 
 public class FilterDesc {
 

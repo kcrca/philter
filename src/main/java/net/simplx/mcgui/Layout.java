@@ -1,12 +1,7 @@
 package net.simplx.mcgui;
 
-import static com.google.common.collect.Streams.stream;
-
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -20,12 +15,15 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import static com.google.common.collect.Streams.stream;
 
 /**
- * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgets (or
- * other ones if you prefer). This is typically used in a mod's {@code Screen} class to put up
- * dialog boxes for custom blocks. For example, the following code will lay out three buttons along
- * the top of that screen:
+ * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgets (or other ones if you
+ * prefer). This is typically used in a mod's {@code Screen} class to put up dialog boxes for custom blocks. For
+ * example, the following code will lay out three buttons along the top of that screen:
  *
  * <code>
  *
@@ -37,7 +35,6 @@ public class Layout {
 
     private int x, y;
     private int w, h;
-
 
     Placer() {
       x = y = w = h = UNKNOWN;
@@ -185,7 +182,6 @@ public class Layout {
       this.h = h;
       return this;
     }
-
 
     public Placer withText(String keyName) {
       return withText(text(keyName));
@@ -364,7 +360,6 @@ public class Layout {
       };
     }
 
-
     private int coord(Horizontal dir) {
       return switch (dir) {
         case LEFT, LEFT_EDGE -> screenX + borderW;
@@ -452,7 +447,6 @@ public class Layout {
   public static final int DEFAULT_BORDER = 6;
 
   public static final int UNKNOWN = Integer.MIN_VALUE;
-
 
   public final int enW;
   public final int fontH;
@@ -606,7 +600,6 @@ public class Layout {
     int y = (graphics.getWindowH() - graphics.getScreenH()) / 2;
     graphics.drawTexture(matrices, x, y, 0, 0, graphics.getScreenW(), graphics.getScreenH());
   }
-
 
   public void drawText(MatrixStack matrices, Placer placer, Text text, int color) {
     graphics.drawText(matrices, text, (float) placer.relX(), (float) placer.relY(), color);

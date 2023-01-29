@@ -13,7 +13,6 @@ public class DocScreenHandler extends ScreenHandler {
 
   public DocScreenHandler(int syncId, PlayerInventory playerInventory, int stuff) {
     super(MoodleMod.DOC_SCREEN_HANDLER, syncId);
-
   }
 
   @Override

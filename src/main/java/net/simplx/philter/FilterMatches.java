@@ -1,9 +1,6 @@
 package net.simplx.philter;
 
 import com.google.common.collect.ImmutableList;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -12,6 +9,9 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class FilterMatches {
 

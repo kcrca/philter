@@ -1,16 +1,7 @@
 package net.simplx.philter;
 
-import static net.minecraft.util.function.BooleanBiFunction.OR;
-
 import com.google.common.collect.Iterators;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.HopperBlock;
-import net.minecraft.block.ShapeContext;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
@@ -36,6 +27,10 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
+import static net.minecraft.util.function.BooleanBiFunction.OR;
 
 public class FilterBlock extends HopperBlock {
 
@@ -104,9 +99,8 @@ public class FilterBlock extends HopperBlock {
   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
       BlockEntityType<T> type) {
     return world.isClient ? null
-        : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+                          : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
-
 
   @Override
   public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos,

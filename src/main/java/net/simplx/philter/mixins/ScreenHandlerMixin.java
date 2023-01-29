@@ -16,6 +16,7 @@ public class ScreenHandlerMixin {
   private void after(int slotIndex, int button, SlotActionType actionType, PlayerEntity player, CallbackInfo info) {
     System.out.println(info.getId());
   }
+
   @Inject(at = @At("HEAD"), method = "updateSlotStacks(ILjava/util/List;Lnet/minecraft/item/ItemStack;)V")
   private void before(int revision, List<ItemStack> stacks, ItemStack cursorStack, CallbackInfo info) {
     System.out.println(info.getId());

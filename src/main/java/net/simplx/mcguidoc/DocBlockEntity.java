@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class DocBlockEntity extends BlockEntity implements NamedScreenHandlerFactory {
 
-
   public DocBlockEntity(BlockPos pos, BlockState state) {
     super(MoodleMod.DOC_BLOCK_ENTITY, pos, state);
   }
