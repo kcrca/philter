@@ -407,7 +407,7 @@ class LayoutTest {
   void fromToVert() {
     Placer anchorWidget = layout.placer(new TextWidget(10, 20, 30, 40, layout.text("foo"), null));
     Placer p = layout.placer().h(6).from(ABOVE, anchorWidget).to(BELOW, anchorWidget);
-    assertThat(p.h()).isEqualTo(40);
+    assertThat(p.h()).isEqualTo(46);
 
     p = layout.placer().from(ABOVE).to(BELOW);
     assertThat(p.h()).isEqualTo(SCREEN_H - 2 * BORDER_H);
