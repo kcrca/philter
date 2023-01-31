@@ -86,13 +86,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
 
   @Override
   public boolean isEmpty() {
-    this.checkLootInteraction(null);
-    return this.getInvStackList().subList(0, INVENTORY_SIZE).stream().allMatch(ItemStack::isEmpty);
+    checkLootInteraction(null);
+    return getInvStackList().subList(0, INVENTORY_SIZE).stream().allMatch(ItemStack::isEmpty);
   }
 
   /**
    * Overridden so it only examines the hopper's part of the inventory.j
    */
+  @Override
   public boolean isFull() {
     DefaultedList<ItemStack> invStackList = getInvStackList();
     for (int i = 0; i < INVENTORY_SIZE; i++) {
@@ -270,7 +271,6 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   public void setActionDir(Direction userFacingDir) {
-
     this.userFacingDir = userFacingDir;
   }
 
