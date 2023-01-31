@@ -11,6 +11,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -42,11 +43,13 @@ import static net.simplx.philter.FilterBlock.*;
  * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
 @SuppressWarnings("SameParameterValue")
-public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScreenHandlerFactory {
+public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory, ExtendedScreenHandlerFactory {
 
   static final int EXAMPLES_COUNT = 16;
   static final int EXAMPLES_START = INVENTORY_SIZE;
   static final int EXAMPLES_END = EXAMPLES_START + EXAMPLES_COUNT;
+
+  private static final int[] INVENTORY_INDEXES = new int[]{0, 1, 2, 3, 4};
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
@@ -269,5 +272,20 @@ public class FilterBlockEntity extends HopperBlockEntity implements ExtendedScre
   public void setActionDir(Direction userFacingDir) {
 
     this.userFacingDir = userFacingDir;
+  }
+
+  @Override
+  public int[] getAvailableSlots(Direction side) {
+    return INVENTORY_INDEXES;
+  }
+
+  @Override
+  public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+    return true;
+  }
+
+  @Override
+  public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    return true;
   }
 }
