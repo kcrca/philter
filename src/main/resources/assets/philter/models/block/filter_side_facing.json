@@ -1,5 +1,6 @@
 {
     "comment": "Side-facing hopper top and spout",
+    "parent": "block/block",
     "ambientocclusion": false,
     "textures": {
 	"top": "philter:block/filter_side_facing_top",

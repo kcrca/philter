@@ -1,5 +1,6 @@
 {
     "comment": "Side-facing filter top and spout",
+    "parent": "block/block",
     "ambientocclusion": false,
     "textures": {
         "particle": "#top"

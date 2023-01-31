@@ -185,7 +185,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE).to(hopperHeight - layout.borderH);
     Placer mid = layout.placer().w(hopperP.w()).from(BELOW, hopperP).to(BELOW).x(hopperP.x()).y(BELOW, hopperP);
-    topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(MID, mid);
+    topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(BOTTOM);
+    topP.y(topP.y() - layout.placer().inCheckbox().h() - layout.gapH);
     examplesP = layout.placer().size(EXAMPLES_W, EXAMPLES_H).x(CENTER, changing).y(TOP_EDGE, changing);
     examplesP.y(examplesP.y() - 12); // line it up with the top of the player's inventory
     int examplesX = examplesP.x() - x + EXAMPLES_BORDER + 1;
