@@ -93,6 +93,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private Placer hopperP;
   private Placer examplesP;
   private Placer exampleBgP;
+  private Placer dirP;
 
   public FilterScreen(FilterScreenHandler handler, PlayerInventory inventory, Text title) {
     super(handler, inventory, title);
@@ -207,6 +208,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
     directionButtons = new RadioButtons<>();
+    dirP = layout.placer().withText("filter_dir").x(LEFT);
     for (int i = 0; i < 4; i++) {
       Direction toDir = dir == handler.facing ? DOWN : dir;
       Placer q = layout.placer().inCheckbox();
@@ -218,6 +220,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       }
       directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
       dir = dir.rotateClockwise(Axis.Y);
+      if (i == 0) {
+        dirP.y(q.y() + layout.gapH);
+      }
     }
     directionButtons.setUpdateCallback(this::setFilterDir);
     directionButtons.findButton(handler.filter).setChecked(true);
@@ -369,7 +374,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
 
     Placer p = layout.placer().x(LEFT).y(BELOW, hopperP).inLabel();
-    textRenderer.draw(matrices, layout.text("filter_dir"), p.x(), p.y() + layout.textH, LABEL_COLOR);
+    textRenderer.draw(matrices, layout.text("filter_dir"), dirP.x(), dirP.y(), LABEL_COLOR);
 
     drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();
