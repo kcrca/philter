@@ -26,9 +26,10 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BooleanSupplier;
+
 import static net.simplx.philter.FilterBlock.*;
 
 /**
@@ -36,7 +37,7 @@ import static net.simplx.philter.FilterBlock.*;
  * subclasses. So this is a mash-up of forced inheritance (via access-widener) and copies where needed. The alternative
  * is to simply copy the entire hopper entity class and tweak it. This way, at least what <em>can</em> be inherited is
  * inherited.
- *
+ * <p>
  * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to check the filter before
  * doing any move. The static {@link #serverTick} here simply invokes {@link #doServerTick} as an instance method, which
  * mirrors the static {@link HopperBlockEntity#serverTick} (non-statically) and so on until we get to
@@ -132,7 +133,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     lastTickTime = world.getTime();
     if (!needsCooldown()) {
       setTransferCooldown(0);
-      insertAndExtract(world, pos, state, () -> extract(world, this));
+      insertAndExtract(world, pos, state);
     }
     if (flicker > 0) {
       --flicker;
@@ -145,14 +146,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @SuppressWarnings("UnusedReturnValue")
-  private boolean insertAndExtract(World world, BlockPos pos, BlockState state, BooleanSupplier booleanSupplier) {
+  private boolean insertAndExtract(World world, BlockPos pos, BlockState state) {
     if (world.isClient) {
       return false;
     }
     if (!needsCooldown() && state.get(HopperBlock.ENABLED)) {
-      boolean bl = false;
+      boolean changed = false;
       if (!isEmpty()) {
-        var filterState = state.with(FACING, state.get(FILTER));
+        BlockState filterState = state.with(FACING, state.get(FILTER));
         SimpleInventory tmpInventory = new SimpleInventory(size());
         for (int i = 0; i < INVENTORY_SIZE; i++) {
           if (inFilter(getStack(i), world, pos, state)) {
@@ -163,29 +164,18 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
           }
         }
         if (!tmpInventory.isEmpty() && insert(world, pos, filterState, this)) {
-          bl = true;
+          changed = true;
         } else {
-          bl = insert(world, pos, state, this);
+          changed = insert(world, pos, state, this);
         }
       }
-      if (!isFull()) {
-        bl |= booleanSupplier.getAsBoolean();
-      }
-      if (bl) {
+      if (changed) {
         setTransferCooldown(8);
         HopperBlockEntity.markDirty(world, pos, state);
         return true;
       }
     }
     return false;
-  }
-
-  public void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity) {
-    if (entity instanceof ItemEntity && VoxelShapes.matchesAnywhere(
-        VoxelShapes.cuboid(entity.getBoundingBox().offset(-pos.getX(), -pos.getY(), -pos.getZ())), getInputAreaShape(),
-        BooleanBiFunction.AND)) {
-      insertAndExtract(world, pos, state, () -> HopperBlockEntity.extract(this, (ItemEntity) entity));
-    }
   }
 
   private boolean inFilter(ItemStack hopperStack, World world, BlockPos pos, BlockState state) {
@@ -246,14 +236,12 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     if (!filterMatches.input.equals(desc.matches)) {
       filterMatches = new FilterMatches(desc.matches);
     }
-    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true) : filterMatches.matchAny(item, desc.exact,
-        false);
+    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true) : filterMatches.matchAny(item, desc.exact, false);
   }
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING),
-        getCachedState().get(FILTER), true);
+    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING), getCachedState().get(FILTER), true);
   }
 
   @Override

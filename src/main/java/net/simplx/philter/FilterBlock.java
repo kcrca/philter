@@ -167,12 +167,4 @@ public class FilterBlock extends HopperBlock {
       return ActionResult.CONSUME;
     }
   }
-
-  @Override
-  public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-    BlockEntity blockEntity = world.getBlockEntity(pos);
-    if (blockEntity instanceof FilterBlockEntity) {
-      ((FilterBlockEntity) blockEntity).onEntityCollided(world, pos, state, entity);
-    }
-  }
 }
