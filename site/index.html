@@ -41,15 +41,31 @@
             <img src="visual.png" alt="a filter in place">
 
         <p>
-            Overall the filter is a steel-blue hopper, and it has a redstone insert that does the
-            filtering. The blue
-            tab on the filter's top shows where normal items are directed. The redstone stripe flashes
-            when an item
-            is instead filtered to the hopper on the right.
+	    Overall the filter is a steel-blue hopper, and it has a redstone insert that does the filtering. The blue
+	    tab on the filter's top shows where normal items are directed. The redstone stripe flashes when an item is
+	    instead filtered to the hopper on the right.
 
-            This insert blocks the "pulling" from above. This means you can run filters horizontally or vertically
-            as you please without worrying about the filter pulling items down from the philter (or hopper or chest)
-            above. Which makes it very simple to create a sorter without using redstone to block that pulling.
+        <p>
+	    The filter does not "pull" from the block above. This means you can run filters horizontally or vertically
+	    as you please without worrying about the filter pulling items down from the philter (or hopper or chest)
+	    above it.  Which makes it very simple to create a sorter without using redstone to block that pulling.
+
+        <p>
+	    Here's an image of how you can use it to build an item sorter:
+
+            <img src="sorter.png" alt="a filter in place">
+
+	    The input is the topmost chest. The filters
+	    all point into the chests, and they face to the next filter (that is, the hopper part of the filter points
+	    to the next filter). The last filter faces down to put items into the row of filters below. There is an
+	    overflow for unfiltered items into the chest on the lower right.
+
+        <p>
+	    So items from the chest will get sorted into the six chests, with unsorted items ending in the seventh chest.
+	    Note that lack of extra redstone mechanism, it is all done with the filter.
+
+	<p>
+
 
         <p>
             You can set up the filter using its UI:
