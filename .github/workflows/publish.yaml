@@ -30,7 +30,7 @@ jobs:
           submodules: true
 
       - name: Setup Java
-        uses: actions/setup-java@stable
+        uses: actions/setup-java@v2
         with:
           distribution: "temurin"
           java-version: 17
