@@ -1,0 +1,15 @@
+Steps to do a release for version VER:
+
+* In site/:
+	* ./update_version.sh VER
+	* Make sure images are up to date
+	* Update index.html writeup
+	* commit / push
+* ./gradlew assemble
+* copy ./build/libs/philterVER.jar to site/
+* in site,/ run ./sync_site (nearlyfreespeech.com's password is the password)
+* Tag the repository with the version name
+* Update versions .github/workflows/publish.yaml
+* push and puss --tags
+* Run the workflow (do _NOT_ "rerun" the workflow, that will rerun that older version)
+* Update the descriptions /images on modrinth and curseforge
