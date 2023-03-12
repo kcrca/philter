@@ -1,5 +1,6 @@
 {
   "philter.filter.name": "Filter",
+  "block.philter.filter": "Filter",
 
   "philter.filter.mode.tooltip": "Set sorting mode",
 
