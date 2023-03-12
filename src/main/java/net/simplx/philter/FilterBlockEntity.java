@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
 import net.minecraft.block.entity.HopperBlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -286,5 +287,9 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   @Override
   public boolean canExtract(int slot, ItemStack stack, Direction dir) {
     return true;
+  }
+
+  /** HopperBlockEntity uses this to suck items out of the world. We don't want to, since we don't pull from above. */
+  public static void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity, HopperBlockEntity blockEntity) {
   }
 }
