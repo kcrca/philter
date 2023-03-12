@@ -6,13 +6,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HopperBlock;
 import net.minecraft.block.entity.HopperBlockEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SidedInventory;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -20,10 +17,8 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -145,52 +140,70 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     }
   }
 
-  @SuppressWarnings("UnusedReturnValue")
-  private boolean insertAndExtract(World world, BlockPos pos, BlockState state) {
+  private void insertAndExtract(World world, BlockPos pos, BlockState state) {
     if (world.isClient) {
-      return false;
+      return;
     }
-    if (!needsCooldown() && state.get(HopperBlock.ENABLED)) {
-      boolean changed = false;
-      if (!isEmpty()) {
-        BlockState filterState = state.with(FACING, state.get(FILTER));
-        SimpleInventory tmpInventory = new SimpleInventory(size());
-        for (int i = 0; i < INVENTORY_SIZE; i++) {
-          if (inFilter(getStack(i), world, pos, state)) {
-            tmpInventory.setStack(i, getStack(i));
-            world.setBlockState(pos, state.with(FILTERED, 1), Block.NOTIFY_LISTENERS);
-            flicker = 8;
-            break;
-          }
+    if (needsCooldown() || !state.get(HopperBlock.ENABLED) || isEmpty()) {
+      return;
+    }
+
+    Inventory facingOut = getInventoryAt(world, pos.offset(state.get(FACING)));
+    Direction facingSide = state.get(FACING).getOpposite();
+    Inventory filterOut = getInventoryAt(world, pos.offset(state.get(FILTER)));
+    Direction filterSide = state.get(FILTER).getOpposite();
+    if (facingOut == null && filterOut == null) {
+      return;
+    }
+
+    boolean changed = false;
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
+      ItemStack stack = getStack(i);
+      if (stack.isEmpty()) {
+        continue;
+      }
+      ItemStack toTransfer = stack.copy().split(1);
+      if (filterOut != null && inFilter(stack, filterOut)) {
+        changed = tryTransfer(filterOut, filterSide, stack, toTransfer);
+        if (changed) {
+          flicker = 8;
         }
-        if (!tmpInventory.isEmpty() && insert(world, pos, filterState, this)) {
-          changed = true;
-        } else {
-          changed = insert(world, pos, state, this);
-        }
+      }
+      if (!changed && facingOut != null) {
+        changed = tryTransfer(facingOut, facingSide, stack, toTransfer);
       }
       if (changed) {
-        setTransferCooldown(8);
-        HopperBlockEntity.markDirty(world, pos, state);
-        return true;
+        break;
       }
+    }
+    if (changed) {
+      setTransferCooldown(8);
+      HopperBlockEntity.markDirty(world, pos, state);
+    }
+  }
+
+  private boolean tryTransfer(Inventory out, Direction filterSide, ItemStack stack, ItemStack toTransfer) {
+    ItemStack after = HopperBlockEntity.transfer(this, out, toTransfer, filterSide);
+    if (after.isEmpty()) {
+      stack.decrement(1);
+      return true;
     }
     return false;
   }
 
-  private boolean inFilter(ItemStack hopperStack, World world, BlockPos pos, BlockState state) {
+  private boolean inFilter(ItemStack hopperStack, Inventory targetInv) {
     if (hopperStack.getCount() == 0) {
       return false;
     }
     return switch (desc.mode) {
       case NONE -> false;
-      case SAME_AS -> filterSameAs(hopperStack, world, pos, state);
+      case SAME_AS -> filterSameAs(hopperStack, targetInv);
       case MATCHES -> filterMatches(hopperStack);
     };
   }
 
-  private boolean filterSameAs(ItemStack item, World world, BlockPos pos, BlockState state) {
-    List<ItemStack> examples = getExamples(world, pos, state);
+  private boolean filterSameAs(ItemStack item, Inventory targetInv) {
+    List<ItemStack> examples = getExamples(targetInv);
     if (examples == null) return false;
     for (ItemStack invStack : examples) {
       if (desc.exact) {
@@ -207,7 +220,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Nullable
-  private List<ItemStack> getExamples(World world, BlockPos pos, BlockState state) {
+  private List<ItemStack> getExamples(Inventory targetInv) {
     List<ItemStack> examples = new ArrayList<>();
     DefaultedList<ItemStack> exampleInv = getInvStackList();
     for (int i = EXAMPLES_START; i < EXAMPLES_END; i++) {
@@ -217,13 +230,11 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
       }
     }
     if (examples.isEmpty()) {
-      Direction direction = state.get(FILTER);
-      Inventory inventory = getInventoryAt(world, pos.offset(direction));
-      if (inventory == null) {
+      if (targetInv == null) {
         return null;
       }
-      for (int i = 0; i < inventory.size(); i++) {
-        ItemStack itemStack = inventory.getStack(i);
+      for (int i = 0; i < targetInv.size(); i++) {
+        ItemStack itemStack = targetInv.getStack(i);
         if (!itemStack.isEmpty()) {
           examples.add(itemStack);
         }
