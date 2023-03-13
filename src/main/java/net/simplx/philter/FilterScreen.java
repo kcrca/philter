@@ -106,21 +106,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     desc = handler.getFilterDesc();
   }
 
-  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-    if (keyCode == 256) {
-      client.player.closeHandledScreen();
-    }
-
-    Element focused = getFocused();
-    if (focused instanceof TextFieldWidget textField) {
-      if (!textField.keyPressed(keyCode, scanCode, modifiers) && !textField.isActive())
-        return super.keyPressed(keyCode, scanCode, modifiers);
-      return true;
-    }
-    return false;
-  }
-
-
   protected void init() {
     initializing = true;
     super.init();
