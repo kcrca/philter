@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.*;
@@ -23,12 +24,15 @@ import net.simplx.mcgui.RadioButtonWidget;
 import net.simplx.mcgui.RadioButtons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
 import static net.minecraft.util.math.Direction.DOWN;
@@ -52,14 +56,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   public static final int TEXTURE_WIDTH = 512;
   public static final int TEXTURE_HEIGHT = 256;
 
-  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID,
-      "textures/block/filter_down_facing_top.png");
-  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID,
-      "textures/block/filter_down_filter_top_on.png");
-  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID,
-      "textures/block/filter_side_facing_top.png");
-  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID,
-      "textures/block/filter_side_filter_top_on.png");
+  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID, "textures/block/filter_down_facing_top.png");
+  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID, "textures/block/filter_down_filter_top_on.png");
+  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID, "textures/block/filter_side_facing_top.png");
+  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID, "textures/block/filter_side_filter_top_on.png");
   public static final int TOP_SIZE = 32;
   public static final int TOP_MID = TOP_SIZE / 2;
 
@@ -106,6 +106,21 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     desc = handler.getFilterDesc();
   }
 
+  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    if (keyCode == 256) {
+      client.player.closeHandledScreen();
+    }
+
+    Element focused = getFocused();
+    if (focused instanceof TextFieldWidget textField) {
+      if (!textField.keyPressed(keyCode, scanCode, modifiers) && !textField.isActive())
+        return super.keyPressed(keyCode, scanCode, modifiers);
+      return true;
+    }
+    return false;
+  }
+
+
   protected void init() {
     initializing = true;
     super.init();
@@ -120,33 +135,21 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     Placer p;
     Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text("mode." + mode.toString().toLowerCase());
-    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton().x(RIGHT,
-        titlePlace).y(ABOVE);
+    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton().x(RIGHT, titlePlace).y(ABOVE);
     titlePlace.y(MID, modeP);
-    CyclingButtonWidget<FilterMode> modeButton = addDrawableChild(
-        CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode).tooltip(
-            value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip")).build(p.x(), p.y(), p.w(),
-            p.h(), null, (button, m) -> setMode(m)));
+    CyclingButtonWidget<FilterMode> modeButton = addDrawableChild(CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode).tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
     p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT, modeP).y(ABOVE);
-    allButton = addDrawableChild(
-        CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText().tooltip(
-            value -> layout.tooltip((value ? "all" : "any") + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null,
-            (button, all) -> setAll(all)));
+    allButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText().tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");
-    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton().x(
-        titlePlace.x()).y(BELOW, layout.placer(modeButton));
-    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact).tooltip(
-        value -> layout.tooltip("exact." + value + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), exactText,
-        (button, exact) -> setExact(exact)));
+    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton().x(titlePlace.x()).y(BELOW, layout.placer(modeButton));
+    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact).tooltip(value -> layout.tooltip("exact." + value + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
 
     p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, layout.placer(exactButton));
-    saveButton = addDrawableChild(
-        new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h()).tooltip(
-            layout.tooltip("save.tooltip")).build());
+    saveButton = addDrawableChild(new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h()).tooltip(layout.tooltip("save.tooltip")).build());
 
     Placer changing = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP).to(BELOW);
 
@@ -161,7 +164,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     for (int i = 0; true; i++) {
       int col = i % 2;
       int row = i / 2;
-      p = first.clone().x(changing.x() + col * first.w()).y(changing.y() + row * first.h());
+      p = first.clone().x(changing.x() + col * first.w()).y(changing.y() + row * (first.h() + 2));
       if (p.y() > bottom.y()) {
         break;
       }
@@ -193,17 +196,13 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int examplesX = examplesP.x() - x + EXAMPLES_BORDER + 1;
     int examplesY = examplesP.y() - y + EXAMPLES_BORDER + 1;
     if (examplesX != EXAMPLES_GRID_X || examplesY != EXAMPLES_GRID_Y) {
-      LOGGER.warn(
-          String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X, EXAMPLES_GRID_Y,
-              examplesX, examplesY));
+      LOGGER.warn(String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X, EXAMPLES_GRID_Y, examplesX, examplesY));
     }
     p = layout.placer().w(changing.w() * 3 / 4).x(CENTER, examplesP).y(BELOW, examplesP);
     int width1 = changing.w() * 3 / 4;
-    exampleText = addDrawableChild(
-        p.place(MultilineTextWidget.createCentered(width1, textRenderer, layout.text("examples"))));
+    exampleText = addDrawableChild(p.place(MultilineTextWidget.createCentered(width1, textRenderer, layout.text("examples"))));
     int bgBorder = 3;
-    exampleBgP = layout.placer().size(exampleText.getWidth() + 2 * bgBorder, exampleText.getHeight() + 2 * bgBorder).at(
-        exampleText.getX() - bgBorder, exampleText.getY() - bgBorder);
+    exampleBgP = layout.placer().size(exampleText.getWidth() + 2 * bgBorder, exampleText.getHeight() + 2 * bgBorder).at(exampleText.getX() - bgBorder, exampleText.getY() - bgBorder);
 
     boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
@@ -290,19 +289,18 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     exampleText.visible = desc.mode == SAME_AS;
     Arrays.stream(handler.filterSlots).forEach(slot -> slot.setEnabled(desc.mode == SAME_AS));
 
-    // We have to deal with focus before changing visibility
     boolean wasVisible = matchesFields.get(0).visible;
     boolean newVisible = desc.mode == MATCHES;
+    setMatchesVisible(newVisible);
     if (!wasVisible && newVisible) {
       setInitialFocus(matchesFields.get(0));
     } else if (wasVisible && !newVisible) {
       if (matchesFields.stream().anyMatch(ClickableWidget::isFocused)) {
         TextFieldWidget lastField = matchesFields.get(matchesFields.size() - 1);
-        setFocused(lastField);
+        setInitialFocus(lastField);
         lastField.changeFocus(true);
       }
     }
-    setMatchesVisible(newVisible);
 
     sendFilterDesc();
   }
@@ -325,8 +323,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void storeText() {
-    desc.matches = matchesFields.stream().map(TextFieldWidget::getText).filter(text -> !text.isBlank()).collect(
-        toImmutableList());
+    desc.matches = matchesFields.stream().map(TextFieldWidget::getText).filter(text -> !text.isBlank()).collect(toImmutableList());
   }
 
   private void save(ButtonWidget unused) {

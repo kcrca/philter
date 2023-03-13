@@ -1,4 +1,5 @@
 1.3.1: Evaluate contents by slot: For first slot, either filter or move; if nothing, then for second slot, either filter or move, ...
+       Allow an 'e' in the matches boxes (what a weird crock that I have to do anything to make this work!)
        Fix problems working with Lithium>
 
 1.3: Don't pull items from a filter or hoopper above.
