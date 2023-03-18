@@ -5,7 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.*;
@@ -25,7 +24,6 @@ import net.simplx.mcgui.RadioButtons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -185,9 +183,12 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
     p = layout.placer().w(changing.w() * 3 / 4).x(CENTER, examplesP).y(BELOW, examplesP);
     int width1 = changing.w() * 3 / 4;
-    exampleText = addDrawableChild(p.place(MultilineTextWidget.createCentered(width1, textRenderer, layout.text("examples"))));
+    MultilineTextWidget exampleText = new MultilineTextWidget(layout.text("examples"), textRenderer);
+    exampleText.setMaxWidth(width1);
+    exampleText.setCentered(true);
+    this.exampleText = addDrawableChild(p.place(exampleText));
     int bgBorder = 3;
-    exampleBgP = layout.placer().size(exampleText.getWidth() + 2 * bgBorder, exampleText.getHeight() + 2 * bgBorder).at(exampleText.getX() - bgBorder, exampleText.getY() - bgBorder);
+    exampleBgP = layout.placer().size(this.exampleText.getWidth() + 2 * bgBorder, this.exampleText.getHeight() + 2 * bgBorder).at(this.exampleText.getX() - bgBorder, this.exampleText.getY() - bgBorder);
 
     boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
@@ -283,7 +284,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
       if (matchesFields.stream().anyMatch(ClickableWidget::isFocused)) {
         TextFieldWidget lastField = matchesFields.get(matchesFields.size() - 1);
         setInitialFocus(lastField);
-        lastField.changeFocus(true);
+        lastField.setFocused(true);
       }
     }
 
