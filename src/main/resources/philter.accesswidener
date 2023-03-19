@@ -28,7 +28,6 @@ accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	x			I
 accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	y			I
 accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	backgroundWidth		I
 accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	backgroundHeight	I
-accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	client          	Lnet/minecraft/client/MinecraftClient;
 
 accessible	field	net/minecraft/client/gui/screen/Screen		textRenderer		Lnet/minecraft/client/font/TextRenderer;
 accessible	method	net/minecraft/client/gui/screen/Screen		addDrawableChild	(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;
