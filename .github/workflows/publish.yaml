@@ -8,7 +8,7 @@ env:                                              #Environment variables that ca
   MINECRAFT_VERSION: 1.19.4
   JAVA_VERSION: 17
 
-  GITHUB_TAG: 1.3.1+1.19.4
+  GITHUB_TAG: 1.3.1+1.19.4x
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
   CURSEFORGE_TOKEN: ${{ secrets.PUBLISH_CURSEFORGE_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.PUBLISH_GITHUB_TOKEN }}
