@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+@SuppressWarnings("unused")
 public class RadioButtons<T> {
 
   private final List<RadioButtonWidget<T>> buttons;

@@ -6,7 +6,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.Hopper;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -27,9 +26,11 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
+
 import static net.minecraft.util.function.BooleanBiFunction.OR;
 
 public class FilterBlock extends HopperBlock {
@@ -97,14 +98,14 @@ public class FilterBlock extends HopperBlock {
   @Override
   @Nullable
   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
-      BlockEntityType<T> type) {
+                                                                BlockEntityType<T> type) {
     return world.isClient ? null
-                          : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+        : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
 
   @Override
   public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos,
-      NavigationType type) {
+                                    NavigationType type) {
     return false;
   }
 
@@ -137,7 +138,7 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos,
-      ShapeContext context) {
+                                    ShapeContext context) {
     return SHAPES.get(state.get(FACING)).get(state.get(FILTER));
   }
 
@@ -148,7 +149,7 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
-      Hand hand, BlockHitResult hit) {
+                            Hand hand, BlockHitResult hit) {
     if (world.isClient) {
       return ActionResult.SUCCESS;
     } else {

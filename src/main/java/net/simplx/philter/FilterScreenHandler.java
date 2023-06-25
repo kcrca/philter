@@ -10,6 +10,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+
 import static net.minecraft.screen.HopperScreenHandler.SLOT_COUNT;
 import static net.simplx.philter.FilterBlockEntity.EXAMPLES_COUNT;
 import static net.simplx.philter.PhilterMod.FILTER_SCREEN_HANDLER;
@@ -33,8 +34,7 @@ public class FilterScreenHandler extends ScreenHandler {
   static {
     //noinspection ConstantConditions
     if (EXAMPLES_GRID_COLS * EXAMPLES_GRID_ROWS != EXAMPLES_COUNT) {
-      throw new IllegalStateException(
-          "Size mismatch! " + (EXAMPLES_GRID_COLS * EXAMPLES_GRID_ROWS) + " != " + SLOT_COUNT);
+      throw new IllegalStateException("Size mismatch! " + (EXAMPLES_GRID_COLS * EXAMPLES_GRID_ROWS) + " != " + SLOT_COUNT);
     }
   }
 
@@ -45,7 +45,7 @@ public class FilterScreenHandler extends ScreenHandler {
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterDesc filterDesc,
-      BlockPos pos, Direction facing, Direction filter, boolean onServer) {
+                             BlockPos pos, Direction facing, Direction filter, boolean onServer) {
     super(FILTER_SCREEN_HANDLER, syncId);
     this.inventory = inventory;
     checkSize(inventory, SLOT_COUNT + EXAMPLES_COUNT);
@@ -57,7 +57,7 @@ public class FilterScreenHandler extends ScreenHandler {
       addSlot(new Slot(inventory, i, 44 + i * 18, 20));
     }
     int slotNum = 0;
-    boolean alwaysEnabled = onServer;
+    @SuppressWarnings("UnnecessaryLocalVariable") boolean alwaysEnabled = onServer;
     for (int slotRow = 0; slotRow < EXAMPLES_GRID_ROWS; slotRow++) {
       for (int slotCol = 0; slotCol < EXAMPLES_GRID_COLS; slotCol++) {
         // On the server side these are always enabled.
@@ -104,7 +104,7 @@ public class FilterScreenHandler extends ScreenHandler {
     int playerStart = SLOT_COUNT + EXAMPLES_COUNT;
     int playerEnd = playerStart + player.getInventory().main.size();
     if (slotNum >= playerStart && slotNum < playerEnd) {
-      // Move the player's inventory into the hoopper slots
+      // Move the player's inventory into the hopper slots
       if (!insertItem(slotStack, 0, SLOT_COUNT, false)) {
         return ItemStack.EMPTY;
       }

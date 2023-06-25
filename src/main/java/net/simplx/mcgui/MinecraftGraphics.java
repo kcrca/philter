@@ -7,6 +7,7 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import org.apache.commons.lang3.NotImplementedException;
 
 class MinecraftGraphics implements Graphics {
 
@@ -59,7 +60,7 @@ class MinecraftGraphics implements Graphics {
 
   @Override
   public void drawTexture(MatrixStack matrices, int x, int y, int u, int v, int w, int h) {
-    screen.drawTexture(matrices, x, y, u, v, w, h);
+    throw new NotImplementedException();
   }
 
   @Override
@@ -76,7 +77,7 @@ class MinecraftGraphics implements Graphics {
   }
 
   public void drawText(MatrixStack matrices, Text text, float x, float y, int color) {
-    textRenderer.draw(matrices, text, x, y, color);
+    throw new NotImplementedException();
   }
 
   public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {

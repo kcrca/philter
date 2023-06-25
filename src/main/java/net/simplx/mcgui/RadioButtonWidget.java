@@ -3,6 +3,7 @@ package net.simplx.mcgui;
 import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.text.Text;
 
+@SuppressWarnings("unused")
 public class RadioButtonWidget<T> extends CheckboxWidget {
 
   private RadioButtons<T> buttons;

@@ -39,7 +39,7 @@ import static net.simplx.philter.FilterBlock.*;
  * mirrors the static {@link HopperBlockEntity#serverTick} (non-statically) and so on until we get to
  * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
-@SuppressWarnings("SameParameterValue")
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory, ExtendedScreenHandlerFactory {
 
   static final int EXAMPLES_COUNT = 16;
@@ -72,7 +72,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
         buf.readEnumConstant(Direction.class);
         Direction newFilterDir = buf.readEnumConstant(Direction.class);
         if (rawEntity.getCachedState().get(FILTER) != newFilterDir) {
-          player.world.setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
+          player.getWorld().setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
         }
         rawEntity.markDirty();
       } finally {
@@ -212,7 +212,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
           return true;
         }
       } else {
-        if (invStack.isItemEqual(item)) {
+        if (ItemStack.areItemsEqual(invStack, item)) {
           return true;
         }
       }
@@ -248,12 +248,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     if (!filterMatches.input.equals(desc.matches)) {
       filterMatches = new FilterMatches(desc.matches);
     }
-    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true) : filterMatches.matchAny(item, desc.exact, false);
+    return desc.matchAll ? filterMatches.matchAll(item, desc.exact, true) : filterMatches.matchAny(item, desc.exact,
+        false);
   }
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING), getCachedState().get(FILTER), true);
+    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING),
+        getCachedState().get(FILTER), true);
   }
 
   @Override
@@ -290,6 +292,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   /** HopperBlockEntity uses this to suck items out of the world. We don't want to, since we don't pull from above. */
-  public static void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity, HopperBlockEntity blockEntity) {
+  public static void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity,
+                                      HopperBlockEntity blockEntity) {
   }
 }

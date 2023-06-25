@@ -1,14 +1,12 @@
 package net.simplx.philter;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.*;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.MutableText;
@@ -54,10 +52,14 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   public static final int TEXTURE_WIDTH = 512;
   public static final int TEXTURE_HEIGHT = 256;
 
-  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID, "textures/block/filter_down_facing_top.png");
-  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID, "textures/block/filter_down_filter_top_on.png");
-  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID, "textures/block/filter_side_facing_top.png");
-  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID, "textures/block/filter_side_filter_top_on.png");
+  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID, "textures/block" +
+      "/filter_down_facing_top.png");
+  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID, "textures/block" +
+      "/filter_down_filter_top_on.png");
+  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID, "textures/block" +
+      "/filter_side_facing_top.png");
+  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID, "textures/block" +
+      "/filter_side_filter_top_on.png");
   public static final int TOP_SIZE = 32;
   public static final int TOP_MID = TOP_SIZE / 2;
 
@@ -88,7 +90,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   private boolean initializing;
   private Placer titlePlace;
   private Placer topP;
-  private Placer hopperP;
   private Placer examplesP;
   private Placer exampleBgP;
   private Placer dirP;
@@ -97,7 +98,6 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     super(handler, inventory, title);
     backgroundWidth = SCREEN_W;
     backgroundHeight = SCREEN_H;
-    passEvents = false;
     hopperWidth = 176;
     hopperHeight = 133;
     playerInventoryTitleY = hopperHeight - 94;
@@ -118,21 +118,29 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
     Placer p;
     Function<FilterMode, Text> modeTextGen = mode -> (Text) layout.text("mode." + mode.toString().toLowerCase());
-    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton().x(RIGHT, titlePlace).y(ABOVE);
+    Placer modeP = p = layout.placer().withTexts(stream(values()).map(modeTextGen).toList()).inButton().x(RIGHT,
+        titlePlace).y(ABOVE);
     titlePlace.y(MID, modeP);
-    CyclingButtonWidget<FilterMode> modeButton = addDrawableChild(CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode).tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
+    CyclingButtonWidget<FilterMode> modeButton =
+        addDrawableChild(CyclingButtonWidget.builder(modeTextGen).values(values()).omitKeyText().initially(desc.mode).tooltip(value -> layout.tooltip("mode." + value.toString().toLowerCase() + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, m) -> setMode(m)));
 
     Text allText = layout.text("all");
     Text anyText = layout.text("any");
     p = layout.placer().withTexts(anyText, allText).inButton().x(RIGHT, modeP).y(ABOVE);
-    allButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText().tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
+    allButton =
+        addDrawableChild(CyclingButtonWidget.onOffBuilder(anyText, allText).initially(true).omitKeyText().tooltip(value -> layout.tooltip((value ? "all" : "any") + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), null, (button, all) -> setAll(all)));
 
     Text exactText = layout.text("exact");
-    Placer exactP = p = layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton().x(titlePlace.x()).y(BELOW, layout.placer(modeButton));
-    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact).tooltip(value -> layout.tooltip("exact." + value + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), exactText, (button, exact) -> setExact(exact)));
+    Placer exactP = p =
+        layout.placer().w(layout.onOffButtonW(exactText)).h(layout.textH).inButton().x(titlePlace.x()).y(BELOW,
+            layout.placer(modeButton));
+    exactButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(desc.exact).tooltip(value -> layout.tooltip(
+        "exact." + value + ".tooltip")).build(p.x(), p.y(), p.w(), p.h(), exactText,
+        (button, exact) -> setExact(exact)));
 
     p = layout.placer().withText(saveText).inButton().x(RIGHT).y(MID, layout.placer(exactButton));
-    saveButton = addDrawableChild(new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(), p.h()).tooltip(layout.tooltip("save.tooltip")).build());
+    saveButton = addDrawableChild(new ButtonWidget.Builder(saveText, this::save).dimensions(p.x(), p.y(), p.w(),
+        p.h()).tooltip(layout.tooltip("save.tooltip")).build());
 
     Placer changing = layout.placer().from(LEFT, titlePlace).to(RIGHT).from(BELOW, exactP).to(BELOW);
 
@@ -170,7 +178,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
     setMatchesVisible(false); // ... so if it needs to be visible, it will be newly visible.
 
-    hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE).to(hopperHeight - layout.borderH);
+    Placer hopperP = layout.placer().from(LEFT).to(x + hopperWidth).from(ABOVE).to(hopperHeight - layout.borderH);
     Placer mid = layout.placer().w(hopperP.w()).from(BELOW, hopperP).to(BELOW).x(hopperP.x()).y(BELOW, hopperP);
     topP = layout.placer().size(TOP_SIZE, TOP_SIZE).x(CENTER, mid).y(BOTTOM);
     topP.y(topP.y() - layout.placer().inCheckbox().h() - layout.gapH);
@@ -179,7 +187,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     int examplesX = examplesP.x() - x + EXAMPLES_BORDER + 1;
     int examplesY = examplesP.y() - y + EXAMPLES_BORDER + 1;
     if (examplesX != EXAMPLES_GRID_X || examplesY != EXAMPLES_GRID_Y) {
-      LOGGER.warn(String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X, EXAMPLES_GRID_Y, examplesX, examplesY));
+      LOGGER.warn(String.format("Filter misalignment: expected at (%d, %d), not (%d, %d)", EXAMPLES_GRID_X,
+          EXAMPLES_GRID_Y, examplesX, examplesY));
     }
     p = layout.placer().w(changing.w() * 3 / 4).x(CENTER, examplesP).y(BELOW, examplesP);
     int width1 = changing.w() * 3 / 4;
@@ -188,9 +197,10 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     exampleText.setCentered(true);
     this.exampleText = addDrawableChild(p.place(exampleText));
     int bgBorder = 3;
-    exampleBgP = layout.placer().size(this.exampleText.getWidth() + 2 * bgBorder, this.exampleText.getHeight() + 2 * bgBorder).at(this.exampleText.getX() - bgBorder, this.exampleText.getY() - bgBorder);
+    exampleBgP = layout.placer().size(this.exampleText.getWidth() + 2 * bgBorder,
+        this.exampleText.getHeight() + 2 * bgBorder).at(this.exampleText.getX() - bgBorder,
+        this.exampleText.getY() - bgBorder);
 
-    boolean facingDown = handler.facing == DOWN;
     Direction dir = handler.userFacingDir;
     directionButtons = new RadioButtons<>();
     dirP = layout.placer().withText("filter_dir").x(LEFT);
@@ -222,9 +232,9 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   @Override
-  protected void drawForeground(MatrixStack matrices, int mouseX, int mouseY) {
-    super.drawForeground(matrices, mouseX, mouseY);
-    layout.drawText(matrices, titlePlace, titleText, TITLE_TEXT_COLOR);
+  protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+    super.drawForeground(context, mouseX, mouseY);
+    layout.drawText(context, this.textRenderer, titlePlace, titleText, TITLE_TEXT_COLOR);
   }
 
   private void matchChanged(int i, String text) {
@@ -309,7 +319,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
   }
 
   private void storeText() {
-    desc.matches = matchesFields.stream().map(TextFieldWidget::getText).filter(text -> !text.isBlank()).collect(toImmutableList());
+    desc.matches =
+        matchesFields.stream().map(TextFieldWidget::getText).filter(text -> !text.isBlank()).collect(toImmutableList());
   }
 
   private void save(ButtonWidget unused) {
@@ -326,10 +337,11 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     }
   }
 
-  public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-    renderBackground(matrices);
-    super.render(matrices, mouseX, mouseY, delta);
-    drawMouseoverTooltip(matrices, mouseX, mouseY);
+  @Override
+  public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    renderBackground(context);
+    super.render(context, mouseX, mouseY, delta);
+    drawMouseoverTooltip(context, mouseX, mouseY);
   }
 
   @Override
@@ -341,55 +353,55 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
     super.close();
   }
 
-  protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
-    RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-    RenderSystem.setShaderTexture(0, TEXTURE);
+  @Override
+  protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
     int midX = (width - backgroundWidth) / 2;
     int midY = (height - backgroundHeight) / 2;
-    drawTexture(matrices, midX, midY, 0, 0, backgroundWidth, backgroundHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    context.drawTexture(TEXTURE, midX, midY, 0, 0, backgroundWidth, backgroundHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
     if (desc.mode == SAME_AS) {
       Placer p = examplesP;
-      drawTexture(matrices, p.x(), p.y(), SCREEN_W, 0, p.w(), p.h(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+      context.drawTexture(TEXTURE, p.x(), p.y(), SCREEN_W, 0, p.w(), p.h(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
       p = exampleBgP;
-      DrawableHelper.fill(matrices, p.x(), p.y(), p.endX(), p.endY(), 0xff404040);
+      context.fill(p.x(), p.y(), p.endX(), p.endY(), 0xff404040);
     }
 
-    Placer p = layout.placer().x(LEFT).y(BELOW, hopperP).inLabel();
-    textRenderer.draw(matrices, layout.text("filter_dir"), dirP.x(), dirP.y(), LABEL_COLOR);
+    context.drawText(textRenderer, layout.text("filter_dir"), dirP.x(), dirP.y(), LABEL_COLOR, false);
 
-    drawTop(matrices, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
+    drawTop(context, handler.facing, FILTER_DOWN_FACING_TOP, FILTER_SIDE_FACING_TOP);
     RadioButtonWidget<Direction> button = directionButtons.getOn();
-    drawTop(matrices, button.getValue(), FILTER_DOWN_FILTER_TOP, FILTER_SIDE_FILTER_TOP);
+    drawTop(context, button.getValue(), FILTER_DOWN_FILTER_TOP, FILTER_SIDE_FILTER_TOP);
   }
 
-  void drawTop(MatrixStack matrices, Direction dir, Identifier down, Identifier side) {
-    matrices.push();
-    matrices.translate(topP.x() + TOP_MID, topP.y() + TOP_MID, 0);
-    if (dir == DOWN) {
-      RenderSystem.setShaderTexture(0, down);
-    } else {
-      int rot = (dir.getHorizontal() - handler.userFacingDir.getHorizontal()) * 90;
-      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
-      RenderSystem.setShaderTexture(0, side);
+  void drawTop(DrawContext context, Direction dir, Identifier down, Identifier side) {
+    MatrixStack matrices = context.getMatrices();
+    try {
+      matrices.push();
+      matrices.translate(topP.x() + TOP_MID, topP.y() + TOP_MID, 0);
+      Identifier texture = down;
+      if (dir != DOWN) {
+        int rot = (dir.getHorizontal() - handler.userFacingDir.getHorizontal()) * 90;
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
+        texture = side;
+      }
+      matrices.translate(-TOP_MID, -TOP_MID, 0);
+      context.drawTexture(texture, 0, 0, 0, 0, topP.w(), topP.h(), topP.w(), topP.h());
+    } finally {
+      matrices.pop();
     }
-    matrices.translate(-TOP_MID, -TOP_MID, 0);
-    drawTexture(matrices, 0, 0, 0, 0, topP.w(), topP.h(), topP.w(), topP.h());
-    matrices.pop();
   }
 
   @SuppressWarnings("unused")
-  private void drawBox(MatrixStack matrices, Placer p, int color) {
+  private void drawBox(DrawContext context, Placer p, int color) {
     if (p != null) {
-      drawBox(matrices, p.x(), p.y(), p.w(), p.h(), color);
+      drawBox(context, p.x(), p.y(), p.w(), p.h(), color);
     }
   }
 
-  private void drawBox(MatrixStack matrices, int x, int y, int width, int height, int color) {
-    drawHorizontalLine(matrices, x, x + width, y, color);
-    drawHorizontalLine(matrices, x, x + width, y + height, color);
-    drawVerticalLine(matrices, x, y, y + height, color);
-    drawVerticalLine(matrices, x + width, y, y + height, color);
+  private void drawBox(DrawContext context, int x, int y, int width, int height, int color) {
+    context.drawHorizontalLine(x, x + width, y, color);
+    context.drawHorizontalLine(x, x + width, y + height, color);
+    context.drawVerticalLine(x, y, y + height, color);
+    context.drawVerticalLine(x + width, y, y + height, color);
   }
 }

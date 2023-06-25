@@ -1,5 +1,6 @@
 package net.simplx.mcguidoc;
 
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
@@ -10,6 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.simplx.mcgui.Layout;
 import net.simplx.mcgui.Layout.Placer;
+import org.apache.commons.lang3.NotImplementedException;
+
 import java.util.List;
 import static net.simplx.mcgui.Horizontal.LEFT;
 import static net.simplx.mcgui.Horizontal.RIGHT;
@@ -55,12 +58,12 @@ public class DocScreen extends HandledScreen<DocScreenHandler> {
   private void setColor(Object name) {
   }
 
-  private void doStuff(ButtonWidget buttonWidget) {
-
+  @Override
+  protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+    throw new NotImplementedException();
   }
 
-  @Override
-  protected void drawBackground(MatrixStack matrices, float delta, int mouseX, int mouseY) {
-    layout.drawBackground(matrices, TEXTURE, delta, mouseX, mouseY);
+  private void doStuff(ButtonWidget buttonWidget) {
+
   }
 }

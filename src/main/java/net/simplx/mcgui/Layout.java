@@ -2,6 +2,8 @@ package net.simplx.mcgui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -15,9 +17,11 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
 import static com.google.common.collect.Streams.stream;
 
 /**
@@ -29,8 +33,9 @@ import static com.google.common.collect.Streams.stream;
  *
  * </code>
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class Layout {
+  @SuppressWarnings("unused")
   public class Placer implements Cloneable {
 
     private int x, y;
@@ -235,7 +240,7 @@ public class Layout {
         case TOP -> to.y();
         case MID -> to.y() + (to.h() - h()) / 2;
         case BOTTOM -> to.y() + to.h();
-        case BOTOTM_EDGE -> to.y() + to.h() - h();
+        case BOTTOM_EDGE -> to.y() + to.h() - h();
         case BELOW -> to.y() + to.h() + gapH;
       };
       return this;
@@ -254,7 +259,7 @@ public class Layout {
       y = switch (dir) {
         case ABOVE, TOP, TOP_EDGE -> screenY + borderH;
         case MID -> screenY + (screenH - h()) / 2;
-        case BELOW, BOTTOM, BOTOTM_EDGE -> screenY + screenH - borderH - h();
+        case BELOW, BOTTOM, BOTTOM_EDGE -> screenY + screenH - borderH - h();
       };
       return this;
     }
@@ -323,7 +328,7 @@ public class Layout {
       if (hasW()) {
         widget.setWidth(w());
       }
-      // Dunno why there isn't a setHeight, but there isn't, so I've used access-widener.
+      // Don't know why there isn't a setHeight, but there isn't, so I've used access-widener.
       if (hasH()) {
         widget.height = h();
       }
@@ -421,7 +426,7 @@ public class Layout {
         case MID -> placer.y() + placer.h() / 2;
         case BOTTOM -> placer.y() + placer.h();
         case BELOW -> placer.y() + placer.h() + gapH;
-        case BOTOTM_EDGE -> placer.y() + placer.h() - w();
+        case BOTTOM_EDGE -> placer.y() + placer.h() - w();
       };
     }
 
@@ -430,7 +435,7 @@ public class Layout {
         case ABOVE, TOP, TOP_EDGE -> screenY + borderH;
         case MID -> screenY + screenH / 2;
         case BELOW, BOTTOM -> screenY + screenH - borderH;
-        case BOTOTM_EDGE -> screenY + screenH - borderH - h();
+        case BOTTOM_EDGE -> screenY + screenH - borderH - h();
       };
     }
 
@@ -600,7 +605,7 @@ public class Layout {
   }
 
   public void drawBackground(MatrixStack matrices, Identifier texture, float delta, int mouseX,
-      int mouseY) {
+                             int mouseY) {
     RenderSystem.setShader(GameRenderer::getPositionTexProgram);
     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     RenderSystem.setShaderTexture(0, texture);
@@ -609,8 +614,8 @@ public class Layout {
     graphics.drawTexture(matrices, x, y, 0, 0, graphics.getScreenW(), graphics.getScreenH());
   }
 
-  public void drawText(MatrixStack matrices, Placer placer, Text text, int color) {
-    graphics.drawText(matrices, text, (float) placer.relX(), (float) placer.relY(), color);
+  public void drawText(DrawContext context, TextRenderer renderer, Placer placer, Text text, int color) {
+    context.drawText(renderer, text, placer.relX(), placer.relY(), color, false);
   }
 
   public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
