@@ -13,7 +13,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -40,7 +40,8 @@ import static net.simplx.philter.FilterBlock.*;
  * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
-public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory, ExtendedScreenHandlerFactory {
+public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory,
+    ExtendedScreenHandlerFactory<FilterData> {
 
   static final int EXAMPLES_COUNT = 16;
   static final int EXAMPLES_START = INVENTORY_SIZE;
@@ -55,36 +56,36 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
 
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
-    setInvStackList(DefaultedList.ofSize(INVENTORY_SIZE + EXAMPLES_COUNT, ItemStack.EMPTY));
+    setHeldStacks(DefaultedList.ofSize(INVENTORY_SIZE + EXAMPLES_COUNT, ItemStack.EMPTY));
     type = PhilterMod.FILTER_BLOCK_ENTITY;
     desc = new FilterDesc(FilterMode.SAME_AS, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
     flicker = 0;
   }
 
-  public static void updateEntity(PlayerEntity player, PacketByteBuf buf) {
-    FilterDesc filterDesc = new FilterDesc(buf);
-    BlockPos pos = buf.readBlockPos();
+  public static void updateEntity(PlayerEntity player, FilterData data) {
+    FilterDesc filterDesc = data.desc();
+    BlockPos pos = data.pos();
     var rawEntity = player.getWorld().getBlockEntity(pos);
     if (rawEntity instanceof FilterBlockEntity) {
-      try {
-        ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
-        buf.readEnumConstant(Direction.class);
-        Direction newFilterDir = buf.readEnumConstant(Direction.class);
-        if (rawEntity.getCachedState().get(FILTER) != newFilterDir) {
-          player.getWorld().setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
-        }
-        rawEntity.markDirty();
-      } finally {
-        buf.release();
+      ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
+      Direction newFilterDir = data.filter();
+      if (rawEntity.getCachedState().get(FILTER) != newFilterDir) {
+        player.getWorld().setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
       }
+      rawEntity.markDirty();
     }
   }
 
   @Override
   public boolean isEmpty() {
-    checkLootInteraction(null);
-    return getInvStackList().subList(0, INVENTORY_SIZE).stream().allMatch(ItemStack::isEmpty);
+    generateLoot(null);
+    for (ItemStack itemStack : this.getHeldStacks().subList(0, INVENTORY_SIZE)) {
+      if (!itemStack.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -92,7 +93,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
    */
   @Override
   public boolean isFull() {
-    DefaultedList<ItemStack> invStackList = getInvStackList();
+    DefaultedList<ItemStack> invStackList = this.getHeldStacks();
     for (int i = 0; i < INVENTORY_SIZE; i++) {
       ItemStack itemStack = invStackList.get(i);
       if (!itemStack.isEmpty() && itemStack.getCount() == itemStack.getMaxCount()) {
@@ -104,14 +105,14 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Override
-  public void readNbt(NbtCompound nbt) {
-    super.readNbt(nbt);
+  public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+    super.readNbt(nbt, registryLookup);
     desc = new FilterDesc(nbt);
   }
 
   @Override
-  protected void writeNbt(NbtCompound nbt) {
-    super.writeNbt(nbt);
+  protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+    super.writeNbt(nbt, registryLookup);
     desc.writeNbt(nbt);
   }
 
@@ -223,7 +224,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   @Nullable
   private List<ItemStack> getExamples(Inventory targetInv) {
     List<ItemStack> examples = new ArrayList<>();
-    DefaultedList<ItemStack> exampleInv = getInvStackList();
+    DefaultedList<ItemStack> exampleInv = this.getHeldStacks();
     for (int i = EXAMPLES_START; i < EXAMPLES_END; i++) {
       ItemStack itemStack = exampleInv.get(i);
       if (!itemStack.isEmpty()) {
@@ -254,17 +255,15 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
 
   @Override
   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-    return new FilterScreenHandler(syncId, playerInventory, this, desc, pos, getCachedState().get(FACING),
-        getCachedState().get(FILTER), true);
+    return new FilterScreenHandler(syncId, playerInventory, this, new FilterData(
+        desc, pos, getCachedState().get(FACING),
+        getCachedState().get(FILTER), null));
   }
 
-  @Override
-  public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+
+  public FilterData getScreenOpeningData(ServerPlayerEntity player) {
     BlockState state = player.getWorld().getBlockState(pos);
-    Direction facing = state.get(FACING);
-    Direction filter = state.get(FILTER);
-    desc.write(buf, pos, facing, filter);
-    buf.writeEnumConstant(userFacingDir);
+    return new FilterData(desc, pos, state.get(FACING), state.get(FILTER), userFacingDir);
   }
 
   public void setFilterDesc(FilterDesc desc) {

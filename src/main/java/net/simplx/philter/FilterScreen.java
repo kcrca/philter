@@ -39,7 +39,6 @@ import static net.simplx.philter.FilterMode.values;
 import static net.simplx.philter.FilterMode.*;
 import static net.simplx.philter.FilterScreenHandler.EXAMPLES_GRID_X;
 import static net.simplx.philter.FilterScreenHandler.EXAMPLES_GRID_Y;
-import static net.simplx.philter.PhilterMod.FILTER_ID;
 import static net.simplx.philter.PhilterMod.MOD_ID;
 
 @SuppressWarnings("SameParameterValue")
@@ -213,7 +212,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         case 3 -> q.x(LEFT, topP).y(MID, topP);
         case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
       }
-      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), q.w(), q.h(), null)));
+      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), null, textRenderer)));
       dir = dir.rotateClockwise(Axis.Y);
       if (i == 0) {
         dirP.y(q.y() + layout.gapH);
@@ -331,7 +330,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private void sendFilterDesc() {
     try {
-      ClientPlayNetworking.send(FILTER_ID, desc.packetBuf(handler.getPos(), handler.facing, handler.filter));
+      ClientPlayNetworking.send(new FilterData(handler.getFilterDesc(), handler.getPos(), handler.facing,
+          handler.filter, null));
     } catch (NullPointerException e) {
       LOGGER.error("Unexpected null", e);
     }
@@ -339,7 +339,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   @Override
   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-    renderBackground(context);
+    renderBackground(context, mouseX, mouseY, delta);
     super.render(context, mouseX, mouseY, delta);
     drawMouseoverTooltip(context, mouseX, mouseY);
   }

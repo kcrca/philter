@@ -19,7 +19,7 @@ public class DocBlockEntity extends BlockEntity implements NamedScreenHandlerFac
   @Nullable
   @Override
   public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-    return new DocScreenHandler(syncId, inv, 0);
+    return new DocScreenHandler(syncId, inv, new MoodleMod.DummyData(0));
   }
 
   @Override

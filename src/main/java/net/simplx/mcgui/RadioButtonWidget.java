@@ -1,5 +1,6 @@
 package net.simplx.mcgui;
 
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.text.Text;
 
@@ -10,13 +11,12 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
   private final T value;
   private int index;
 
-  public RadioButtonWidget(T value, int x, int y, int width, int height, Text message) {
-    this(value, x, y, width, height, message, message != null && !message.getString().isBlank());
+  public RadioButtonWidget(T value, int x, int y, Text message, TextRenderer textRenderer) {
+    this(value, x, y, message, message != null && !message.getString().isBlank(), textRenderer);
   }
 
-  public RadioButtonWidget(T value, int x, int y, int width, int height, Text message,
-      boolean showMessage) {
-    super(x, y, width, height, message, false, showMessage);
+  public RadioButtonWidget(T value, int x, int y, Text message, boolean showMessage, TextRenderer textRenderer) {
+    super(x, y, message, textRenderer, false, null);
     this.value = value;
     index = -1;
   }

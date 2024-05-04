@@ -1,12 +1,11 @@
 package net.simplx.philter;
 
 import com.google.common.collect.Iterators;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.Hopper;
-import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -34,6 +33,7 @@ import java.util.Map;
 import static net.minecraft.util.function.BooleanBiFunction.OR;
 
 public class FilterBlock extends HopperBlock {
+  public static final MapCodec<FilterBlock> CODEC = FilterBlock.createCodec(FilterBlock::new);
 
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
@@ -66,7 +66,8 @@ public class FilterBlock extends HopperBlock {
     var voxels = Iterators.concat(dirs.entrySet().iterator(), raycast.entrySet().iterator());
     while (voxels.hasNext()) {
       var shape = voxels.next();
-      shape.setValue(VoxelShapes.combineAndSimplify(shape.getValue(), Hopper.INSIDE_SHAPE, OR));
+//      shape.setValue(VoxelShapes.combineAndSimplify(shape.getValue(), HopperBlock.INSIDE_SHAPE, OR));
+      shape.setValue(shape.getValue());
     }
 
     for (Direction facing : Direction.values()) {
@@ -100,13 +101,7 @@ public class FilterBlock extends HopperBlock {
   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
                                                                 BlockEntityType<T> type) {
     return world.isClient ? null
-        : checkType(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
-  }
-
-  @Override
-  public boolean canPathfindThrough(BlockState state, BlockView world, BlockPos pos,
-                                    NavigationType type) {
-    return false;
+        : HopperBlock.validateTicker(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
 
   @Override
@@ -149,12 +144,13 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
-                            Hand hand, BlockHitResult hit) {
+                             BlockHitResult hit) {
     if (world.isClient) {
       return ActionResult.SUCCESS;
     } else {
       BlockEntity blockEntity = world.getBlockEntity(pos);
       if (blockEntity instanceof FilterBlockEntity fbe) {
+        Hand hand = player.getActiveHand();
         ItemPlacementContext ctx = new ItemPlacementContext(player, hand, ItemStack.EMPTY, hit);
         fbe.setActionDir(null);
         for (var dir : ctx.getPlacementDirections()) {

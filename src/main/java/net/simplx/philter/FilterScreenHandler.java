@@ -5,7 +5,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
@@ -38,19 +37,25 @@ public class FilterScreenHandler extends ScreenHandler {
     }
   }
 
-  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
-    this(syncId, playerInventory, new SimpleInventory(SLOT_COUNT + EXAMPLES_COUNT), new FilterDesc(buf),
-        buf.readBlockPos(), buf.readEnumConstant(Direction.class), buf.readEnumConstant(Direction.class), false);
-    userFacingDir = buf.readEnumConstant(Direction.class);
+  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, FilterData data) {
+    this(syncId, playerInventory, new SimpleInventory(SLOT_COUNT + EXAMPLES_COUNT), data);
+    userFacingDir = data.userFacing();
+    setup(playerInventory, null, false);
   }
 
-  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterDesc filterDesc,
-                             BlockPos pos, Direction facing, Direction filter, boolean onServer) {
+  public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterData data) {
     super(FILTER_SCREEN_HANDLER, syncId);
     this.inventory = inventory;
     checkSize(inventory, SLOT_COUNT + EXAMPLES_COUNT);
     inventory.onOpen(playerInventory.player);
-    this.filterDesc = filterDesc;
+    this.filterDesc = data.desc();
+    this.pos = data.pos();
+    this.facing = data.facing();
+    this.filter = data.filter();
+    setup(playerInventory, inventory, true);
+  }
+
+  private void setup(PlayerInventory playerInventory, Inventory inventory, boolean onServer) {
     filterSlots = new FilterSlot[EXAMPLES_COUNT];
     int i;
     for (i = 0; i < 5; ++i) {
@@ -75,10 +80,6 @@ public class FilterScreenHandler extends ScreenHandler {
     for (i = 0; i < 9; ++i) {
       addSlot(new Slot(playerInventory, i, 8 + i * 18, 109));
     }
-    this.pos = pos;
-
-    this.facing = facing;
-    this.filter = filter;
   }
 
   @Override

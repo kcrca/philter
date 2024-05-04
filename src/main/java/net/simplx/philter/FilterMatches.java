@@ -87,7 +87,8 @@ public class FilterMatches {
       Identifier id = key.get().getValue();
       String nbtStr = "";
       if (exact) {
-        NbtCompound nbt = item.getNbt();
+//        NbtCompound nbt = item.getNbt();
+        NbtCompound nbt = null;
         if (nbt == null) {
           nbtStr = "{}";
         } else {
