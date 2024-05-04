@@ -31,6 +31,7 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.stream;
+import static net.minecraft.datafixer.fix.TextFixes.text;
 import static net.minecraft.util.math.Direction.DOWN;
 import static net.simplx.mcgui.Colors.LABEL_COLOR;
 import static net.simplx.mcgui.Horizontal.*;
@@ -212,7 +213,7 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         case 3 -> q.x(LEFT, topP).y(MID, topP);
         case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
       }
-      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), null, textRenderer)));
+      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), layout.text(""), textRenderer)));
       dir = dir.rotateClockwise(Axis.Y);
       if (i == 0) {
         dirP.y(q.y() + layout.gapH);

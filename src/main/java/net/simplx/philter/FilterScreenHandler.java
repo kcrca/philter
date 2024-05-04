@@ -40,7 +40,6 @@ public class FilterScreenHandler extends ScreenHandler {
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, FilterData data) {
     this(syncId, playerInventory, new SimpleInventory(SLOT_COUNT + EXAMPLES_COUNT), data);
     userFacingDir = data.userFacing();
-    setup(playerInventory, null, false);
   }
 
   public FilterScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, FilterData data) {
