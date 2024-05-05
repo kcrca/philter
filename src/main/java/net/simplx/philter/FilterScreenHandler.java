@@ -51,7 +51,7 @@ public class FilterScreenHandler extends ScreenHandler {
     this.pos = data.pos();
     this.facing = data.facing();
     this.filter = data.filter();
-    setup(playerInventory, inventory, true);
+    setup(playerInventory, inventory, data.userFacing() == null);
   }
 
   private void setup(PlayerInventory playerInventory, Inventory inventory, boolean onServer) {
