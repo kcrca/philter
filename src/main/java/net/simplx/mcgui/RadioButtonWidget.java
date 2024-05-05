@@ -16,7 +16,7 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
   }
 
   public RadioButtonWidget(T value, int x, int y, Text message, boolean showMessage, TextRenderer textRenderer) {
-    super(x, y, message, textRenderer, false, null);
+    super(x, y, message, textRenderer, false, Callback.EMPTY);
     this.value = value;
     index = -1;
   }
