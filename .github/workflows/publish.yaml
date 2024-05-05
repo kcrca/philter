@@ -6,7 +6,7 @@ env:                                              #Environment variables that ca
   VERSION: 1.3.1+1.20.6
   RELEASE_NAME: Philter Mod 1.3.1 for Minecraft 1.20.6
   MINECRAFT_VERSION: 1.20.6
-  JAVA_VERSION: 17
+  JAVA_VERSION: 21
 
   GITHUB_TAG: 1.3.1+1.20.6
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
         run: ./gradlew clean build
  
       - name: Publish (CurseForge/Modrinth/Github)
-        uses: Kir-Antipov/mc-publish@v3.2                                   #The specified MC-Publish Github Action in the version 3.2
+        uses: Kir-Antipov/mc-publish@v3.3                                   #The specified MC-Publish Github Action in the version 3.3
         with:
           curseforge-id: 810984
           curseforge-token: "${{env.CURSEFORGE_TOKEN}}"
