@@ -1,11 +1,20 @@
 package net.simplx.mcgui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 @SuppressWarnings("unused")
 public class RadioButtonWidget<T> extends CheckboxWidget {
+  private static final Identifier SELECTED_HIGHLIGHTED_TEXTURE = new Identifier("philter", "widget" +
+      "/radiobutton_selected_highlighted");
+  private static final Identifier SELECTED_TEXTURE = new Identifier("philter", "widget/radiobutton_selected");
+  private static final Identifier HIGHLIGHTED_TEXTURE = new Identifier("philter", "widget/radiobutton_highlighted");
+  private static final Identifier TEXTURE = new Identifier("philter", "widget/radiobutton");
 
   private RadioButtons<T> buttons;
   private final T value;
@@ -80,5 +89,18 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
     } else {
       setCheckedInternal(on);
     }
+  }
+
+  @Override
+  public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    super.renderWidget(context, mouseX, mouseY, delta);
+    MinecraftClient minecraftClient = MinecraftClient.getInstance();
+    RenderSystem.enableDepthTest();
+    TextRenderer textRenderer = minecraftClient.textRenderer;
+    Identifier identifier = this.checked ? (this.isFocused() ? SELECTED_HIGHLIGHTED_TEXTURE : SELECTED_TEXTURE) :
+        (this.isFocused() ? HIGHLIGHTED_TEXTURE : TEXTURE);
+    int i = CheckboxWidget.getSize(textRenderer);
+    context.drawGuiTexture(identifier, this.getX(), this.getY(), i, i);
+
   }
 }
