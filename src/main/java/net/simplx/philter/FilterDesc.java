@@ -2,26 +2,21 @@ package net.simplx.philter;
 
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
 import static net.simplx.philter.FilterMode.SAME_AS;
 
 public class FilterDesc {
 
-  public static final PacketCodec<ByteBuf, FilterDesc> PACKET_CODEC = new PacketCodec<ByteBuf, FilterDesc>() {
+  public static final PacketCodec<ByteBuf, FilterDesc> PACKET_CODEC = new PacketCodec<>() {
     @Override
     public FilterDesc decode(ByteBuf buf) {
       try {
@@ -52,10 +47,6 @@ public class FilterDesc {
     this.exact = exact;
   }
 
-  public FilterDesc(PacketByteBuf buf) {
-    this(requireNonNull(buf.readNbt()));
-  }
-
   @SuppressWarnings("SimplifiableConditionalExpression")
   public FilterDesc(NbtCompound nbt) {
     try {
@@ -82,12 +73,6 @@ public class FilterDesc {
     }
   }
 
-  public PacketByteBuf packetBuf(BlockPos pos, Direction facing, Direction filter) {
-    var buf = PacketByteBufs.create();
-    write(buf, pos, facing, filter);
-    return buf;
-  }
-
   public void writeNbt(NbtCompound nbt) {
     nbt.putString(MODE, mode.toString());
     if (matches.size() > 0) {
@@ -105,15 +90,6 @@ public class FilterDesc {
 
   public String match(int index) {
     return index >= matches.size() ? "" : matches.get(index);
-  }
-
-  public void write(PacketByteBuf buf, BlockPos pos, Direction facing,
-                    Direction filter) {
-    NbtCompound nbt = toNbt();
-    buf.writeNbt(nbt);
-    buf.writeBlockPos(pos);
-    buf.writeEnumConstant(facing);
-    buf.writeEnumConstant(filter);
   }
 
   @NotNull

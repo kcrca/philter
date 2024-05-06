@@ -1,7 +1,6 @@
 package net.simplx.philter;
 
 import com.google.common.collect.Iterators;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -33,8 +32,6 @@ import java.util.Map;
 import static net.minecraft.util.function.BooleanBiFunction.OR;
 
 public class FilterBlock extends HopperBlock {
-  public static final MapCodec<FilterBlock> CODEC = FilterBlock.createCodec(FilterBlock::new);
-
   public static final DirectionProperty FACING = Properties.HOPPER_FACING;
   public static final BooleanProperty ENABLED = Properties.ENABLED;
   public static final DirectionProperty FILTER = DirectionProperty.of("filter");
@@ -144,7 +141,7 @@ public class FilterBlock extends HopperBlock {
 
   @Override
   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
-                             BlockHitResult hit) {
+                            BlockHitResult hit) {
     if (world.isClient) {
       return ActionResult.SUCCESS;
     } else {

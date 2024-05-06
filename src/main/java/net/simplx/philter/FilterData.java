@@ -19,8 +19,7 @@ public record FilterData(FilterDesc desc, BlockPos pos, Direction facing, Direct
   public static final Id<FilterData> ID = CustomPayload.id(FILTER_ID.getNamespace() + ":" + FILTER_ID.getPath());
   private static final PacketCodec<ByteBuf, Optional<Direction>> OPTIONAL_DIRECTION_PACKET_CODEC =
       PacketCodecs.optional(Direction.PACKET_CODEC);
-  private static final PacketCodec<ByteBuf, Direction> NULLABLE_DIRECTION_CODEC =
-      new PacketCodec<ByteBuf, Direction>() {
+  private static final PacketCodec<ByteBuf, Direction> NULLABLE_DIRECTION_CODEC = new PacketCodec<>() {
     @Override
     public Direction decode(ByteBuf buf) {
       return OPTIONAL_DIRECTION_PACKET_CODEC.decode(buf).orElse(null);

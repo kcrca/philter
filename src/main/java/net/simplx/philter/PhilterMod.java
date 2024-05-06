@@ -2,10 +2,6 @@ package net.simplx.philter;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -24,10 +20,9 @@ public class PhilterMod implements ModInitializer {
   public static final String MOD_ID = "philter";
   public static final Identifier FILTER_ID = new Identifier(MOD_ID, "filter");
 
-  public static final Block FILTER_BLOCK =
-      new FilterBlock(FabricBlockSettings.copyOf(AbstractBlock.Settings.create()).strength(4.0f));
+  public static final Block FILTER_BLOCK = new FilterBlock(AbstractBlock.Settings.create().strength(4.0f));
   public static final BlockEntityType<FilterBlockEntity> FILTER_BLOCK_ENTITY =
-      FabricBlockEntityTypeBuilder.create(FilterBlockEntity::new, FILTER_BLOCK).build();
+      BlockEntityType.Builder.create(FilterBlockEntity::new, FILTER_BLOCK).build();
   public static final ScreenHandlerType<FilterScreenHandler> FILTER_SCREEN_HANDLER =
       new ExtendedScreenHandlerType<>(FilterScreenHandler::new, FilterData.PACKET_CODEC);
 
