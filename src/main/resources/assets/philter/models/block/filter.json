@@ -13,8 +13,8 @@
                 "north": { "texture": "#side", "cullface": "north" },
                 "south": { "texture": "#side", "cullface": "south" },
                 "west":  { "texture": "#side", "cullface": "west" },
-                "east":  { "texture": "#side", "cullface": "up" },
-                "down":  { "texture": "#side", "cullface": "up" }
+                "east":  { "texture": "#side", "cullface": "east" },
+                "down":  { "texture": "#side", "cullface": "down" }
             }
 	},
         {   "from": [ 4, 4, 4 ],
