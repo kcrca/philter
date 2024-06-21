@@ -1,13 +1,9 @@
 package net.simplx.mcgui;
 
-import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +17,8 @@ class RadioButtonsTest {
   private static RadioButtons<Integer> createButtonsWithValueOn(int which) {
     RadioButtons<Integer> buttons = new RadioButtons<>();
     for (int i = 0; i < 5; i++) {
-      RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE + i, 0, 0, EMPTY_TEXT, DUMMY_RENDERER);
+      RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE + i, 0, 0, 100, EMPTY_TEXT,
+          DUMMY_RENDERER);
       if (i == which) {
         button.setChecked(true);
       }
@@ -41,7 +38,8 @@ class RadioButtonsTest {
   @Test
   void onButton_isChecked() {
     RadioButtons<Integer> buttons = new RadioButtons<>();
-    RadioButtonWidget<Integer> button = buttons.add(new RadioButtonWidget<>(FIRST_VALUE, 0, 0, EMPTY_TEXT, DUMMY_RENDERER));
+    RadioButtonWidget<Integer> button = buttons.add(new RadioButtonWidget<>(FIRST_VALUE, 0, 0, 100, EMPTY_TEXT,
+        DUMMY_RENDERER));
     assertThat(buttons.getValue()).isEqualTo(FIRST_VALUE);
     assertThat(buttons.getOn()).isSameAs(button);
   }
@@ -49,7 +47,8 @@ class RadioButtonsTest {
   @Test
   void buttonsIsSet() {
     RadioButtons<Integer> buttons = new RadioButtons<>();
-    RadioButtonWidget<Integer> button = buttons.add(new RadioButtonWidget<>(FIRST_VALUE, 0, 0, EMPTY_TEXT, DUMMY_RENDERER));
+    RadioButtonWidget<Integer> button = buttons.add(new RadioButtonWidget<>(FIRST_VALUE, 0, 0, 100, EMPTY_TEXT,
+        DUMMY_RENDERER));
     assertThat(button.getButtons()).isSameAs(buttons);
   }
 
@@ -57,7 +56,7 @@ class RadioButtonsTest {
   void buttonsChanged() {
     RadioButtons<Integer> buttons1 = new RadioButtons<>();
     RadioButtons<Integer> buttons2 = new RadioButtons<>();
-    RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE, 0, 0, EMPTY_TEXT, DUMMY_RENDERER);
+    RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE, 0, 0, 100, EMPTY_TEXT, DUMMY_RENDERER);
     button.setButtons(buttons1);
     button.setButtons(buttons2);
     assertThat(button.getButtons()).isSameAs(buttons2);
@@ -76,7 +75,7 @@ class RadioButtonsTest {
   @Test
   void buttonsChangedSetToNull() {
     RadioButtons<Integer> buttons = new RadioButtons<>();
-    RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE, 0, 0, EMPTY_TEXT, DUMMY_RENDERER);
+    RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE, 0, 0, 100, EMPTY_TEXT, DUMMY_RENDERER);
     button.setButtons(buttons);
     button.setButtons(null);
     assertThat(buttons.getOn()).isNull();
@@ -88,7 +87,8 @@ class RadioButtonsTest {
     RadioButtons<Integer> buttons = new RadioButtons<>();
     RadioButtonWidget<Integer> first = null;
     for (int i = 0; i < 5; i++) {
-      RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE + i, 0, 0, EMPTY_TEXT, DUMMY_RENDERER);
+      RadioButtonWidget<Integer> button = new RadioButtonWidget<>(FIRST_VALUE + i, 0, 0, 100, EMPTY_TEXT,
+          DUMMY_RENDERER);
       if (first == null) {
         first = button;
       }

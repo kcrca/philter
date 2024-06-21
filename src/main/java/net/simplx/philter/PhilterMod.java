@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
 public class PhilterMod implements ModInitializer {
 
   public static final String MOD_ID = "philter";
-  public static final Identifier FILTER_ID = new Identifier(MOD_ID, "filter");
+  public static final Identifier FILTER_ID = Identifier.of(MOD_ID, "filter");
 
   public static final Block FILTER_BLOCK = new FilterBlock(AbstractBlock.Settings.create().strength(4.0f));
   public static final BlockEntityType<FilterBlockEntity> FILTER_BLOCK_ENTITY =

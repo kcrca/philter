@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.LockButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -14,13 +13,14 @@ import net.simplx.mcgui.Layout.Placer;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
+
 import static net.simplx.mcgui.Horizontal.LEFT;
 import static net.simplx.mcgui.Horizontal.RIGHT;
 import static net.simplx.mcgui.Vertical.*;
 
 public class DocScreen extends HandledScreen<DocScreenHandler> {
 
-  private static final Identifier TEXTURE = new Identifier("minecraft",
+  private static final Identifier TEXTURE = Identifier.of("minecraft",
       "textures/gui/container/dispenser.png");
 
   private Layout layout;

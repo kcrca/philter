@@ -10,22 +10,22 @@ import net.minecraft.util.Identifier;
 
 @SuppressWarnings("unused")
 public class RadioButtonWidget<T> extends CheckboxWidget {
-  private static final Identifier SELECTED_HIGHLIGHTED_TEXTURE = new Identifier("philter", "widget" +
+  private static final Identifier SELECTED_HIGHLIGHTED_TEXTURE =  Identifier.of("philter", "widget" +
       "/radiobutton_selected_highlighted");
-  private static final Identifier SELECTED_TEXTURE = new Identifier("philter", "widget/radiobutton_selected");
-  private static final Identifier HIGHLIGHTED_TEXTURE = new Identifier("philter", "widget/radiobutton_highlighted");
-  private static final Identifier TEXTURE = new Identifier("philter", "widget/radiobutton");
+  private static final Identifier SELECTED_TEXTURE = Identifier.of("philter", "widget/radiobutton_selected");
+  private static final Identifier HIGHLIGHTED_TEXTURE = Identifier.of("philter", "widget/radiobutton_highlighted");
+  private static final Identifier TEXTURE = Identifier.of("philter", "widget/radiobutton");
 
   private RadioButtons<T> buttons;
   private final T value;
   private int index;
 
-  public RadioButtonWidget(T value, int x, int y, Text message, TextRenderer textRenderer) {
-    this(value, x, y, message, message != null && !message.getString().isBlank(), textRenderer);
+  public RadioButtonWidget(T value, int x, int y, int maxWidth, Text message, TextRenderer textRenderer) {
+    this(value, x, y, maxWidth, message, message != null && !message.getString().isBlank(), textRenderer);
   }
 
-  public RadioButtonWidget(T value, int x, int y, Text message, boolean showMessage, TextRenderer textRenderer) {
-    super(x, y, message, textRenderer, false, Callback.EMPTY);
+  public RadioButtonWidget(T value, int x, int y, int maxWidth, Text message, boolean showMessage, TextRenderer textRenderer) {
+    super(x, y, maxWidth, message, textRenderer, false, Callback.EMPTY);
     this.value = value;
     index = -1;
   }
@@ -99,7 +99,7 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
     TextRenderer textRenderer = minecraftClient.textRenderer;
     Identifier identifier = this.checked ? (this.isFocused() ? SELECTED_HIGHLIGHTED_TEXTURE : SELECTED_TEXTURE) :
         (this.isFocused() ? HIGHLIGHTED_TEXTURE : TEXTURE);
-    int i = CheckboxWidget.getSize(textRenderer);
+    int i = CheckboxWidget.getCheckboxSize(textRenderer);
     context.drawGuiTexture(identifier, this.getX(), this.getY(), i, i);
 
   }

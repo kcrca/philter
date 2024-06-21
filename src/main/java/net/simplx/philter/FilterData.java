@@ -13,10 +13,11 @@ import net.minecraft.util.math.Direction;
 import java.util.Optional;
 
 import static net.simplx.philter.PhilterMod.FILTER_ID;
+import static net.simplx.philter.PhilterMod.MOD_ID;
 
 public record FilterData(FilterDesc desc, BlockPos pos, Direction facing, Direction filter,
                          Direction userFacing) implements CustomPayload {
-  public static final Id<FilterData> ID = CustomPayload.id(FILTER_ID.getNamespace() + ":" + FILTER_ID.getPath());
+  public static final Id<FilterData> ID = CustomPayload.id(MOD_ID);
   private static final PacketCodec<ByteBuf, Optional<Direction>> OPTIONAL_DIRECTION_PACKET_CODEC =
       PacketCodecs.optional(Direction.PACKET_CODEC);
   private static final PacketCodec<ByteBuf, Direction> NULLABLE_DIRECTION_CODEC = new PacketCodec<>() {

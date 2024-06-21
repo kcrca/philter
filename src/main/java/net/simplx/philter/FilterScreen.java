@@ -47,17 +47,17 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FilterScreen.class);
 
-  private static final Identifier TEXTURE = new Identifier(MOD_ID, "textures/gui/container/filter.png");
+  private static final Identifier TEXTURE = Identifier.of(MOD_ID, "textures/gui/container/filter.png");
   public static final int TEXTURE_WIDTH = 512;
   public static final int TEXTURE_HEIGHT = 256;
 
-  private static final Identifier FILTER_DOWN_FACING_TOP = new Identifier(MOD_ID, "textures/block" +
+  private static final Identifier FILTER_DOWN_FACING_TOP = Identifier.of(MOD_ID, "textures/block" +
       "/filter_down_facing_top.png");
-  private static final Identifier FILTER_DOWN_FILTER_TOP = new Identifier(MOD_ID, "textures/block" +
+  private static final Identifier FILTER_DOWN_FILTER_TOP = Identifier.of(MOD_ID, "textures/block" +
       "/filter_down_filter_top_on.png");
-  private static final Identifier FILTER_SIDE_FACING_TOP = new Identifier(MOD_ID, "textures/block" +
+  private static final Identifier FILTER_SIDE_FACING_TOP = Identifier.of(MOD_ID, "textures/block" +
       "/filter_side_facing_top.png");
-  private static final Identifier FILTER_SIDE_FILTER_TOP = new Identifier(MOD_ID, "textures/block" +
+  private static final Identifier FILTER_SIDE_FILTER_TOP = Identifier.of(MOD_ID, "textures/block" +
       "/filter_side_filter_top_on.png");
   public static final int TOP_SIZE = 32;
   public static final int TOP_MID = TOP_SIZE / 2;
@@ -212,8 +212,8 @@ public class FilterScreen extends HandledScreen<FilterScreenHandler> {
         case 3 -> q.x(LEFT, topP).y(MID, topP);
         case 0 -> q.x(CENTER, topP).y(ABOVE, topP);
       }
-      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), Text.literal(""),
-          textRenderer)));
+      directionButtons.add(addDrawableChild(new RadioButtonWidget<>(toDir, q.x(), q.y(), 100,
+          Text.literal(""), textRenderer)));
       dir = dir.rotateClockwise(Axis.Y);
       if (i == 0) {
         dirP.y(q.y() + layout.gapH);

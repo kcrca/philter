@@ -3,6 +3,7 @@ package net.simplx.mcguidoc;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -21,8 +22,8 @@ public class MoodleMod implements ModInitializer {
         PacketCodec.tuple(PacketCodecs.INTEGER, DummyData::dummy, DummyData::new);
   }
 
-  public static final Identifier DOC_ID = new Identifier("minecraft", "grass_block");
-  public static final Block DOC_BLOCK = new DocBlock(FabricBlockSettings.create().strength(4));
+  public static final Identifier DOC_ID = Identifier.of("minecraft", "grass_block");
+  public static final Block DOC_BLOCK = new DocBlock( AbstractBlock.Settings.create().strength(4));
   public static final BlockItem DOC_BLOCK_ITEM = Registry.register(Registries.ITEM, DOC_ID, new BlockItem(DOC_BLOCK,
       new Item.Settings()));
 

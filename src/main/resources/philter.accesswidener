@@ -34,6 +34,8 @@ accessible	method	net/minecraft/client/gui/screen/Screen		addDrawableChild	(Lnet
 accessible	method	net/minecraft/client/gui/screen/Screen		remove			(Lnet/minecraft/client/gui/Element;)V
 
 accessible	field	net/minecraft/client/gui/widget/CheckboxWidget	checked			Z
-accessible	method	net/minecraft/client/gui/widget/CheckboxWidget  <init>    		(IILnet/minecraft/text/Text;Lnet/minecraft/client/font/TextRenderer;ZLnet/minecraft/client/gui/widget/CheckboxWidget$Callback;)V
+accessible	method	net/minecraft/client/gui/widget/CheckboxWidget	<init>    		(IIILnet/minecraft/text/Text;Lnet/minecraft/client/font/TextRenderer;ZLnet/minecraft/client/gui/widget/CheckboxWidget$Callback;)V
+
+
 accessible	field	net/minecraft/client/gui/widget/ClickableWidget	height			I
 
