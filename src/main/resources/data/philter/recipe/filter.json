@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": { "item": "minecraft:comparator" },
+    "R": { "item": "minecraft:repeater" },
+    "T": { "item": "minecraft:redstone_torch" },
+    "D": { "item": "minecraft:redstone" },
+    "H": { "item": "minecraft:hopper" }
+  },
+  "pattern": [
+    "   ",
+    "CRT",
+      "DHD"
+      ],
+  "result": {
+    "count": 1,
+    "id": "philter:filter"
+  }
+}
+
