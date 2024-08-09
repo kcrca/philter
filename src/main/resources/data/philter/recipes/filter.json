@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "group": "redstone",
   "pattern": [
     "   ",
     "CRT",
@@ -13,6 +14,7 @@
     "H": { "item": "minecraft:hopper" }
   },
   "result": {
+    "count": 1,
     "id": "philter:filter"
   }
 }
