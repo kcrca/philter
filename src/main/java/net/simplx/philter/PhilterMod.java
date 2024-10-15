@@ -29,7 +29,6 @@ public class PhilterMod implements ModInitializer {
   @Override
   public void onInitialize() {
     Registry.register(Registries.BLOCK, FILTER_ID, FILTER_BLOCK);
-    Registry.register(Registries.ITEM, FILTER_ID, new BlockItem(FILTER_BLOCK, new Item.Settings()));
     Registry.register(Registries.BLOCK_ENTITY_TYPE, FILTER_ID, FILTER_BLOCK_ENTITY);
 
     var blockItem = Registry.register(Registries.ITEM, FILTER_ID, new BlockItem(FILTER_BLOCK, new Item.Settings()));
