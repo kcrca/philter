@@ -1,3 +1,5 @@
+1.3.5: Fix client-server crash (duplicate IDs)
+
 1.3.4: Fix recipe stuff
 
 1.3.3: Fix model problems>
