@@ -15,8 +15,7 @@
       "net.simplx.philter.client.PhilterClient"
     ],
     "main": [
-      "net.simplx.philter.PhilterMod"f
-
+      "net.simplx.philter.PhilterMod"
     ]
   },
   "mixins": [
