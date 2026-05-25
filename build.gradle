@@ -18,6 +18,8 @@ loom {
             name "Game Test"
             source sourceSets.testmod
             runDir "run/gametest"
+            property 'fabric-api.gametest', 'true'
+            property 'fabric-api.gametest.report-file', "${projectDir}/run/gametest/gametest-report.xml"
         }
     }
 }
