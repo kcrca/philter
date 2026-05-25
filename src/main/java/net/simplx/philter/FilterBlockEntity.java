@@ -35,9 +35,9 @@ import static net.simplx.philter.FilterBlock.*;
 public class FilterBlockEntity extends HopperBlockEntity implements WorldlyContainer,
     ExtendedMenuProvider<FilterData> {
 
-  static final int EXAMPLES_COUNT = 16;
-  static final int EXAMPLES_START = HOPPER_CONTAINER_SIZE;
-  static final int EXAMPLES_END = EXAMPLES_START + EXAMPLES_COUNT;
+  public static final int EXAMPLES_COUNT = 16;
+  public static final int EXAMPLES_START = HOPPER_CONTAINER_SIZE;
+  public static final int EXAMPLES_END = EXAMPLES_START + EXAMPLES_COUNT;
 
   private static final int[] INVENTORY_INDEXES = new int[]{0, 1, 2, 3, 4};
 
