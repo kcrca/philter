@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "philter-testmod",
+  "version": "1.0.0",
+  "name": "Philter Test Mod",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "net.simplx.philter.test.PhilterGameTest"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "fabric-api": "*",
+    "philter": "*"
+  }
+}

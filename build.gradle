@@ -3,8 +3,23 @@ plugins {
     id 'maven-publish'
 }
 
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
 loom {
     accessWidenerPath = file("src/main/resources/philter.accesswidener")
+    runs {
+        gametest {
+            server()
+            name "Game Test"
+            source sourceSets.testmod
+            runDir "run/gametest"
+        }
+    }
 }
 
 version = project.mod_version
@@ -27,6 +42,8 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    testmodImplementation sourceSets.main.output
 }
 
 processResources {
