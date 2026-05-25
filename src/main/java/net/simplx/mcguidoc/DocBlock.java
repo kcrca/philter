@@ -1,51 +1,51 @@
 package net.simplx.mcguidoc;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class DocBlock extends BlockWithEntity {
-  public static final MapCodec<DocBlock> CODEC = DocBlock.createCodec(DocBlock::new);
+public class DocBlock extends BaseEntityBlock {
+  public static final MapCodec<DocBlock> CODEC = DocBlock.simpleCodec(DocBlock::new);
 
-  public DocBlock(Settings settings) {
-    super(settings);
-    stateManager.getDefaultState();
+  public DocBlock(BlockBehaviour.Properties properties) {
+    super(properties);
   }
 
-  public MapCodec<DocBlock> getCodec() {
+  @Override
+  protected MapCodec<DocBlock> codec() {
     return CODEC;
   }
 
   @Nullable
   @Override
-  public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+  public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
     return new DocBlockEntity(pos, state);
   }
 
   @Override
-  public BlockRenderType getRenderType(BlockState state) {
-    return BlockRenderType.MODEL;
+  protected RenderShape getRenderShape(BlockState state) {
+    return RenderShape.MODEL;
   }
 
-
   @Override
-  protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-    if (!world.isClient) {
-      NamedScreenHandlerFactory factory = state.createScreenHandlerFactory(world, pos);
+  protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+      BlockHitResult hit) {
+    if (!level.isClientSide()) {
+      MenuProvider factory = state.getMenuProvider(level, pos);
       if (factory != null) {
-        //With this call the server will request the client to open the appropriate Screenhandler
-        player.openHandledScreen(factory);
+        player.openMenu(factory);
       }
     }
-    return ActionResult.SUCCESS;
+    return InteractionResult.SUCCESS;
   }
 }

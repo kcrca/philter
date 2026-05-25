@@ -1,28 +1,28 @@
 package net.simplx.mcguidoc;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 
-public class DocScreenHandler extends ScreenHandler {
+public class DocScreenHandler extends AbstractContainerMenu {
 
-  public DocScreenHandler(int syncId, PlayerInventory playerInventory, MoodleMod.DummyData stuff) {
+  public DocScreenHandler(int syncId, Inventory playerInventory, MoodleMod.DummyData stuff) {
     this(syncId, playerInventory, null, stuff);
   }
 
-  public DocScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, MoodleMod.DummyData stuff) {
+  public DocScreenHandler(int syncId, Inventory playerInventory, Container inventory, MoodleMod.DummyData stuff) {
     super(MoodleMod.DOC_SCREEN_HANDLER, syncId);
   }
 
   @Override
-  public ItemStack quickMove(PlayerEntity player, int slot) {
-    return null;
+  public ItemStack quickMoveStack(Player player, int slot) {
+    return ItemStack.EMPTY;
   }
 
   @Override
-  public boolean canUse(PlayerEntity player) {
+  public boolean stillValid(Player player) {
     return true;
   }
 }

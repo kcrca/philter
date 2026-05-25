@@ -1,13 +1,13 @@
 package net.simplx.mcguidoc;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.LockButtonWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.LockIconButton;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Inventory;
 import net.simplx.mcgui.Layout;
 import net.simplx.mcgui.Layout.Placer;
 import org.apache.commons.lang3.NotImplementedException;
@@ -18,14 +18,14 @@ import static net.simplx.mcgui.Horizontal.LEFT;
 import static net.simplx.mcgui.Horizontal.RIGHT;
 import static net.simplx.mcgui.Vertical.*;
 
-public class DocScreen extends HandledScreen<DocScreenHandler> {
+public class DocScreen extends AbstractContainerScreen<DocScreenHandler> {
 
-  private static final Identifier TEXTURE = Identifier.of("minecraft",
+  private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("minecraft",
       "textures/gui/container/dispenser.png");
 
   private Layout layout;
 
-  public DocScreen(DocScreenHandler handler, PlayerInventory inventory, Text title) {
+  public DocScreen(DocScreenHandler handler, Inventory inventory, Component title) {
     super(handler, inventory, title);
   }
 
@@ -35,35 +35,37 @@ public class DocScreen extends HandledScreen<DocScreenHandler> {
     layout = new Layout(this);
     layout.setPrefix("moodle");
     Placer p;
-    Text button1Text = layout.text("button1");
+    Component button1Text = layout.text("button1");
     Placer button1Placer = p = layout.placer().withText(button1Text).x(LEFT).y(ABOVE).inButton();
-    var button1 = addDrawableChild(
-        new ButtonWidget.Builder(button1Text, this::doStuff).dimensions(p.x(), p.y(), p.w(), p.h())
-            .build());
-    Text colorText = layout.text("colors");
+    var button1 = addRenderableWidget(
+        Button.builder(button1Text, this::doStuff).bounds(p.x(), p.y(), p.w(), p.h()).build());
     String[] colors = new String[]{"red", "green", "blue"};
-    Placer colorButtonPlacer = layout.placer().withTexts(layout.texts(List.of(colors)))
+    Placer colorButtonPlacer = p = layout.placer().withTexts(layout.texts(List.of(colors)))
         .x(RIGHT, button1Placer).y(MID, button1Placer).inButton();
-    var colorButton = addDrawableChild(
-        CyclingButtonWidget.builder(name -> layout.text((String) name))
-            .tooltip(name -> layout.tooltip(name + ".tooltip"))
-            .build(p.x(), p.y(), p.w(), p.h(), null, (button, name) -> setColor(name)));
+    var colorButton = addRenderableWidget(
+        CycleButton.builder(name -> layout.text((String) name), colors[0])
+            .withValues(colors)
+            .withTooltip(name -> layout.tooltip(name + ".tooltip"))
+            .create(p.x(), p.y(), p.w(), p.h(), Component.empty(), (button, name) -> setColor(name)));
     p = layout.placer().lockButton().x(colorButton.getX()).y(BELOW, colorButtonPlacer);
-    addDrawableChild(new LockButtonWidget(p.x(), p.y(), this::toggleLock));
+    addRenderableWidget(new LockIconButton(p.x(), p.y(), this::toggleLock));
   }
 
-  private void toggleLock(ButtonWidget buttonWidget) {
+  private void toggleLock(Button button) {
   }
 
   private void setColor(Object name) {
   }
 
   @Override
-  protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+  public void extractContents(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float delta) {
     throw new NotImplementedException();
   }
 
-  private void doStuff(ButtonWidget buttonWidget) {
+  @Override
+  protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+  }
 
+  private void doStuff(Button button) {
   }
 }

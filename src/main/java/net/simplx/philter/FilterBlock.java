@@ -1,127 +1,120 @@
 package net.simplx.philter;
 
-import com.google.common.collect.Iterators;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.Axis;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
-import static net.minecraft.util.function.BooleanBiFunction.OR;
-
 public class FilterBlock extends HopperBlock {
-  public static final DirectionProperty FACING = Properties.HOPPER_FACING;
-  public static final BooleanProperty ENABLED = Properties.ENABLED;
-  public static final DirectionProperty FILTER = DirectionProperty.of("filter");
-  public static final IntProperty FILTERED = IntProperty.of("filtered", 0, 1);
+  public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING_HOPPER;
+  public static final BooleanProperty ENABLED = BlockStateProperties.ENABLED;
+  public static final EnumProperty<Direction> FILTER = EnumProperty.create("filter", Direction.class);
+  public static final IntegerProperty FILTERED = IntegerProperty.create("filtered", 0, 1);
 
-  private static final VoxelShape CENTER_SHAPE = Block.createCuboidShape(4, 4, 4, 12, 12, 12);
-  private static final Map<Direction, Map<Direction, VoxelShape>> SHAPES = new EnumMap<>(
-      Direction.class);
-  private static final Map<Direction, Map<Direction, VoxelShape>> RAYCAST_SHAPES = new EnumMap<>(
-      Direction.class);
+  private static final VoxelShape HOPPER_TOP = box(0, 10, 0, 16, 16, 16);
+  private static final VoxelShape HOPPER_BODY = Shapes.or(HOPPER_TOP, box(4, 4, 4, 12, 10, 12));
+  private static final VoxelShape HOPPER_INSIDE = box(2, 11, 2, 14, 16, 14);
+  private static final VoxelShape CENTER_SHAPE = box(4, 4, 4, 12, 12, 12);
+
+  private static final Map<Direction, Map<Direction, VoxelShape>> SHAPES = new EnumMap<>(Direction.class);
+  private static final Map<Direction, Map<Direction, VoxelShape>> RAYCAST_SHAPES = new EnumMap<>(Direction.class);
 
   static {
-    Map<Direction, VoxelShape> dirs = new EnumMap<>(Direction.class);
-    dirs.put(Direction.DOWN, DOWN_SHAPE);
-    dirs.put(Direction.UP, DOWN_SHAPE); // not used, but fails if nothing is set
-    dirs.put(Direction.EAST, EAST_SHAPE);
-    dirs.put(Direction.NORTH, NORTH_SHAPE);
-    dirs.put(Direction.SOUTH, SOUTH_SHAPE);
-    dirs.put(Direction.WEST, WEST_SHAPE);
-    Map<Direction, VoxelShape> raycast = new EnumMap<>(Direction.class);
-    raycast.put(Direction.DOWN, DOWN_RAYCAST_SHAPE);
-    raycast.put(Direction.UP, DOWN_RAYCAST_SHAPE); // not used, but fails if nothing is set
-    raycast.put(Direction.EAST, EAST_RAYCAST_SHAPE);
-    raycast.put(Direction.NORTH, NORTH_RAYCAST_SHAPE);
-    raycast.put(Direction.SOUTH, SOUTH_RAYCAST_SHAPE);
-    raycast.put(Direction.WEST, WEST_RAYCAST_SHAPE);
-
-    // Now we fill in the top of the hopper, where the sorter machine lives
-    var voxels = Iterators.concat(dirs.entrySet().iterator(), raycast.entrySet().iterator());
-    while (voxels.hasNext()) {
-      var shape = voxels.next();
-//      shape.setValue(VoxelShapes.combineAndSimplify(shape.getValue(), HopperBlock.INSIDE_SHAPE, OR));
-      shape.setValue(shape.getValue());
-    }
-
     for (Direction facing : Direction.values()) {
       Map<Direction, VoxelShape> shapes = new EnumMap<>(Direction.class);
       Map<Direction, VoxelShape> raycastShapes = new EnumMap<>(Direction.class);
       SHAPES.put(facing, shapes);
       RAYCAST_SHAPES.put(facing, raycastShapes);
+      VoxelShape facingShape = Shapes.or(HOPPER_BODY, pipeShape(facing));
+      VoxelShape facingInside = Shapes.or(HOPPER_INSIDE, pipeShape(facing));
       for (Direction filter : Direction.values()) {
-        VoxelShape p = VoxelShapes.combineAndSimplify(dirs.get(facing), dirs.get(filter), OR);
-        shapes.put(filter, VoxelShapes.combineAndSimplify(p, CENTER_SHAPE, OR));
-        VoxelShape r = VoxelShapes.combineAndSimplify(raycast.get(facing), raycast.get(filter), OR);
-        raycastShapes.put(filter, VoxelShapes.combineAndSimplify(r, TOP_SHAPE, OR));
+        VoxelShape p = Shapes.joinUnoptimized(facingShape, Shapes.or(HOPPER_BODY, pipeShape(filter)), BooleanOp.OR);
+        shapes.put(filter, Shapes.joinUnoptimized(p, CENTER_SHAPE, BooleanOp.OR));
+        VoxelShape r = Shapes.joinUnoptimized(facingInside, Shapes.or(HOPPER_INSIDE, pipeShape(filter)), BooleanOp.OR);
+        raycastShapes.put(filter, Shapes.joinUnoptimized(r, HOPPER_TOP, BooleanOp.OR));
       }
     }
   }
 
-  public FilterBlock(Settings settings) {
-    super(settings);
-    stateManager.getDefaultState();
-    setDefaultState(getDefaultState().with(FILTER, Direction.NORTH));
+  private static VoxelShape pipeShape(Direction dir) {
+    return switch (dir) {
+      case DOWN -> box(6, 0, 6, 10, 4, 10);
+      case UP -> box(6, 4, 6, 10, 10, 10);
+      case NORTH -> box(6, 6, 0, 10, 10, 4);
+      case SOUTH -> box(6, 6, 12, 10, 10, 16);
+      case WEST -> box(0, 6, 6, 4, 10, 10);
+      case EAST -> box(12, 6, 6, 16, 10, 10);
+    };
+  }
+
+  public FilterBlock(BlockBehaviour.Properties properties) {
+    super(properties);
+    registerDefaultState(defaultBlockState().setValue(FILTER, Direction.NORTH));
   }
 
   @Nullable
   @Override
-  public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+  public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
     return new FilterBlockEntity(pos, state);
   }
 
   @Override
   @Nullable
-  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
+  public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
                                                                 BlockEntityType<T> type) {
-    return world.isClient ? null
-        : HopperBlock.validateTicker(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
+    return level.isClientSide() ? null
+        : createTickerHelper(type, PhilterMod.FILTER_BLOCK_ENTITY, FilterBlockEntity::serverTick);
   }
 
   @Override
-  protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+  protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
     builder.add(FACING, ENABLED, FILTER, FILTERED);
   }
 
   @Override
-  public BlockRenderType getRenderType(BlockState state) {
-    return BlockRenderType.MODEL;
+  protected RenderShape getRenderShape(BlockState state) {
+    return RenderShape.MODEL;
   }
 
   @Nullable
   @Override
-  public BlockState getPlacementState(ItemPlacementContext ctx) {
-    Direction direction = ctx.getSide().getOpposite();
+  public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+    Direction direction = ctx.getClickedFace().getOpposite();
     Direction facing = direction.getAxis() == Axis.Y ? Direction.DOWN : direction;
-    Direction[] directions = ctx.getPlacementDirections();
+    Direction[] directions = ctx.getNearestLookingDirections();
     for (int i = 1; i < directions.length; i++) {
       Direction filter = directions[i];
       if (filter != Direction.UP && filter != facing) {
-        return getDefaultState().with(FACING, facing).with(FILTER, filter).with(ENABLED, true)
-            .with(FILTERED, 0);
+        return defaultBlockState().setValue(FACING, facing).setValue(FILTER, filter).setValue(ENABLED, true)
+            .setValue(FILTERED, 0);
       }
     }
     throw new IllegalStateException(
@@ -129,36 +122,35 @@ public class FilterBlock extends HopperBlock {
   }
 
   @Override
-  public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos,
-                                    ShapeContext context) {
-    return SHAPES.get(state.get(FACING)).get(state.get(FILTER));
+  protected VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos,
+                                CollisionContext context) {
+    return SHAPES.get(state.getValue(FACING)).get(state.getValue(FILTER));
   }
 
   @Override
-  public VoxelShape getRaycastShape(BlockState state, BlockView world, BlockPos pos) {
-    return RAYCAST_SHAPES.get(state.get(FACING)).get(state.get(FILTER));
+  protected VoxelShape getInteractionShape(BlockState state, BlockGetter world, BlockPos pos) {
+    return RAYCAST_SHAPES.get(state.getValue(FACING)).get(state.getValue(FILTER));
   }
 
   @Override
-  public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
+  protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                             BlockHitResult hit) {
-    if (world.isClient) {
-      return ActionResult.SUCCESS;
+    if (level.isClientSide()) {
+      return InteractionResult.SUCCESS;
     } else {
-      BlockEntity blockEntity = world.getBlockEntity(pos);
+      BlockEntity blockEntity = level.getBlockEntity(pos);
       if (blockEntity instanceof FilterBlockEntity fbe) {
-        Hand hand = player.getActiveHand();
-        ItemPlacementContext ctx = new ItemPlacementContext(player, hand, ItemStack.EMPTY, hit);
+        BlockPlaceContext ctx = new BlockPlaceContext(player, InteractionHand.MAIN_HAND, ItemStack.EMPTY, hit);
         fbe.setActionDir(null);
-        for (var dir : ctx.getPlacementDirections()) {
+        for (var dir : ctx.getNearestLookingDirections()) {
           if (dir.getAxis() != Axis.Y) {
             fbe.setActionDir(dir);
             break;
           }
         }
-        player.openHandledScreen(fbe);
+        player.openMenu(fbe);
       }
-      return ActionResult.CONSUME;
+      return InteractionResult.CONSUME;
     }
   }
 }

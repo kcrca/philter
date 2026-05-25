@@ -1,29 +1,33 @@
 package net.simplx.mcguidoc;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import org.jetbrains.annotations.Nullable;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class DocBlockEntity extends BlockEntity implements NamedScreenHandlerFactory {
+public class DocBlockEntity extends BlockEntity implements ExtendedMenuProvider<MoodleMod.DummyData> {
 
   public DocBlockEntity(BlockPos pos, BlockState state) {
     super(MoodleMod.DOC_BLOCK_ENTITY, pos, state);
   }
 
-  @Nullable
   @Override
-  public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
+  public MoodleMod.DummyData getScreenOpeningData(ServerPlayer player) {
+    return new MoodleMod.DummyData(0);
+  }
+
+  @Override
+  public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
     return new DocScreenHandler(syncId, inv, new MoodleMod.DummyData(0));
   }
 
   @Override
-  public Text getDisplayName() {
-    return Text.literal("McGUI Doc");
+  public Component getDisplayName() {
+    return Component.literal("McGUI Doc");
   }
 }

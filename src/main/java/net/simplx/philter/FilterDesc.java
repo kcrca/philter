@@ -2,12 +2,13 @@ package net.simplx.philter;
 
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -16,19 +17,19 @@ import static net.simplx.philter.FilterMode.SAME_AS;
 
 public class FilterDesc {
 
-  public static final PacketCodec<ByteBuf, FilterDesc> PACKET_CODEC = new PacketCodec<>() {
+  public static final StreamCodec<ByteBuf, FilterDesc> STREAM_CODEC = new StreamCodec<>() {
     @Override
     public FilterDesc decode(ByteBuf buf) {
       try {
-        return new FilterDesc(PacketCodecs.UNLIMITED_NBT_COMPOUND.decode(buf));
+        return new FilterDesc(ByteBufCodecs.COMPOUND_TAG.decode(buf));
       } catch (IllegalArgumentException | NullPointerException e) {
-        return new FilterDesc(new NbtCompound());
+        return new FilterDesc(new CompoundTag());
       }
     }
 
     @Override
     public void encode(ByteBuf buf, FilterDesc value) {
-      PacketCodecs.UNLIMITED_NBT_COMPOUND.encode(buf, value.toNbt());
+      ByteBufCodecs.COMPOUND_TAG.encode(buf, value.toCompoundTag());
     }
   };
   private static final String MATCHES = "Matches";
@@ -48,24 +49,22 @@ public class FilterDesc {
   }
 
   @SuppressWarnings("SimplifiableConditionalExpression")
-  public FilterDesc(NbtCompound nbt) {
+  public FilterDesc(CompoundTag nbt) {
     try {
       mode = SAME_AS;
-      if (nbt.contains(MODE, NbtElement.STRING_TYPE)) {
-        mode = FilterMode.valueOf(nbt.getString(MODE));
-      }
-      if (!nbt.contains(MATCHES, NbtElement.LIST_TYPE)) {
+      nbt.getString(MODE).ifPresent(s -> mode = FilterMode.valueOf(s));
+      ListTag nbtList = nbt.getListOrEmpty(MATCHES);
+      if (nbtList.isEmpty()) {
         matches = ImmutableList.of();
       } else {
-        NbtList nbtList = nbt.getList(MATCHES, NbtElement.STRING_TYPE);
-        ImmutableList.Builder<String> matches = ImmutableList.builder();
+        ImmutableList.Builder<String> matchesBuilder = ImmutableList.builder();
         for (int i = 0; i < nbtList.size(); i++) {
-          matches.add(nbtList.getString(i));
+          nbtList.getString(i).ifPresent(matchesBuilder::add);
         }
-        this.matches = matches.build();
+        this.matches = matchesBuilder.build();
       }
-      matchAll = nbt.contains(MATCH_ALL, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
-      exact = nbt.contains(EXACT, NbtElement.BYTE_TYPE) ? nbt.getBoolean(EXACT) : false;
+      matchAll = nbt.getBooleanOr(MATCH_ALL, false);
+      exact = nbt.getBooleanOr(EXACT, false);
     } catch (IllegalArgumentException | NullPointerException e) {
       mode = SAME_AS;
       matches = ImmutableList.of();
@@ -73,19 +72,31 @@ public class FilterDesc {
     }
   }
 
-  public void writeNbt(NbtCompound nbt) {
-    nbt.putString(MODE, mode.toString());
-    if (matches.size() > 0) {
-      NbtList nbtList = new NbtList();
-      for (int i = 0; i < matches.size(); i++) {
-        nbtList.add(NbtString.of(matches.get(i)));
-      }
-      nbt.put(MATCHES, nbtList);
+  public FilterDesc(ValueInput input) {
+    try {
+      mode = SAME_AS;
+      input.getString(MODE).ifPresent(s -> mode = FilterMode.valueOf(s));
+      matches = ImmutableList.copyOf(
+          input.listOrEmpty(MATCHES, com.mojang.serialization.Codec.STRING).stream().toList());
+      matchAll = input.getBooleanOr(MATCH_ALL, false);
+      exact = input.getBooleanOr(EXACT, false);
+    } catch (IllegalArgumentException | NullPointerException e) {
+      mode = SAME_AS;
+      matches = ImmutableList.of();
+      exact = true;
+    }
+  }
+
+  public void write(ValueOutput output) {
+    output.putString(MODE, mode.toString());
+    if (!matches.isEmpty()) {
+      var list = output.list(MATCHES, com.mojang.serialization.Codec.STRING);
+      matches.forEach(list::add);
       if (matchAll) {
-        nbt.putBoolean(MATCH_ALL, true);
+        output.putBoolean(MATCH_ALL, true);
       }
     }
-    nbt.putBoolean(EXACT, exact);
+    output.putBoolean(EXACT, exact);
   }
 
   public String match(int index) {
@@ -93,9 +104,20 @@ public class FilterDesc {
   }
 
   @NotNull
-  private NbtCompound toNbt() {
-    NbtCompound nbt = new NbtCompound();
-    writeNbt(nbt);
+  public CompoundTag toCompoundTag() {
+    CompoundTag nbt = new CompoundTag();
+    nbt.putString(MODE, mode.toString());
+    if (!matches.isEmpty()) {
+      ListTag nbtList = new ListTag();
+      for (String match : matches) {
+        nbtList.add(StringTag.valueOf(match));
+      }
+      nbt.put(MATCHES, nbtList);
+      if (matchAll) {
+        nbt.putBoolean(MATCH_ALL, true);
+      }
+    }
+    nbt.putBoolean(EXACT, exact);
     return nbt;
   }
 }

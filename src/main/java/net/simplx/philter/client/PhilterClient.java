@@ -3,7 +3,7 @@ package net.simplx.philter.client;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.simplx.philter.FilterScreen;
 import net.simplx.philter.PhilterMod;
 
@@ -12,6 +12,6 @@ public class PhilterClient implements ClientModInitializer {
 
   @Override
   public void onInitializeClient() {
-    HandledScreens.register(PhilterMod.FILTER_SCREEN_HANDLER, FilterScreen::new);
+    MenuScreens.register(PhilterMod.FILTER_SCREEN_HANDLER, FilterScreen::new);
   }
 }

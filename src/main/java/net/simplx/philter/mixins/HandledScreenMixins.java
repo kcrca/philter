@@ -1,37 +1,25 @@
 package net.simplx.philter.mixins;
 
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(HandledScreen.class)
+@Mixin(AbstractContainerScreen.class)
 public abstract class HandledScreenMixins extends Screen {
 
-  protected HandledScreenMixins(Text title) {
+  protected HandledScreenMixins(Component title) {
     super(title);
   }
 
-  @Inject(method = "keyPressed(III)Z", at = @At("HEAD"), cancellable = true)
-  public void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-    if (keyCode == 256) {
-      // Just in case...
-      if (client != null && client.player != null) {
-        client.player.closeHandledScreen();
-      }
-    }
-
-    Element focused = getFocused();
-    if (focused instanceof TextFieldWidget textField) {
-      if (!textField.keyPressed(keyCode, scanCode, modifiers) && !textField.isActive()) {
-        cir.setReturnValue(super.keyPressed(keyCode, scanCode, modifiers));
-      }
-      cir.setReturnValue(true);
-    }
+  @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z", at = @At("HEAD"), cancellable = true)
+  public void keyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
+    // FilterScreen overrides keyPressed directly; this mixin kept for future use
   }
 }

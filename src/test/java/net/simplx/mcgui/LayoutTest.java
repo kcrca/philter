@@ -18,8 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.network.chat.Component;
 import net.simplx.mcgui.Layout.Placer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,21 +69,21 @@ class LayoutTest {
 
   @Test
   void setPrefix_noPrefix() {
-    Text text = layout.text("foo");
+    Component text = layout.text("foo");
     assertThat(text.getString()).isEqualTo("foo");
   }
 
   @Test
   void setPrefix_prefixUsed() {
     layout.setPrefix("testing.");
-    Text text = layout.text("foo");
+    Component text = layout.text("foo");
     assertThat(text.getString()).isEqualTo("testing.foo");
   }
 
   @Test
   void setPrefix_dotAdded() {
     layout.setPrefix("testing");
-    Text text = layout.text("foo");
+    Component text = layout.text("foo");
     assertEquals("testing.foo", text.getString());
   }
 
@@ -95,7 +95,7 @@ class LayoutTest {
 
   @Test
   void textW_str() {
-    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
+    when(graphicsMock.getWidth(Component.translatable("foo"))).thenReturn(17);
     assertThat(layout.textW("foo")).isEqualTo(17);
   }
 
@@ -109,9 +109,9 @@ class LayoutTest {
 
   @Test
   void maxTextW() {
-    when(graphicsMock.getWidth(Text.translatable("1"))).thenReturn(1);
-    when(graphicsMock.getWidth(Text.translatable("2"))).thenReturn(2);
-    when(graphicsMock.getWidth(Text.translatable("3"))).thenReturn(3);
+    when(graphicsMock.getWidth(Component.translatable("1"))).thenReturn(1);
+    when(graphicsMock.getWidth(Component.translatable("2"))).thenReturn(2);
+    when(graphicsMock.getWidth(Component.translatable("3"))).thenReturn(3);
     assertThat(layout.maxTextW(layout.texts(List.of("1", "2", "3")))).isEqualTo(3);
   }
 
@@ -133,30 +133,30 @@ class LayoutTest {
 
   @Test
   void buttonW() {
-    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(17);
+    when(graphicsMock.getWidth(Component.translatable("foo"))).thenReturn(17);
     assertThat(layout.buttonW("foo")).isGreaterThan(17);
   }
 
   @Test
   void onOffButtonW() {
-    when(graphicsMock.getWidth(Text.translatable("options.on"))).thenReturn(5);
-    when(graphicsMock.getWidth(Text.translatable("options.off"))).thenReturn(100);
-    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(20);
+    when(graphicsMock.getWidth(Component.translatable("options.on"))).thenReturn(5);
+    when(graphicsMock.getWidth(Component.translatable("options.off"))).thenReturn(100);
+    when(graphicsMock.getWidth(Component.translatable("foo"))).thenReturn(20);
     assertThat(layout.onOffButtonW(layout.text("foo"))).isGreaterThan(120);
   }
 
   @Test
   void drawText() {
 //    layout.drawText(new MatrixStack(), layout.placer().at(17, 29), layout.text("foo"), -1);
-//    verify(graphicsMock).drawText(Mockito.any(), eq(Text.translatable("foo")), eq(6.0f), eq(3.0f),
+//    verify(graphicsMock).drawText(Mockito.any(), eq(Component.translatable("foo")), eq(6.0f), eq(3.0f),
 //        eq(-1));
   }
 
   @Test
-  void addDrawableChild() {
-    TextWidget element = new TextWidget(1, 2, 3, 4, layout.text("foo"), null);
-    layout.addDrawableChild(element);
-    verify(graphicsMock).addDrawableChild(element);
+  void addRenderableWidget() {
+    StringWidget element = new StringWidget(1, 2, 3, 4, layout.text("foo"), null);
+    layout.addRenderableWidget(element);
+    verify(graphicsMock).addRenderableWidget(element);
   }
 
   @Test
@@ -195,7 +195,7 @@ class LayoutTest {
 
   @Test
   void withText() {
-    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(50);
+    when(graphicsMock.getWidth(Component.translatable("foo"))).thenReturn(50);
     Placer p = layout.placer().withText("foo");
     assertThat(p.w()).isEqualTo(50);
     assertThat(p.h()).isEqualTo(layout.textH);
@@ -203,9 +203,9 @@ class LayoutTest {
 
   @Test
   void withTexts() {
-    when(graphicsMock.getWidth(Text.translatable("foo"))).thenReturn(50);
-    when(graphicsMock.getWidth(Text.translatable("bar"))).thenReturn(60);
-    when(graphicsMock.getWidth(Text.translatable("baz"))).thenReturn(70);
+    when(graphicsMock.getWidth(Component.translatable("foo"))).thenReturn(50);
+    when(graphicsMock.getWidth(Component.translatable("bar"))).thenReturn(60);
+    when(graphicsMock.getWidth(Component.translatable("baz"))).thenReturn(70);
     Placer p = layout.placer().withTexts("foo", "bar", "baz");
     assertThat(p.w()).isEqualTo(70);
     assertThat(p.h()).isEqualTo(layout.textH);
@@ -349,7 +349,7 @@ class LayoutTest {
     }
     layout.placer().h(5).x(LEFT); // no exception
 
-    Placer anchorPlacer = layout.placer(new TextWidget(10, 20, 30, 40, layout.text("foo"), null));
+    Placer anchorPlacer = layout.placer(new StringWidget(10, 20, 30, 40, layout.text("foo"), null));
     for (var dir : List.of(CENTER, LEFT)) {
       assertThatThrownBy(() -> layout.placer().h(5).x(dir, anchorPlacer)).isInstanceOf(
           IllegalArgumentException.class);
@@ -365,7 +365,7 @@ class LayoutTest {
     }
     layout.placer().h(5).y(ABOVE); // no exception
 
-    Placer anchorPlacer = layout.placer(new TextWidget(10, 20, 30, 40, layout.text("foo"), null));
+    Placer anchorPlacer = layout.placer(new StringWidget(10, 20, 30, 40, layout.text("foo"), null));
     for (var dir : List.of(MID, ABOVE)) {
       assertThatThrownBy(() -> layout.placer().w(6).y(dir, anchorPlacer)).isInstanceOf(
           IllegalArgumentException.class);
@@ -393,7 +393,7 @@ class LayoutTest {
 
   @Test
   void fromToHoriz() {
-    Placer anchorPlacer = layout.placer(new TextWidget(10, 20, 30, 40, layout.text("foo"), null));
+    Placer anchorPlacer = layout.placer(new StringWidget(10, 20, 30, 40, layout.text("foo"), null));
     Placer p = layout.placer().from(LEFT, anchorPlacer).to(RIGHT, anchorPlacer);
     assertThat(p.w()).isEqualTo(30);
 
@@ -403,7 +403,7 @@ class LayoutTest {
 
   @Test
   void fromToVert() {
-    Placer anchorWidget = layout.placer(new TextWidget(10, 20, 30, 40, layout.text("foo"), null));
+    Placer anchorWidget = layout.placer(new StringWidget(10, 20, 30, 40, layout.text("foo"), null));
     Placer p = layout.placer().h(6).from(ABOVE, anchorWidget).to(BELOW, anchorWidget);
     assertThat(p.h()).isEqualTo(46);
 

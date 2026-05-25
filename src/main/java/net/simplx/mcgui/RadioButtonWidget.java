@@ -1,31 +1,31 @@
 package net.simplx.mcgui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.CheckboxWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 @SuppressWarnings("unused")
-public class RadioButtonWidget<T> extends CheckboxWidget {
-  private static final Identifier SELECTED_HIGHLIGHTED_TEXTURE =  Identifier.of("philter", "widget" +
-      "/radiobutton_selected_highlighted");
-  private static final Identifier SELECTED_TEXTURE = Identifier.of("philter", "widget/radiobutton_selected");
-  private static final Identifier HIGHLIGHTED_TEXTURE = Identifier.of("philter", "widget/radiobutton_highlighted");
-  private static final Identifier TEXTURE = Identifier.of("philter", "widget/radiobutton");
+public class RadioButtonWidget<T> extends AbstractWidget.WithInactiveMessage {
+  private static final Identifier SELECTED_HIGHLIGHTED_TEXTURE = Identifier.fromNamespaceAndPath("philter",
+      "widget/radiobutton_selected_highlighted");
+  private static final Identifier SELECTED_TEXTURE = Identifier.fromNamespaceAndPath("philter", "widget/radiobutton_selected");
+  private static final Identifier HIGHLIGHTED_TEXTURE = Identifier.fromNamespaceAndPath("philter", "widget/radiobutton_highlighted");
+  private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("philter", "widget/radiobutton");
 
   private RadioButtons<T> buttons;
   private final T value;
   private int index;
+  private boolean selected;
 
-  public RadioButtonWidget(T value, int x, int y, int maxWidth, Text message, TextRenderer textRenderer) {
-    this(value, x, y, maxWidth, message, message != null && !message.getString().isBlank(), textRenderer);
-  }
-
-  public RadioButtonWidget(T value, int x, int y, int maxWidth, Text message, boolean showMessage, TextRenderer textRenderer) {
-    super(x, y, maxWidth, message, textRenderer, false, Callback.EMPTY);
+  public RadioButtonWidget(T value, int x, int y, int maxWidth, Component message) {
+    super(x, y, maxWidth, 20, message);
     this.value = value;
     index = -1;
   }
@@ -42,11 +42,18 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
     return buttons;
   }
 
+  public RadioButtons<T> getButtons() {
+    return buttons;
+  }
+
+  public boolean isSelected() {
+    return selected;
+  }
+
   public void setButtons(RadioButtons<T> buttons) {
     if (buttons == this.buttons) {
       return;
     }
-
     if (this.buttons != null) {
       this.buttons.remove(this);
     }
@@ -56,30 +63,23 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
     }
   }
 
-  public RadioButtons<T> getButtons() {
-    return buttons;
+  void setSelectedInternal(boolean on) {
+    selected = on;
   }
 
-  /**
-   * Internal call to force this on.
-   */
-  void setCheckedInternal(boolean on) {
-    checked = on;
-  }
-
-  /**
-   * Internal call to set the buttons.
-   */
   void setButtonsInternal(RadioButtons<T> buttons, int index) {
     this.buttons = buttons;
     this.index = index;
   }
 
   @Override
-  public void onPress() {
-    if (!isChecked()) {
-      super.onPress();
-      setChecked(true);
+  public void onClick(MouseButtonEvent event, boolean bl) {
+    if (!selected) {
+      if (buttons != null) {
+        buttons.setChecked(this);
+      } else {
+        selected = true;
+      }
     }
   }
 
@@ -87,20 +87,22 @@ public class RadioButtonWidget<T> extends CheckboxWidget {
     if (buttons != null) {
       buttons.setChecked(this);
     } else {
-      setCheckedInternal(on);
+      selected = on;
     }
   }
 
   @Override
-  public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-    super.renderWidget(context, mouseX, mouseY, delta);
-    MinecraftClient minecraftClient = MinecraftClient.getInstance();
-    RenderSystem.enableDepthTest();
-    TextRenderer textRenderer = minecraftClient.textRenderer;
-    Identifier identifier = this.checked ? (this.isFocused() ? SELECTED_HIGHLIGHTED_TEXTURE : SELECTED_TEXTURE) :
-        (this.isFocused() ? HIGHLIGHTED_TEXTURE : TEXTURE);
-    int i = CheckboxWidget.getCheckboxSize(textRenderer);
-    context.drawGuiTexture(identifier, this.getX(), this.getY(), i, i);
+  protected void extractWidgetRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float delta) {
+    Font font = Minecraft.getInstance().font;
+    Identifier id = selected
+        ? (isFocused() ? SELECTED_HIGHLIGHTED_TEXTURE : SELECTED_TEXTURE)
+        : (isFocused() ? HIGHLIGHTED_TEXTURE : TEXTURE);
+    int size = Checkbox.getBoxSize(font);
+    extractor.blitSprite(RenderPipelines.GUI_TEXTURED, id, getX(), getY(), size, size);
+  }
 
+  @Override
+  protected void updateWidgetNarration(NarrationElementOutput output) {
+    defaultButtonNarrationText(output);
   }
 }

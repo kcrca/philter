@@ -1,16 +1,10 @@
 package net.simplx.mcgui;
 
-import net.minecraft.client.font.FontStorage;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Font;
 
-import java.util.function.Function;
-
-class DummyRenderer extends TextRenderer {
+class DummyRenderer extends Font {
 
   public DummyRenderer() {
-    super(null, false);
+    super(null);
   }
-
-
 }

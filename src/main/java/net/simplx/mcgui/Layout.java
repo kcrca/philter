@@ -1,22 +1,19 @@
 package net.simplx.mcgui;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.LockButtonWidget;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.LockIconButton;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,12 +23,7 @@ import static com.google.common.collect.Streams.stream;
 
 /**
  * {@code Layout} provides tools for laying out Minecraft GUIs using the underlying widgets (or other ones if you
- * prefer). This is typically used in a mod's {@code Screen} class to put up dialog boxes for custom blocks. For
- * example, the following code will lay out three buttons along the top of that screen:
- *
- * <code>
- *
- * </code>
+ * prefer). This is typically used in a mod's {@code Screen} class to put up dialog boxes for custom blocks.
  */
 @SuppressWarnings({"UnusedReturnValue", "unused"})
 public class Layout {
@@ -200,7 +192,7 @@ public class Layout {
       return withText(text(keyName));
     }
 
-    public Placer withText(Text text) {
+    public Placer withText(Component text) {
       return w(textW(text)).h(textH);
     }
 
@@ -208,11 +200,11 @@ public class Layout {
       return withTexts(texts(keyName, keyNames));
     }
 
-    public Placer withTexts(Text text, Text... others) {
+    public Placer withTexts(Component text, Component... others) {
       return withTexts(Lists.asList(text, others));
     }
 
-    public Placer withTexts(Iterable<Text> texts) {
+    public Placer withTexts(Iterable<Component> texts) {
       return w(maxTextW(texts)).h(textH);
     }
 
@@ -276,7 +268,7 @@ public class Layout {
       if (h != UNKNOWN) {
         h += 2 * buttonBorderH;
       } else {
-        h = ButtonWidget.DEFAULT_HEIGHT;
+        h = Button.DEFAULT_HEIGHT;
       }
       return this;
     }
@@ -313,12 +305,12 @@ public class Layout {
     }
 
     public Placer inCheckbox() {
-      // It doesn't say this anywhere, but it's 20x20.m
+      // It doesn't say this anywhere, but it's 20x20.
       w = h = 20;
       return this;
     }
 
-    public <T extends ClickableWidget> T place(T widget) {
+    public <T extends AbstractWidget> T place(T widget) {
       if (hasX()) {
         widget.setX(x());
       }
@@ -328,9 +320,8 @@ public class Layout {
       if (hasW()) {
         widget.setWidth(w());
       }
-      // Don't know why there isn't a setHeight, but there isn't, so I've used access-widener.
       if (hasH()) {
-        widget.height = h();
+        widget.setHeight(h());
       }
       return widget;
     }
@@ -450,7 +441,7 @@ public class Layout {
 
   private void ensureLockButtonData() {
     if (lockButtonW == UNKNOWN) {
-      LockButtonWidget lb = new LockButtonWidget(0, 0, null);
+      LockIconButton lb = new LockIconButton(0, 0, button -> {});
       lockButtonW = lb.getWidth();
       lockButtonH = lb.getHeight();
     }
@@ -479,15 +470,15 @@ public class Layout {
 
   private String prefix;
 
-  public Layout(HandledScreen<?> screen) {
+  public Layout(AbstractContainerScreen<?> screen) {
     this(screen, DEFAULT_BORDER, DEFAULT_BORDER);
   }
 
-  public Layout(HandledScreen<?> screen, int gap, int border) {
+  public Layout(AbstractContainerScreen<?> screen, int gap, int border) {
     this(screen, gap, gap, border, border);
   }
 
-  public Layout(HandledScreen<?> screen, int gapW, int gapH, int borderW, int borderH) {
+  public Layout(AbstractContainerScreen<?> screen, int gapW, int gapH, int borderW, int borderH) {
     this(new MinecraftGraphics(screen), gapW, gapH, borderW, borderH);
   }
 
@@ -522,7 +513,7 @@ public class Layout {
     return new Placer();
   }
 
-  public Placer placer(ClickableWidget widget) {
+  public Placer placer(AbstractWidget widget) {
     var placer = new Placer();
     return placer.w(widget.getWidth()).h(widget.getHeight()).x(widget.getX()).y(widget.getY());
   }
@@ -543,27 +534,27 @@ public class Layout {
     return textW(text(keyName));
   }
 
-  public int textW(Text text) {
+  public int textW(Component text) {
     return graphics.getWidth(text);
   }
 
-  public Collection<Text> texts(Iterable<String> strs) {
-    return stream(strs).map(str -> (Text) text(str)).toList();
+  public Collection<Component> texts(Iterable<String> strs) {
+    return stream(strs).map(str -> (Component) text(str)).toList();
   }
 
   public int maxTextStrW(Iterable<String> texts) {
     return stream(texts).map(this::textStrW).max(Integer::compare).orElse(0);
   }
 
-  public Collection<Text> texts(String keyName, String... others) {
+  public Collection<Component> texts(String keyName, String... others) {
     return texts(Lists.asList(keyName, others));
   }
 
-  public int maxTextW(Iterable<Text> texts) {
+  public int maxTextW(Iterable<Component> texts) {
     return stream(texts).map(this::textW).max(Integer::compare).orElse(0);
   }
 
-  public int maxTextW(Text first, Text... others) {
+  public int maxTextW(Component first, Component... others) {
     return maxTextW(Lists.asList(first, others));
   }
 
@@ -571,55 +562,54 @@ public class Layout {
     return buttonW(text(text));
   }
 
-  public int buttonW(Text text) {
+  public int buttonW(Component text) {
     return textW(text) + 2 * enW;
   }
 
-  public MutableText text(String keyName) {
+  public MutableComponent text(String keyName) {
     if (!prefix.isEmpty()) {
       keyName = prefix + keyName;
     }
-    return Text.translatable(keyName);
+    return Component.translatable(keyName);
   }
 
-  public MutableText literal(String str) {
-    return Text.literal(str);
+  public MutableComponent literal(String str) {
+    return Component.literal(str);
   }
 
   public Tooltip tooltip(String keyName) {
-    return Tooltip.of(text(keyName));
+    return Tooltip.create(text(keyName));
   }
 
-  public int buttonW(Iterable<Text> texts) {
+  public int buttonW(Iterable<Component> texts) {
     int maxW = 0;
-    for (Text t : texts) {
+    for (Component t : texts) {
       maxW = Math.max(buttonW(t), maxW);
     }
     return maxW;
   }
 
-  public int onOffButtonW(Text text) {
+  public int onOffButtonW(Component text) {
     int onOffW = buttonW(
-        List.of(Text.translatable("options.on"), Text.translatable("options.off")));
-    return textW(text) + textW(Text.literal(": ")) + onOffW;
+        List.of(Component.translatable("options.on"), Component.translatable("options.off")));
+    return textW(text) + textW(Component.literal(": ")) + onOffW;
   }
 
-  public void drawBackground(MatrixStack matrices, Identifier texture, float delta, int mouseX,
-                             int mouseY) {
-    RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-    RenderSystem.setShaderTexture(0, texture);
+  public void drawBackground(GuiGraphicsExtractor extractor, Identifier texture, float delta, int mouseX, int mouseY) {
     int x = (graphics.getWindowW() - graphics.getScreenW()) / 2;
     int y = (graphics.getWindowH() - graphics.getScreenH()) / 2;
-    graphics.drawTexture(matrices, x, y, 0, 0, graphics.getScreenW(), graphics.getScreenH());
+    int w = graphics.getScreenW();
+    int h = graphics.getScreenH();
+    extractor.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, 0f, 0f, w, h, w, h);
   }
 
-  public void drawText(DrawContext context, TextRenderer renderer, Placer placer, Text text, int color) {
-    context.drawText(renderer, text, placer.relX(), placer.relY(), color, false);
+  public void drawText(GuiGraphicsExtractor extractor, net.minecraft.client.gui.Font font, Placer placer,
+      Component text, int color) {
+    extractor.text(font, text, placer.relX(), placer.relY(), color, false);
   }
 
-  public <T extends Element & Drawable & Selectable> T addDrawableChild(T element) {
-    return graphics.addDrawableChild(element);
+  public <T extends GuiEventListener & Renderable & NarratableEntry> T addRenderableWidget(T element) {
+    return graphics.addRenderableWidget(element);
   }
 
   public Placer screenPlace() {

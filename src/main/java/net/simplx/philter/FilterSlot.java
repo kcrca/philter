@@ -1,21 +1,21 @@
 package net.simplx.philter;
 
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
 
 public class FilterSlot extends Slot {
 
   private boolean enabled;
   private final boolean alwaysEnabled;
 
-  public FilterSlot(Inventory inventory, int index, int x, int y, boolean alwaysEnabled) {
+  public FilterSlot(Container inventory, int index, int x, int y, boolean alwaysEnabled) {
     super(inventory, index, x, y);
     this.alwaysEnabled = alwaysEnabled;
   }
 
   @Override
-  public boolean isEnabled() {
+  public boolean isActive() {
     return alwaysEnabled || enabled;
   }
 
@@ -24,12 +24,12 @@ public class FilterSlot extends Slot {
   }
 
   @Override
-  public int getMaxItemCount() {
+  public int getMaxStackSize() {
     return 1;
   }
 
   @Override
-  public boolean canInsert(ItemStack stack) {
-    return isEnabled();
+  public boolean mayPlace(ItemStack stack) {
+    return isActive();
   }
 }

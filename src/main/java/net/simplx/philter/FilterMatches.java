@@ -1,13 +1,12 @@
 package net.simplx.philter;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,17 +50,21 @@ public class FilterMatches {
   }
 
   public boolean matchAny(ItemStack item, boolean exact, boolean matchAll) {
-    return checkTags(tagsYes, true, item, matchAll) || checkTags(tagsNo, false, item, matchAll) || checkPatterns(patternsYes, true, item, exact, matchAll) || checkPatterns(patternsNo, false, item, exact, matchAll);
+    return checkTags(tagsYes, true, item, matchAll) || checkTags(tagsNo, false, item, matchAll)
+        || checkPatterns(patternsYes, true, item, exact, matchAll)
+        || checkPatterns(patternsNo, false, item, exact, matchAll);
   }
 
   public boolean matchAll(ItemStack item, boolean exact, boolean matchAll) {
-    return checkTags(tagsYes, true, item, matchAll) && checkTags(tagsNo, false, item, matchAll) && checkPatterns(patternsYes, true, item, exact, matchAll) && checkPatterns(patternsNo, false, item, exact, matchAll);
+    return checkTags(tagsYes, true, item, matchAll) && checkTags(tagsNo, false, item, matchAll)
+        && checkPatterns(patternsYes, true, item, exact, matchAll)
+        && checkPatterns(patternsNo, false, item, exact, matchAll);
   }
 
   private boolean checkTags(List<Identifier> tags, boolean yes, ItemStack item, boolean matchAll) {
     for (Identifier tag : tags) {
-      TagKey<Item> t = TagKey.of(RegistryKeys.ITEM, tag);
-      boolean isIn = item.isIn(t);
+      TagKey<Item> t = TagKey.create(Registries.ITEM, tag);
+      boolean isIn = item.is(t);
       if (!matchAll && isIn == yes) {
         return true;
       } else if (matchAll && isIn != yes) {
@@ -71,22 +74,17 @@ public class FilterMatches {
     return matchAll;
   }
 
-  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item, boolean exact, boolean matchAll) {
+  private boolean checkPatterns(List<Pattern> patterns, boolean yes, ItemStack item, boolean exact,
+                                boolean matchAll) {
     for (Pattern pattern : patterns) {
-      Item it = item.getItem();
-      @SuppressWarnings("deprecation") Optional<RegistryKey<Item>> key = it.getRegistryEntry().getKey();
+      Optional<net.minecraft.resources.ResourceKey<Item>> key = item.typeHolder().unwrapKey();
       if (key.isEmpty()) {
         continue;
       }
-      Identifier id = key.get().getValue();
+      Identifier id = key.get().identifier();
       String nbtStr = "";
       if (exact) {
-        ComponentMap components = item.getComponents();
-        if (components == null) {
-          nbtStr = "{}";
-        } else {
-          nbtStr = components.toString();
-        }
+        nbtStr = item.getComponents().toString();
       }
       boolean isIn =
           pattern.matcher(id.toString() + nbtStr).find() == yes || id.getNamespace().equals("minecraft") &&

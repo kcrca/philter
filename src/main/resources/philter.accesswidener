@@ -1,41 +1,23 @@
-accessWidener	v1	named
+accessWidener	v1	official
 
-accessible	field	net/minecraft/block/entity/HopperBlockEntity	transferCooldown	I
-accessible	field	net/minecraft/block/entity/HopperBlockEntity	lastTickTime		J
-accessible	method	net/minecraft/block/entity/HopperBlockEntity	needsCooldown		()Z
-accessible	method	net/minecraft/block/entity/HopperBlockEntity	setTransferCooldown	(I)V
-extendable	method	net/minecraft/block/entity/HopperBlockEntity	isFull			()Z
-accessible	method	net/minecraft/block/entity/HopperBlockEntity	canMergeItems		(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)Z
+accessible	field	net/minecraft/world/level/block/entity/HopperBlockEntity	cooldownTime	I
+accessible	field	net/minecraft/world/level/block/entity/HopperBlockEntity	tickedGameTime	J
+accessible	method	net/minecraft/world/level/block/entity/HopperBlockEntity	isOnCooldown	()Z
+accessible	method	net/minecraft/world/level/block/entity/HopperBlockEntity	setCooldown	(I)V
+extendable	method	net/minecraft/world/level/block/entity/HopperBlockEntity	inventoryFull	()Z
+accessible	method	net/minecraft/world/level/block/entity/HopperBlockEntity	canMergeItems	(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)Z
 
-mutable		field	net/minecraft/block/entity/BlockEntity		type			Lnet/minecraft/block/entity/BlockEntityType;
-accessible	field	net/minecraft/block/entity/BlockEntity		type			Lnet/minecraft/block/entity/BlockEntityType;
-
-accessible	field	net/minecraft/block/HopperBlock			TOP_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			DOWN_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			EAST_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			NORTH_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			SOUTH_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			WEST_SHAPE		Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			DOWN_RAYCAST_SHAPE	Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			EAST_RAYCAST_SHAPE	Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			NORTH_RAYCAST_SHAPE	Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			SOUTH_RAYCAST_SHAPE	Lnet/minecraft/util/shape/VoxelShape;
-accessible	field	net/minecraft/block/HopperBlock			WEST_RAYCAST_SHAPE	Lnet/minecraft/util/shape/VoxelShape;
+mutable		field	net/minecraft/world/level/block/entity/BlockEntity		type			Lnet/minecraft/world/level/block/entity/BlockEntityType;
+accessible	field	net/minecraft/world/level/block/entity/BlockEntity		type			Lnet/minecraft/world/level/block/entity/BlockEntityType;
 
 # Stuff for McGui
 
-accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	x			I
-accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	y			I
-accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	backgroundWidth		I
-accessible	field	net/minecraft/client/gui/screen/ingame/HandledScreen	backgroundHeight	I
+accessible	field	net/minecraft/client/gui/screens/inventory/AbstractContainerScreen	leftPos		I
+accessible	field	net/minecraft/client/gui/screens/inventory/AbstractContainerScreen	topPos		I
+accessible	field	net/minecraft/client/gui/screens/inventory/AbstractContainerScreen	imageWidth	I
+accessible	field	net/minecraft/client/gui/screens/inventory/AbstractContainerScreen	imageHeight	I
 
-accessible	field	net/minecraft/client/gui/screen/Screen		textRenderer		Lnet/minecraft/client/font/TextRenderer;
-accessible	method	net/minecraft/client/gui/screen/Screen		addDrawableChild	(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;
-accessible	method	net/minecraft/client/gui/screen/Screen		remove			(Lnet/minecraft/client/gui/Element;)V
-
-accessible	field	net/minecraft/client/gui/widget/CheckboxWidget	checked			Z
-accessible	method	net/minecraft/client/gui/widget/CheckboxWidget	<init>    		(IIILnet/minecraft/text/Text;Lnet/minecraft/client/font/TextRenderer;ZLnet/minecraft/client/gui/widget/CheckboxWidget$Callback;)V
-
-
-accessible	field	net/minecraft/client/gui/widget/ClickableWidget	height			I
+accessible	field	net/minecraft/client/gui/screens/Screen		font		Lnet/minecraft/client/gui/Font;
+accessible	method	net/minecraft/client/gui/screens/Screen		addRenderableWidget	(Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;
+accessible	method	net/minecraft/client/gui/screens/Screen		removeWidget		(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V
 

@@ -1,26 +1,25 @@
 package net.simplx.philter;
 
 import com.google.common.collect.ImmutableList;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.HopperBlock;
-import net.minecraft.block.entity.HopperBlockEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SidedInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -30,57 +29,72 @@ import static net.simplx.philter.FilterBlock.*;
 
 /**
  * This block is effectively a hopper, but neither {@link HopperBlock} nor {@link HopperBlockEntity} are designed for
- * subclasses. So this is a mash-up of forced inheritance (via access-widener) and copies where needed. The alternative
- * is to simply copy the entire hopper entity class and tweak it. This way, at least what <em>can</em> be inherited is
- * inherited.
- * <p>
- * This is only to be able to re-write the {@link HopperBlockEntity#insertAndExtract} method to check the filter before
- * doing any move. The static {@link #serverTick} here simply invokes {@link #doServerTick} as an instance method, which
- * mirrors the static {@link HopperBlockEntity#serverTick} (non-statically) and so on until we get to
- * {@link #insertAndExtract}. Everything below that we just invoke the superclass method.
+ * subclasses. So this is a mash-up of forced inheritance (via access-widener) and copies where needed.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
-public class FilterBlockEntity extends HopperBlockEntity implements SidedInventory,
-    ExtendedScreenHandlerFactory<FilterData> {
+public class FilterBlockEntity extends HopperBlockEntity implements WorldlyContainer,
+    ExtendedMenuProvider<FilterData> {
 
   static final int EXAMPLES_COUNT = 16;
-  static final int EXAMPLES_START = INVENTORY_SIZE;
+  static final int EXAMPLES_START = HOPPER_CONTAINER_SIZE;
   static final int EXAMPLES_END = EXAMPLES_START + EXAMPLES_COUNT;
 
   private static final int[] INVENTORY_INDEXES = new int[]{0, 1, 2, 3, 4};
+
+  private NonNullList<ItemStack> filterItems = NonNullList.withSize(HOPPER_CONTAINER_SIZE + EXAMPLES_COUNT, ItemStack.EMPTY);
 
   private FilterDesc desc;
   private FilterMatches filterMatches;
   private int flicker;
   private Direction userFacingDir;
 
+  @Override
+  public boolean isValidBlockState(BlockState state) {
+    return PhilterMod.FILTER_BLOCK_ENTITY != null
+        ? PhilterMod.FILTER_BLOCK_ENTITY.isValid(state)
+        : state.getBlock() == PhilterMod.FILTER_BLOCK;
+  }
+
   protected FilterBlockEntity(BlockPos pos, BlockState state) {
     super(pos, state);
-    setHeldStacks(DefaultedList.ofSize(INVENTORY_SIZE + EXAMPLES_COUNT, ItemStack.EMPTY));
     type = PhilterMod.FILTER_BLOCK_ENTITY;
     desc = new FilterDesc(FilterMode.SAME_AS, ImmutableList.of(), false);
     filterMatches = new FilterMatches(ImmutableList.of());
     flicker = 0;
   }
 
-  public static void updateEntity(PlayerEntity player, FilterData data) {
+  @Override
+  public int getContainerSize() {
+    return filterItems.size();
+  }
+
+  @Override
+  protected NonNullList<ItemStack> getItems() {
+    return filterItems;
+  }
+
+  @Override
+  protected void setItems(NonNullList<ItemStack> items) {
+    filterItems = items;
+  }
+
+  public static void updateEntity(Player player, FilterData data) {
     FilterDesc filterDesc = data.desc();
     BlockPos pos = data.pos();
-    var rawEntity = player.getWorld().getBlockEntity(pos);
+    var rawEntity = player.level().getBlockEntity(pos);
     if (rawEntity instanceof FilterBlockEntity) {
       ((FilterBlockEntity) rawEntity).setFilterDesc(filterDesc);
       Direction newFilterDir = data.filter();
-      if (rawEntity.getCachedState().get(FILTER) != newFilterDir) {
-        player.getWorld().setBlockState(pos, rawEntity.getCachedState().with(FILTER, newFilterDir));
+      if (rawEntity.getBlockState().getValue(FILTER) != newFilterDir) {
+        player.level().setBlockAndUpdate(pos, rawEntity.getBlockState().setValue(FILTER, newFilterDir));
       }
-      rawEntity.markDirty();
+      rawEntity.setChanged();
     }
   }
 
   @Override
   public boolean isEmpty() {
-    generateLoot(null);
-    for (ItemStack itemStack : this.getHeldStacks().subList(0, INVENTORY_SIZE)) {
+    for (ItemStack itemStack : filterItems.subList(0, HOPPER_CONTAINER_SIZE)) {
       if (!itemStack.isEmpty()) {
         return false;
       }
@@ -88,15 +102,11 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     return true;
   }
 
-  /**
-   * Overridden so it only examines the hopper's part of the inventory.j
-   */
   @Override
-  public boolean isFull() {
-    DefaultedList<ItemStack> invStackList = this.getHeldStacks();
-    for (int i = 0; i < INVENTORY_SIZE; i++) {
-      ItemStack itemStack = invStackList.get(i);
-      if (!itemStack.isEmpty() && itemStack.getCount() == itemStack.getMaxCount()) {
+  protected boolean inventoryFull() {
+    for (int i = 0; i < HOPPER_CONTAINER_SIZE; i++) {
+      ItemStack itemStack = filterItems.get(i);
+      if (!itemStack.isEmpty() && itemStack.getCount() == itemStack.getMaxStackSize()) {
         continue;
       }
       return false;
@@ -105,95 +115,94 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Override
-  public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-    super.readNbt(nbt, registryLookup);
-    desc = new FilterDesc(nbt);
+  protected void loadAdditional(ValueInput input) {
+    super.loadAdditional(input);
+    desc = new FilterDesc(input);
   }
 
   @Override
-  protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-    super.writeNbt(nbt, registryLookup);
-    desc.writeNbt(nbt);
+  protected void saveAdditional(ValueOutput output) {
+    super.saveAdditional(output);
+    desc.write(output);
   }
 
   @Override
-  protected Text getContainerName() {
-    return Text.translatable("philter.filter.name");
+  protected Component getDefaultName() {
+    return Component.translatable("philter.filter.name");
   }
 
-  public static void serverTick(World world, BlockPos pos, BlockState state, FilterBlockEntity blockEntity) {
-    blockEntity.doServerTick(world, pos, state);
+  public static void serverTick(Level level, BlockPos pos, BlockState state, FilterBlockEntity blockEntity) {
+    blockEntity.doServerTick(level, pos, state);
   }
 
-  private void doServerTick(World world, BlockPos pos, BlockState state) {
-    transferCooldown--;
-    lastTickTime = world.getTime();
-    if (!needsCooldown()) {
-      setTransferCooldown(0);
-      insertAndExtract(world, pos, state);
+  private void doServerTick(Level level, BlockPos pos, BlockState state) {
+    cooldownTime--;
+    tickedGameTime = level.getGameTime();
+    if (!isOnCooldown()) {
+      setCooldown(0);
+      boolean changed = HopperBlockEntity.suckInItems(level, this);
+      changed |= insertAndExtract(level, pos, state);
+      if (changed) {
+        setCooldown(8);
+        setChanged();
+      }
     }
     if (flicker > 0) {
       --flicker;
       int newState = flicker > 0 ? 1 : 0;
-      int curState = state.get(FILTERED);
+      int curState = state.getValue(FILTERED);
       if (newState != curState) {
-        world.setBlockState(pos, state.with(FILTERED, newState), Block.NOTIFY_LISTENERS);
+        level.setBlock(pos, state.setValue(FILTERED, newState), net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
       }
     }
   }
 
-  private void insertAndExtract(World world, BlockPos pos, BlockState state) {
-    if (world.isClient) {
-      return;
-    }
-    if (needsCooldown() || !state.get(HopperBlock.ENABLED) || isEmpty()) {
-      return;
+  private boolean insertAndExtract(Level level, BlockPos pos, BlockState state) {
+    if (level.isClientSide() || !state.getValue(HopperBlock.ENABLED) || isEmpty()) {
+      return false;
     }
 
-    Inventory facingOut = getInventoryAt(world, pos.offset(state.get(FACING)));
-    Direction facingSide = state.get(FACING).getOpposite();
-    Inventory filterOut = getInventoryAt(world, pos.offset(state.get(FILTER)));
-    Direction filterSide = state.get(FILTER).getOpposite();
+    Container facingOut = getContainerAt(level, pos.relative(state.getValue(FACING)));
+    Direction facingSide = state.getValue(FACING).getOpposite();
+    Container filterOut = getContainerAt(level, pos.relative(state.getValue(FILTER)));
+    Direction filterSide = state.getValue(FILTER).getOpposite();
     if (facingOut == null && filterOut == null) {
-      return;
+      return false;
     }
 
-    boolean changed = false;
-    for (int i = 0; i < INVENTORY_SIZE; i++) {
-      ItemStack stack = getStack(i);
+    for (int i = 0; i < HOPPER_CONTAINER_SIZE; i++) {
+      ItemStack stack = getItem(i);
       if (stack.isEmpty()) {
         continue;
       }
       ItemStack toTransfer = stack.copy().split(1);
+      boolean moved = false;
       if (filterOut != null && inFilter(stack, filterOut)) {
-        changed = tryTransfer(filterOut, filterSide, stack, toTransfer);
-        if (changed) {
+        moved = tryTransfer(filterOut, filterSide, stack, toTransfer);
+        if (moved) {
           flicker = 8;
         }
       }
-      if (!changed && facingOut != null) {
-        changed = tryTransfer(facingOut, facingSide, stack, toTransfer);
+      if (!moved && facingOut != null) {
+        moved = tryTransfer(facingOut, facingSide, stack, toTransfer);
       }
-      if (changed) {
-        break;
+      if (moved) {
+        return true;
       }
     }
-    if (changed) {
-      setTransferCooldown(8);
-      HopperBlockEntity.markDirty(world, pos, state);
-    }
+    return false;
   }
 
-  private boolean tryTransfer(Inventory out, Direction filterSide, ItemStack stack, ItemStack toTransfer) {
-    ItemStack after = HopperBlockEntity.transfer(this, out, toTransfer, filterSide);
+  private boolean tryTransfer(Container out, Direction side, ItemStack stack, ItemStack toTransfer) {
+    ItemStack after = HopperBlockEntity.addItem(this, out, toTransfer, side);
     if (after.isEmpty()) {
-      stack.decrement(1);
+      stack.shrink(1);
       return true;
     }
     return false;
   }
 
-  private boolean inFilter(ItemStack hopperStack, Inventory targetInv) {
+  private boolean inFilter(ItemStack hopperStack, Container targetInv) {
     if (hopperStack.getCount() == 0) {
       return false;
     }
@@ -204,7 +213,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
     };
   }
 
-  private boolean filterSameAs(ItemStack item, Inventory targetInv) {
+  private boolean filterSameAs(ItemStack item, Container targetInv) {
     List<ItemStack> examples = getExamples(targetInv);
     if (examples == null) return false;
     for (ItemStack invStack : examples) {
@@ -213,7 +222,7 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
           return true;
         }
       } else {
-        if (ItemStack.areItemsEqual(invStack, item)) {
+        if (ItemStack.isSameItem(invStack, item)) {
           return true;
         }
       }
@@ -222,11 +231,10 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Nullable
-  private List<ItemStack> getExamples(Inventory targetInv) {
+  private List<ItemStack> getExamples(Container targetInv) {
     List<ItemStack> examples = new ArrayList<>();
-    DefaultedList<ItemStack> exampleInv = this.getHeldStacks();
     for (int i = EXAMPLES_START; i < EXAMPLES_END; i++) {
-      ItemStack itemStack = exampleInv.get(i);
+      ItemStack itemStack = filterItems.get(i);
       if (!itemStack.isEmpty()) {
         examples.add(itemStack);
       }
@@ -235,8 +243,8 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
       if (targetInv == null) {
         return null;
       }
-      for (int i = 0; i < targetInv.size(); i++) {
-        ItemStack itemStack = targetInv.getStack(i);
+      for (int i = 0; i < targetInv.getContainerSize(); i++) {
+        ItemStack itemStack = targetInv.getItem(i);
         if (!itemStack.isEmpty()) {
           examples.add(itemStack);
         }
@@ -254,21 +262,26 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Override
-  protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
+  public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
     return new FilterScreenHandler(syncId, playerInventory, this, new FilterData(
-        desc, pos, getCachedState().get(FACING),
-        getCachedState().get(FILTER), null));
+        desc, worldPosition, getBlockState().getValue(FACING),
+        getBlockState().getValue(FILTER), null));
   }
 
+  @Override
+  public FilterData getScreenOpeningData(ServerPlayer player) {
+    BlockState state = player.level().getBlockState(worldPosition);
+    return new FilterData(desc, worldPosition, state.getValue(FACING), state.getValue(FILTER), userFacingDir);
+  }
 
-  public FilterData getScreenOpeningData(ServerPlayerEntity player) {
-    BlockState state = player.getWorld().getBlockState(pos);
-    return new FilterData(desc, pos, state.get(FACING), state.get(FILTER), userFacingDir);
+  @Override
+  public Component getDisplayName() {
+    return getDefaultName();
   }
 
   public void setFilterDesc(FilterDesc desc) {
     this.desc = desc;
-    markDirty();
+    setChanged();
   }
 
   public void setActionDir(Direction userFacingDir) {
@@ -276,22 +289,21 @@ public class FilterBlockEntity extends HopperBlockEntity implements SidedInvento
   }
 
   @Override
-  public int[] getAvailableSlots(Direction side) {
+  public int[] getSlotsForFace(Direction side) {
     return INVENTORY_INDEXES;
   }
 
   @Override
-  public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+  public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction dir) {
     return true;
   }
 
   @Override
-  public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+  public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction dir) {
     return true;
   }
 
-  /** HopperBlockEntity uses this to suck items out of the world. We don't want to, since we don't pull from above. */
-  public static void onEntityCollided(World world, BlockPos pos, BlockState state, Entity entity,
+  public static void onEntityCollided(Level level, BlockPos pos, BlockState state, Entity entity,
                                       HopperBlockEntity blockEntity) {
   }
 }

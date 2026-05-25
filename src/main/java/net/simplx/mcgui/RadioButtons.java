@@ -33,7 +33,7 @@ public class RadioButtons<T> {
   public RadioButtonWidget<T> add(RadioButtonWidget<T> button) {
     if (!buttons.contains(button)) {
       buttons.add(button);
-      if (button.isChecked() || buttons.size() == 1) {
+      if (button.isSelected() || buttons.size() == 1) {
         setChecked(button);
       }
     }
@@ -43,7 +43,7 @@ public class RadioButtons<T> {
 
   public void setChecked(RadioButtonWidget<T> button) {
     for (var b : buttons) {
-      b.setCheckedInternal(b == button);
+      b.setSelectedInternal(b == button);
     }
     if (on != button) {
       on = button;
