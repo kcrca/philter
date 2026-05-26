@@ -1,12 +1,12 @@
 name: Publish on Github, Curseforge & Modrinth    #The name of your Github Action on Github.com
 
-on: [ pull_request, workflow_dispatch ]           #When your Github Action will be executed ('pull_request' -> on every Merge(/Pull) Request; 'workflow_dispatch' -> allows manual execution through Github.com
+on: [ workflow_dispatch ]
 
-env:                                              #Environment variables that can later be referenced using ${{ env.MINECRAFT_VERSION }}. These are useful for repeating information and allow for quick changes for new mod updates
-  VERSION: 1.3.5+1.21
-  RELEASE_NAME: Philter Mod 1.3.5 for Minecraft 1.21
-  MINECRAFT_VERSION: 1.21
-  JAVA_VERSION: 21
+env:
+  VERSION: 1.3.5+26.1
+  RELEASE_NAME: Philter Mod 1.3.5 for Minecraft 26.1
+  MINECRAFT_VERSION: 26.1
+  JAVA_VERSION: 25
 
   GITHUB_TAG: 1.3.5+1.21
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
